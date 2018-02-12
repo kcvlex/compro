@@ -26,8 +26,7 @@ namespace{
 				return ret;
 			}
 
-			void update(int64_t pos, long long newValue){
-				int64_t delta = newValue - data[pos];
+			void add(int64_t pos, long long delta){
 				pos++;
 				while(pos <= size){
 					data[pos] += delta;
