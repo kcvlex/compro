@@ -1,5 +1,6 @@
-#include<cstdint>
+#include<bits/stdc++.h>
 namespace{
+	using namespace std;
 	class UnionFind{
 		public:
 			int64_t size;

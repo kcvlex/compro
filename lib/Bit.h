@@ -1,5 +1,6 @@
-#include<cstdint>
+#include<bits/stdc++.h>
 namespace{
+	using namespace std;
 	class Bit{
 		private:
 			int64_t size;

@@ -1,6 +1,7 @@
-#include<cstdint>
+#include<bits/stdc++.h>
 template <typename T>
-namespace{
+namespace {
+	using namespace std;
 	class SegmentTree{
 		public:
 			int64_t n;

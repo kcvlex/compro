@@ -1,5 +1,6 @@
 #include<bits/stdc++.h>
 namespace{
+	using namespace std;
 	class StrongDisassembly{
 
 		private:
