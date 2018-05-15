@@ -1,38 +1,53 @@
 #include<bits/stdc++.h>
-namespace{
-	using namespace std;
-	class Bit{
-		private:
-			int64_t size;
-			int64_t *data;
+namespace Algo{
+    using namespace std;
+    using ll = int64_t;
+    template <typename T>
+    class Bit{
+        private:
+            ll size;
+            T *data;
+            T identity_ele;
+            T (*comp)(T, T);
 
-		public:
-			Bit(int64_t n){
-				int64_t newsize = 1;
-				while(newsize < n)  newsize = newsize << 1;
-				size = newsize + 1;
-				data = new int64_t[size];
-				for(int64_t i = 0; i < size; ++i){
-					data[i] = 0;
-				}
-			}
+        public:
+            
+            /*
+             * n: サイズ
+             * デフォルトで0で初期化
+             */
+            Bit(ll size, T identity_ele, T (*comp)(T, T)){
+                ll newsize = 1;
+                while(newsize < size)  newsize = newsize << 1;
+                this->size = newsize + 1;
+                this->identity_ele = identity_ele;
+                this->comp = comp;
+                data = new ll[size];
+                for(ll i = 0; i < size; ++i){
+                    data[i] = identity_ele;
+                }
+            }
 
-			int64_t sum(long long pos){
-				pos++;
-				int64_t ret = 0;
-				while(pos > 0){
-					ret += data[pos];
-					pos -= pos & -pos;
-				}
-				return ret;
-			}
+            /*
+             * 0-origin
+             */
+            T sum(ll pos){
+                pos++;
+                T ret = identity_ele;
+                while(pos > 0){
+                    ret += comp(ret, data[pos]);
+                    pos -= pos & -pos;
+                }
+                return ret;
+            }
 
-			void add(int64_t pos, long long delta){
-				pos++;
-				while(pos <= size){
-					data[pos] += delta;
-					pos += pos & -pos;
-				}
-			}
-	};
+            void add(ll pos, T delta){
+                pos++;
+                while(pos <= size){
+                    data[pos] = data[pos] + delta;
+                    pos += pos & -pos;
+                }
+            }
+    };
+
 }

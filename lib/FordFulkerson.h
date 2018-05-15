@@ -1,17 +1,18 @@
 #include<bits/stdc++.h>
-namespace {
+namespace Algo{
 	using namespace std;
+    using ll = int64_t;
 	class FordFulkerson{
 		struct Edge{
-			int64_t to, cap, rev_index;
+			ll to, cap, rev_index;
 		};
 		private:
 			vector<vector<Edge>> v;
-			int64_t n;
+			ll n;
 			bool *used;
-			const int64_t INF = numeric_limits<int64_t>::max();
+			const ll INF = numeric_limits<ll>::max();
 			
-			int dfs(int64_t now, int64_t goal, int64_t f){
+			int dfs(ll now, ll goal, ll f){
 				if(now == goal) return f;
 				used[now] = 1;
 				for(Edge &e : v[now]){
@@ -21,7 +22,7 @@ namespace {
 					if(e.cap <= 0){
 						continue;
 					}
-					int64_t d = dfs(e.to, goal, min(f, e.cap));
+					ll d = dfs(e.to, goal, min(f, e.cap));
 					if(d > 0){
 						e.cap -= d;
 						v[e.to][e.rev_index].cap += d;
@@ -31,33 +32,33 @@ namespace {
 				return 0;
 			}
 		public:
-			FordFulkerson(int64_t n, vector<Edge> *v){
+			FordFulkerson(ll n, vector<Edge> *v){
 				this->n = n;
-				for(int64_t i = 0; i < n; i++){
+				for(ll i = 0; i < n; i++){
 					this->v.push_back(v[i]);
 				}
 				used = new bool[n];
 			}
 			
-			FordFulkerson(int64_t n, vector<pair<int64_t, int64_t>> *v){
+			FordFulkerson(ll n, vector<pair<ll, ll>> *v){
 				this->n = n;
 				for(int i = 0; i < n; i++){
 					this->v.push_back(vector<Edge>(0));
 				}
 				for(int i = 0; i < n; i++){
 					for(auto e : v[i]){
-						this->v[i].push_back((Edge){e.first, e.second, (int64_t)this->v[e.first].size()});
-						this->v[e.first].push_back((Edge){i, 0, (int64_t)this->v[i].size() - 1});
+						this->v[i].push_back((Edge){e.first, e.second, (ll)this->v[e.first].size()});
+						this->v[e.first].push_back((Edge){i, 0, (ll)this->v[i].size() - 1});
 					}
 				}
 				used = new bool[n];
 			}
 			
-			int64_t max_flow(int64_t start, int64_t goal){
-				int64_t ret = 0;
+			ll max_flow(ll start, ll goal){
+				ll ret = 0;
 				while(1){
 					memset(used, 0, n);
-					int64_t add = dfs(start, goal, INF);
+					ll add = dfs(start, goal, INF);
 					if(add == 0){
 						return ret;
 					}
