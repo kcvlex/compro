@@ -1,49 +1,45 @@
 #include<bits/stdc++.h>
-namespace Algo{
-	using namespace std;
-    using ll = int64_t;
-    template <typename T>
-	class UnionFind{
-		public:
-			vector<T> par;
-			ll *rank;
-            map<T, ll> id;
+using namespace std;
+using ll = int64_t;
+class UnionFind{
+    public:
+        ll size;
+        ll *rank;
+        ll *parent;
 
-			UnionFind(vector<T> &par){
-                this->par = par;
-				rank = new T[par.size()];
-				for(ll i = 0; i < par.size(); ++i){
-					rank[i] = 0;
-                    if(id.find(par[i]) != id.end()){
-                        exit(1);
+        UnionFind(ll N){
+            this->size = N;
+            rank = new ll[size];
+            parent = new ll[size];
+            for(ll i = 0; i < size; ++i){
+                rank[i] = 0;
+                parent[i] = i;
+            }
+        }
+
+        ~UnionFind(){
+        }
+
+        ll find(ll child){
+            return (child == parent[child] ? child : parent[child] = find(parent[child]));
+        }
+
+        void unit(ll x, ll y){
+            x = find(x); y = find(y);
+            if(x != y){
+                if(rank[x] > rank[y]){
+                    parent[y] = x;
+                }else{
+                    parent[x] = y;
+                    if(rank[x] == rank[y]){
+                        ++rank[y];
                     }
-                    id[par[i]] = i;
-				}
-			}
+                }
+            }
+        }
 
-			~UnionFind(){
-			}
+        bool same(ll x, ll y){
+            return (find(x) == find(y));
+        }
 
-			T find(T child){
-				return (child == par[id[child]] ? child : par[id[child]] = find(par[id[child]]));
-			}
-
-			void unit(T x, T y){
-				x = find(x); y = find(y);
-				if(x != y){
-					if(rank[id[x]] > rank[id[y]]){
-						par[id[y]] = x;
-					}else{
-						par[id[x]] = y;
-						if(rank[id[x]] == rank[id[y]]){
-							++rank[y];
-						}
-					}
-				}
-			}
-
-			bool same(T x, T y){
-				return (find(x) == find(y));
-			}
-	};
-}
+};

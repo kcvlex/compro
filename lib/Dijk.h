@@ -13,8 +13,8 @@ class Dijk{
             this->v = v;
         }
         
-        ll *dijk(ll start){
-            ll d[n];
+        vector<ll> dijk(ll start){
+            vector<ll> d(n);
             for(ll i = 0; i < n; i++) d[i] = INF * (i != start);
             priority_queue<pair<ll, ll>, vector<pair<ll, ll>>, functional<bool(pair<ll, ll>, pair<ll, ll>)>> q([&](pair<ll, ll> a, pair<ll, ll> b){return a.second < b.second;});
             q.push(pair<ll, ll>(start, 0));
