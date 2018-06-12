@@ -4,11 +4,11 @@ class Dijk{
     using ll = int64_t;
     private:
         ll n;
-        vector<pair<ll, ll>> v;
+        const vector<pair<ll, ll>> v;
     public:
         const ll INF = INT64_MAX;
         
-        Dijk(ll n, vector<pair<ll, ll>> *v){
+        Dijk(ll n, const vector<pair<ll, ll>> &v){
             this->n = n;
             this->v = v;
         }
