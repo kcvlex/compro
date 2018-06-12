@@ -19,9 +19,11 @@ class LazySegmentTree{
             this->init = init;
             ll tmp = 1;
             while(tmp < v.size()) tmp *= 2;
+            N = tmp;
             node.resize(2 * N - 1);
             lazy.resize(2 * N - 1, init);
-            for(ll i = 0; i < N; i++){
+            lazy_flag.resize(2 * N - 1, init);
+            for(ll i = 0; i < v.size(); i++){
                 node[i + N - 1] = v[i];
             }
             for(ll i = N - 2; 0 <= i; i--){
@@ -84,12 +86,12 @@ class LazySegmentTree{
             /*
              * Execute lazy evaluation.
              */
-            lazy_eval(pos, left, right);
+            lazy_eval(pos, node_left, node_right);
 
             /*
              * If the node is out of inrerval, return.
              */
-            if(right < node_left || node_right < left){
+            if(right <= node_left || node_right <= left){
                 return;
             }
 
@@ -106,7 +108,7 @@ class LazySegmentTree{
                  */
                 lazy[pos] = (node_right - node_left) * val;
                 lazy_flag[pos] = true;
-                lazy_eval(pos, left, right);
+                lazy_eval(pos, node_left, node_right);
             }else{
 
                 /*
@@ -114,6 +116,11 @@ class LazySegmentTree{
                  */
                 update_query(left, right, val, 2 * pos + 1, node_left, (node_left + node_right) / 2);
                 update_query(left, right, val, 2 * pos + 2, (node_left + node_right) / 2, node_right);
+                
+                /*
+                 * !! TO CHANGE !!
+                 * How to summary the value under the node.
+                 */
                 node[pos] = node[2 * pos + 1] + node[2 * pos + 2];
             }
         }
@@ -126,9 +133,9 @@ class LazySegmentTree{
             /*
              * Evaluate the node[pos]
              */
-            lazy_eval(pos, left, right);
+            lazy_eval(pos, node_left, node_right);
 
-            if(node_right <= left || right < node_left){
+            if(node_right <= left || right <= node_left){
                 return init;
             }
             if(left <= node_left && node_right <= right){
