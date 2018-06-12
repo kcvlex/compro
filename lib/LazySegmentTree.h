@@ -66,6 +66,12 @@ class LazySegmentTree{
                 lazy_flag[2 * pos + 1] = true;
                 lazy_flag[2 * pos + 2] = true;
             }
+            
+            /*
+             * !! TOO CHANGE !!
+             * Init lazy[pos] because it alredy has been evaluated.
+             */
+            lazy[pos] = init;
         }
 
         /*
@@ -100,7 +106,7 @@ class LazySegmentTree{
              * If the node cover the interval complety, update this->lazy and execute lazy_eval.
              * Else recursion.
              */
-            if(node_left <= left && right <= node_right){
+            if(left <= node_left && node_right <= right){
 
                 /*
                  * !! TO CHANGE !!
