@@ -30,7 +30,7 @@ class FordFulkerson{
             }
             return 0;
         }
-    
+
     public:
         FordFulkerson(ll n, const vector<pair<ll, ll>> &v){
             this->n = n;
