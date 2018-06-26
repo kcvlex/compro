@@ -32,8 +32,8 @@ class FordFulkerson{
         }
 
     public:
-        FordFulkerson(ll n, const vector<vector<pair<ll, ll>>> &v){
-            this->n = n;
+        FordFulkerson(const vector<vector<pair<ll, ll>>> &v){
+            this->n = v.size();
             for(int i = 0; i < n; i++){
                 this->v.push_back(vector<Edge>(0));
             }
