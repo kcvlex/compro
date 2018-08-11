@@ -7,9 +7,9 @@ class SegmentTree{
         ll size;
         vector<T> node;
         T identity_ele;  //comp(x, identity_ele) == x
-        T (*comp)(T, T);
+        function<T(T, T)> comp;
 
-        SegmentTree(const vector<T> &v, T (*comp)(T, T), T identity_ele){
+        SegmentTree(const vector<T> &v, function<T(T, T)> comp, identity_ele){
             ll tmp = 1;
             while(tmp < v.size()) tmp = (tmp << 1);
             this->size = tmp;
@@ -19,7 +19,7 @@ class SegmentTree{
             for(ll i = 0; i < v.size(); i++){
                 node[i + size - 1] = v[i];
             }
-            for(ll i = N - 2; 0 <= i; i--){
+            for(ll i = size - 2; 0 <= i; i--){
                 node[i] = comp(node[i * 2 + 1], node[i * 2 + 2]);
             }
         }
