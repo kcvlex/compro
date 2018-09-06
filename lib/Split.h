@@ -1,5 +1,4 @@
 #include<bits/stdc++.h>
-#include"Split.h"
 using namespace std;
 
 vector<string> split(const string &str, vector<string> sep){
