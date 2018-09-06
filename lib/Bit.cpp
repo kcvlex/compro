@@ -11,11 +11,6 @@ class Bit{
 
     public:
 
-        /*
-         * size:            size
-         * identity_ele:    単位元
-         * comp:            比較関数
-         */
         Bit(ll size, T identity_ele, function<T(T, T)> comp){
             ll newsize = 1;
             while(newsize < size)  newsize = newsize << 1;

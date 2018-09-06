@@ -9,8 +9,7 @@ class Combination{
 
     public:
         /*
-         * N:   nCkの最大のN
-         * MOD: 素数でなければならない
+         * MOD must be a prime number.
          */
         Combination(ll N, ll MOD){
             this->N = N;
