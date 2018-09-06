@@ -7,7 +7,7 @@ class Bit{
         ll size;
         T *data;
         T identity_ele;
-        T (*comp)(T, T);
+        function<T(T, T)> comp;
 
     public:
 
@@ -16,7 +16,7 @@ class Bit{
          * identity_ele:    単位元
          * comp:            比較関数
          */
-        Bit(ll size, T identity_ele, T (*comp)(T, T)){
+        Bit(ll size, T identity_ele, function<T(T, T)> comp){
             ll newsize = 1;
             while(newsize < size)  newsize = newsize << 1;
             this->size = newsize + 1;
