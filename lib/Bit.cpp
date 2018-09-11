@@ -6,6 +6,7 @@ class Bit{
     private:
         ll size;
         T *data;
+        T *arr;
         T identity_ele;
 
     public:
@@ -16,8 +17,10 @@ class Bit{
             this->size = newsize + 1;
             this->identity_ele = identity_ele;
             data = new ll[this->size];
+            arr = new ll[size];
             for(ll i = 0; i < size; ++i){
                 data[i] = identity_ele;
+                arr[i] = identiti_ele;
             }
         }
 
@@ -25,7 +28,6 @@ class Bit{
          * 0-origin
          */
         T sum(ll pos){
-            pos++;
             T ret = identity_ele;
             while(pos > 0){
                 ret += data[pos];
@@ -38,10 +40,16 @@ class Bit{
          * 0-origin
          */
         void add(ll pos, T delta){
+            arr[pos] += delta;
             pos++;
             while(pos <= size){
                 data[pos] = data[pos] + delta;
                 pos += pos & -pos;
             }
+        }
+
+        void update(ll pos, T value){
+            T delta = value - arr[pos];
+            this->add(pos, delta);
         }
 };
