@@ -9,7 +9,7 @@ class SegmentTree{
         T identity_ele;  //comp(x, identity_ele) == x
         function<T(T, T)> comp;
 
-        SegmentTree(const vector<T> &v, function<T(T, T)> comp, identity_ele){
+        SegmentTree(const vector<T> &v, function<T(T, T)> comp, T identity_ele){
             ll tmp = 1;
             while(tmp < v.size()) tmp = (tmp << 1);
             this->size = tmp;
