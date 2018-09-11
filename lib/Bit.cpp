@@ -7,17 +7,15 @@ class Bit{
         ll size;
         T *data;
         T identity_ele;
-        function<T(T, T)> comp;
 
     public:
 
-        Bit(ll size, T identity_ele, function<T(T, T)> comp){
+        Bit(ll size, T identity_ele){
             ll newsize = 1;
             while(newsize < size)  newsize = newsize << 1;
             this->size = newsize + 1;
             this->identity_ele = identity_ele;
-            this->comp = comp;
-            data = new ll[size];
+            data = new ll[this->size];
             for(ll i = 0; i < size; ++i){
                 data[i] = identity_ele;
             }
@@ -30,7 +28,7 @@ class Bit{
             pos++;
             T ret = identity_ele;
             while(pos > 0){
-                ret += comp(ret, data[pos]);
+                ret += data[pos];
                 pos -= pos & -pos;
             }
             return ret;
