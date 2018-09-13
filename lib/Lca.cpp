@@ -13,7 +13,7 @@ class Lca{
         vector<array<ll, size>> parents;
 
         void dfs(ll now, ll pre, ll d){
-            parents[now][0] = nptr;
+            parents[now][0] = pre;
             depth[now] = d;
             for(ll next : edge[now]){
                 if(next != pre){
@@ -25,6 +25,7 @@ class Lca{
     public:
         Lca(ll n, ll r, const vector<vector<ll>> &e) : N(n), root(r), edge(e) {
             parents.resize(N);
+            depth.resize(N);
             for(ll i = 0; i < N; i++){
                 for(ll j = 0; j < size; j++){
                     parents[i][j] = nptr;
@@ -65,11 +66,11 @@ class Lca{
         ll get_lca(ll n1, ll n2){
             ll d = min(depth[n1], depth[n2]);
             ll ok = 0, ng = d + 1;
-            ll ret = nptr;
+            ll ret = 0;
             while(abs(ok - ng) > 1){
                 ll mid = (ok + ng) / 2;
-                ll p1 = get_parents(n1, d - depth[n1]);
-                ll p2 = get_parents(n2, d - depth[n2]);
+                ll p1 = get_parents(n1, depth[n1] - mid);
+                ll p2 = get_parents(n2, depth[n2] - mid);
                 if(p1 == p2){
                     ok = mid;
                     ret = p1;
