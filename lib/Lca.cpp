@@ -2,7 +2,7 @@
 using namespace std;
 using ll = int64_t;
 const ll size = 30;
-const ll nptr = -1;
+const ll nopt = -1;
 
 class Lca{
     private:
@@ -28,16 +28,16 @@ class Lca{
             depth.resize(N);
             for(ll i = 0; i < N; i++){
                 for(ll j = 0; j < size; j++){
-                    parents[i][j] = nptr;
+                    parents[i][j] = nopt;
                 }
             }
             
-            dfs(root, nptr, 0);
+            dfs(root, nopt, 0);
 
             for(ll i = 1; i < size; i++){
                 for(ll node = 0; node < N; node++){
-                    if(parents[node][i - 1] == nptr){
-                        parents[node][i] = nptr;
+                    if(parents[node][i - 1] == nopt){
+                        parents[node][i] = nopt;
                     }else{
                         parents[node][i] = parents[parents[node][i - 1]][i - 1];
                     }
