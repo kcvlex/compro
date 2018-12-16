@@ -38,6 +38,14 @@ class SegmentTree{
         }
 
         T subQuery(ll a, ll b, ll k, ll l, ll r){
-            return (r <= a || b <= l ? identity_ele : (a <= l && r <= b ? node[k] : comp(subQuery(a, b, k * 2 + 1, l, (l + r) / 2), subQuery(a, b, k * 2 + 2, (l + r) / 2, r))));
+            if(r <= a || b <= l){
+                return identity_ele;
+            }else if(a <= l && r <= b){
+                return node[k];
+            }else{
+                T left = subQuery(a, b, k * 2 + 1, l, (l + r) / 2);
+                T right = subQuery(a, b, k * 2 + 2, (l + r) / 2, r);
+                return comp(left, right);
+            }
         }
 };
