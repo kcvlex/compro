@@ -1,7 +1,2 @@
-*.out
-*.gch
-atcoder
-gcj
-ppc
-srm
-tmp
+*
+!lib
