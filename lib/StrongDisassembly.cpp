@@ -60,8 +60,8 @@ class StrongDisassembly{
             write_num();
         }
 
-        map<ll, vector<ll>> disassembly(){
-            map<ll, vector<ll>> ret;
+        vector<vector<ll>> disassembly(){
+            vector<vector<ll>> ret;
             vector<ll> vec;
             bool used[V] = {};
             for(ll i = 0; i < V; i++){
@@ -77,7 +77,7 @@ class StrongDisassembly{
                 }
                 vector<ll> to_insert;
                 dfs(vertex, used, to_insert);
-                ret[ret.size() - 1] = to_insert;
+                ret.push_back(to_insert);
             }
             return ret;
         }
