@@ -2,37 +2,46 @@
 using namespace std;
 using ll = int64_t;
 
-/*
- * This LazySegmentTree is tree for query "ADD".
- * If you want to change query, you have to change the function "eval".
- * Too show where you have to change, I wrote the comment "!! TO CHANGE !!".
- */
-
+template <typename T, typename L>
 class LazySegmentTree{
     private:
-        ll N, init;
-        vector<ll> node, lazy;
+        ll N;
+        T init_node;
+        L init_lazy;
+        vector<T> node;
+        vector<L> lazy;
         vector<bool> lazy_flag;
+        function<T (T, T)> merge_node;
+        function<T (T, L)> apply_lazy_value;
+        function<L (L, L)> update_lazy_value;
+        function<L (ll, ll, L)> create_lazy_value;
     
     public:
-        LazySegmentTree(const vector<ll> &v, ll init){
-            this->init = init;
+        LazySegmentTree(const vector<T> &v, 
+                        const T &init_node,
+                        const L &init_lazy, 
+                        const decltype(merge_node)        &merge_node,
+                        const decltype(apply_lazy_value)  &apply_lazy_value,
+                        const decltype(update_lazy_value) &update_lazy_value,
+                        const decltype(create_lazy_value) &create_lazy_value) 
+            : init_node(init_node),
+              init_lazy(init_lazy),
+              merge_node(merge_node),
+              apply_lazy_value(apply_lazy_value),
+              update_lazy_value(update_lazy_value),
+              create_lazy_value(create_lazy_value)
+        {
             ll tmp = 1;
             while(tmp < v.size()) tmp *= 2;
             N = tmp;
-            node.resize(2 * N - 1);
-            lazy.resize(2 * N - 1, init);
-            lazy_flag.resize(2 * N - 1, init);
+            node.resize(2 * N - 1, init_node);
+            lazy.resize(2 * N - 1, init_lazy);
+            lazy_flag.resize(2 * N - 1, false);
             for(ll i = 0; i < v.size(); i++){
                 node[i + N - 1] = v[i];
             }
             for(ll i = N - 2; 0 <= i; i--){
-
-                /*
-                 * !! TO CHANGE !!
-                 * You have to change the operator '+' between node[i * 2 + 1] and node[i * 2 + 2]
-                 */
-                node[i] = node[i * 2 + 1] + node[i * 2 + 2];
+                node[i] = merge_node(node[i * 2 + 1], node[i * 2 + 2]);
             }
         }
 
@@ -44,34 +53,20 @@ class LazySegmentTree{
                 return;
             }
 
-            /*
-             * !! TO CHANGE !!
-             * How to update the value node[pos] by using lazy[pos]
-             */
-            node[pos] += lazy[pos];
+            node[pos] = apply_lazy_value(node[pos], lazy[pos]);
             lazy_flag[pos] = false;
 
             /* 
              * whether the node is the bottom of tree or not.
              */
             if(right - left > 1){
-
-                /*
-                 * !! TO CHANGE !!
-                 * How to propagate the value to under node.
-                 * For example, when the query is "ADD", you have to add half of value to under node.
-                 */
-                lazy[2 * pos + 1] += lazy[pos] / 2;
-                lazy[2 * pos + 2] += lazy[pos] / 2;
-                lazy_flag[2 * pos + 1] = true;
-                lazy_flag[2 * pos + 2] = true;
+                for(ll idx : {2 * pos + 1, 2 * pos + 2}){
+                    lazy[idx] = update_lazy_value(lazy[idx], lazy[pos]);
+                    lazy_flag[idx] = true;
+                }
             }
             
-            /*
-             * !! TOO CHANGE !!
-             * Init lazy[pos] because it alredy has been evaluated.
-             */
-            lazy[pos] = init;
+            lazy[pos] = init_lazy;
         }
 
         /*
@@ -107,12 +102,7 @@ class LazySegmentTree{
              * Else recursion.
              */
             if(left <= node_left && node_right <= right){
-
-                /*
-                 * !! TO CHANGE !!
-                 * How to propagate the val and how to summary the val..
-                 */
-                lazy[pos] = (node_right - node_left) * val;
+                lazy[pos] = create_lazy_value(node_left, node_right, val);
                 lazy_flag[pos] = true;
                 lazy_eval(pos, node_left, node_right);
             }else{
@@ -123,11 +113,7 @@ class LazySegmentTree{
                 update_query(left, right, val, 2 * pos + 1, node_left, (node_left + node_right) / 2);
                 update_query(left, right, val, 2 * pos + 2, (node_left + node_right) / 2, node_right);
                 
-                /*
-                 * !! TO CHANGE !!
-                 * How to summary the value under the node.
-                 */
-                node[pos] = node[2 * pos + 1] + node[2 * pos + 2];
+                node[pos] = merge_node(node[2 * pos + 1], node[2 * pos + 2]);
             }
         }
 
@@ -142,16 +128,43 @@ class LazySegmentTree{
             lazy_eval(pos, node_left, node_right);
 
             if(node_right <= left || right <= node_left){
-                return init;
+                return init_node;
             }
             if(left <= node_left && node_right <= right){
                 return node[pos];
             }
 
-            /*
-             * !! TO CHANGE !!
-             * You have to change the mark '+' between get_query and get_query.
-             */
-            return get_query(left, right, 2 * pos + 1, node_left, (node_left + node_right) / 2) + get_query(left, right, 2 * pos + 2, (node_left + node_right) / 2, node_right);
+            ll split = (node_left + node_right) / 2;
+            return merge_node(get_query(left, right, 2 * pos + 1, node_left, split),
+                              get_query(left, right, 2 * pos + 2, split, node_right));
         }
 };
+
+int main(){
+    // solution for http://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=DSL_2_F
+    ll N;
+    cin >> N;
+    ll init = (1ll << 31) - 1;
+    LazySegmentTree<ll, ll> LST(
+            vector<ll>(N, init), init, init,
+            [](ll n1, ll n2){ return min(n1, n2); },
+            [](ll n, ll l){ return l; },
+            [](ll lc, ll lp){ return lp; },
+            [](ll l, ll r, ll v){ return v; });
+    ll Q;
+    cin >> Q;
+    for(ll QQ = 0; QQ < Q; QQ++){
+        ll qn;
+        cin >> qn;
+        if(qn == 0){
+            ll s, t, x;
+            cin >> s >> t >> x;
+            LST.update_query(s, t + 1, x);
+        }else{
+            ll s, t;
+            cin >> s >> t;
+            cout << LST.get_query(s, t + 1) << '\n';
+        }
+    }
+    return 0;
+}
