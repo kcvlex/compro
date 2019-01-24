@@ -20,7 +20,7 @@ class Bit{
             arr = new ll[size];
             for(ll i = 0; i < size; ++i){
                 data[i] = identity_ele;
-                arr[i] = identiti_ele;
+                arr[i] = identity_ele;
             }
         }
 
