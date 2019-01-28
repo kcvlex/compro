@@ -2,19 +2,15 @@
 using namespace std;
 using ll = int64_t;
 class UnionFind{
+    using vec = vector<ll>;
     public:
-        ll size;
-        ll *rank;
-        ll *parent;
+        vec rank;
+        vec parent;
 
         UnionFind(ll N){
-            this->size = N;
-            rank = new ll[size];
-            parent = new ll[size];
-            for(ll i = 0; i < size; ++i){
-                rank[i] = 0;
-                parent[i] = i;
-            }
+            rank = vec(N, 0);
+            parent = vec(N);
+            iota(parent.begin(), parent.end(), 0ll);
         }
 
         ~UnionFind(){
@@ -25,17 +21,16 @@ class UnionFind{
         }
 
         void unit(ll x, ll y){
-            x = find(x); y = find(y);
-            if(x != y){
-                if(rank[x] > rank[y]){
-                    parent[y] = x;
-                }else{
-                    parent[x] = y;
-                    if(rank[x] == rank[y]){
-                        ++rank[y];
-                    }
-                }
+            ll px = find(x);
+            ll py = find(y);
+            if(px == py){
+                return;
             }
+            if(rank[px] < rank[py]){
+                swap(px, py);
+            }
+            parent[py] = px;
+            rank[px] += (rank[px] == rank[py]);
         }
 
         bool same(ll x, ll y){
