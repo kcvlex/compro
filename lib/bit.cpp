@@ -21,15 +21,23 @@ class Bit{
 
         /*
          * 0-origin
+         * sum of [0, pos)
          */
         T sum(ll pos) {
-            pos++;
             T ret = identity_ele;
             while(pos > 0) {
                 ret += data[pos];
                 pos -= pos & -pos;
             }
             return ret;
+        }
+
+        /*
+         * 0-origin
+         * sum of [l, r)
+         */
+        T sum(ll l, ll r) {
+            return sum(r) - sum(l);
         }
 
         /*
