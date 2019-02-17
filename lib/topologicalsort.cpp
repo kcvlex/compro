@@ -3,6 +3,7 @@ using namespace std;
 using ll = int64_t;
 
 vector<ll> top_sort(const vector<vector<ll>> &edges){
+    ll N = edges.size();
 	vector<ll> ret;
 	vector<bool> road(N);
 	vector<bool> used(N);
