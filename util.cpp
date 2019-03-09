@@ -47,3 +47,15 @@ void debug_func(const V<T> &v, const string &s = "") {
         debug_func(v[i], t);
     }
 }
+
+void init_io() {
+    cin.tie(0);
+    ios_base::sync_with_stdio(false);
+    cout << fixed << setprecision(30);
+}
+
+int main() {
+    init_io();
+    cout << 1.0 / 3 << endl;
+    return 0;
+}
