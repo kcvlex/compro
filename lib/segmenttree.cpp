@@ -37,17 +37,17 @@ public:
     }
 
     T query(ll a, ll b) {
-        return subQuery(a, b, 0, 0, size);
+        return sub_query(a, b, 0, 0, size);
     }
 
-    T subQuery(ll a, ll b, ll k, ll l, ll r) {
+    T sub_query(ll a, ll b, ll k, ll l, ll r) {
         if(r <= a || b <= l) {
             return identity_ele;
         }else if(a <= l && r <= b) {
             return node[k];
         }else{
-            T left = subQuery(a, b, k * 2 + 1, l, (l + r) / 2);
-            T right = subQuery(a, b, k * 2 + 2, (l + r) / 2, r);
+            T left = sub_query(a, b, k * 2 + 1, l, (l + r) / 2);
+            T right = sub_query(a, b, k * 2 + 2, (l + r) / 2, r);
             return comp(left, right);
         }
     }
