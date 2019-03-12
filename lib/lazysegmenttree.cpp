@@ -117,7 +117,7 @@ public:
         }
     }
 
-    ll get_query(ll left, ll right, ll pos = 0, ll node_left = 0, ll node_right = -1) {
+    T get_query(ll left, ll right, ll pos = 0, ll node_left = 0, ll node_right = -1) {
         if(node_right < 0) {
             node_right = N;
         }
