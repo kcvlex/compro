@@ -21,6 +21,8 @@ public:
     {
         for(ll i = 1; i <= N; i++) {
             factv[i] = factv[i - 1] * i % MOD;
+        }
+        for(ll i = 0; i <= N; i++) {
             rfactv[i] = pow(factv[i], MOD - 2);
         }
     }
