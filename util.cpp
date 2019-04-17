@@ -1,8 +1,12 @@
+#ifndef UTIL_INCLUDED
+#define UTIL_INCLUDED
+
 #include <bits/stdc++.h>
 using namespace std;
 #define endl '\n'
 #define ALL(V) (V).begin(), (V).end()
 #define ALLR(V) (V).rbegin(), (V).rend()
+#define DEBUGGING
 
 template <typename T> using V = vector<T>;
 template <typename T> using VV = V<V<T>>;
@@ -29,23 +33,12 @@ struct InitIO {
 
 }
 
-istream& operator >>(istream &is, __int128_t &a) {
-    int64_t i;
-    is >> i;
-    a = i;
-    return is;
-}
-
-ostream& operator <<(ostream &os, __int128_t a) {
-    auto i = (int64_t)a;
-    os << i;
-    return os;
-}
-
-
-#define DEBUGGING
+#ifndef DEBUG_FILE
 #ifdef DEBUGGING
 #include "../debug.cpp"
 #else
 #define DEBUG(...) 0
+#endif
+#endif
+
 #endif

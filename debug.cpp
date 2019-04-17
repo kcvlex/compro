@@ -1,4 +1,8 @@
-//#include "util.cpp"
+#ifndef DEBUG_FILE
+#define DEBUG_FILE
+#endif
+
+#include "util.cpp"
 
 #define DEBUG_MODE
 #ifdef DEBUG_MODE
@@ -15,17 +19,32 @@
 string to_string(const string &s);
 template <typename T, typename U> string to_string(const P<T, U> &p);
 template <typename T> string to_string(const V<T> &v);
+template <typename... Args> string to_string(const tuple<Args...> &t);
+
+template <size_t N, typename... Args> 
+struct TupleStringConverter {
+    static string __to_string(const tuple<Args...> &t) {
+        string ret = TupleStringConverter<N - 1, Args...>::__to_string(t);
+        ret = ret + ", " + to_string(get<N>(t));
+        return move(ret);
+    }
+};
+
+template <typename... Args>
+struct TupleStringConverter<0, Args...> {
+    static string __to_string(const tuple<Args...> &t) { return to_string(get<0>(t)); }
+};
 
 string to_string(const string &s) { return s; }
 
 template <typename T, typename U>
 string to_string(const P<T, U> &p) {
-    string ret = "(";
-    ret += to_string(p.first);
-    ret += ", ";
-    ret += to_string(p.second);
-    ret += ")";
-    return move(ret);
+    return move(to_string(tuple_cat(p)));
+}
+
+template <typename... Args>
+string to_string(const tuple<Args...> &t) {
+    return "(" + move(TupleStringConverter<(sizeof...(Args)) - 1, Args...>::__to_string(t)) + ")";
 }
 
 template <typename T>
@@ -75,3 +94,13 @@ V<string> split_names(string &&s) {
     while(getline(ss, t, ',')) if(t.size()) ret.push_back(move(t));
     return move(ret);
 }
+
+int main() {
+    cout << to_string(make_tuple(1333, "tapu", 3.14, "tapya~~")) << endl;
+    cout << to_string(make_pair("tapu", make_pair("tapu", make_pair("tapu", "tapi")))) << endl;
+    return 0;
+}
+
+#ifdef DEBUG_FILE
+#undef DEBUG_FILE
+#endif
