@@ -1,6 +1,3 @@
-#ifndef UTIL_INCLUDED
-#define UTIL_INCLUDED
-
 #include <bits/stdc++.h>
 using namespace std;
 #define endl '\n'
@@ -33,12 +30,18 @@ struct InitIO {
 
 }
 
-#ifndef DEBUG_FILE
 #ifdef DEBUGGING
 #include "../debug.cpp"
 #else
 #define DEBUG(...) 0
 #endif
-#endif
 
-#endif
+template <typename T>
+T make_v(T init) { return init; }
+
+template <typename T, typename... Tail>
+auto make_v(T init, size_t s, Tail... tail) {
+#define rec make_v(init, tail...)
+    return V<decltype(rec)>(s, rec);
+#undef rec
+}
