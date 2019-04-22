@@ -79,7 +79,7 @@ public:
      * @param node_left:    lower limit of interval of the node points.
      * @param node_right:   upper limit of interval of the node points.
      */
-    void update_query(ll left, ll right, ll val, ll pos = 0, ll node_left = 0, ll node_right = -1) {
+    void update_query(ll left, ll right, L val, ll pos = 0, ll node_left = 0, ll node_right = -1) {
         if(node_right < 0) {
             node_right = N;
         }
@@ -105,7 +105,7 @@ public:
             lazy[pos] = create_lazy_value(node_left, node_right, val);
             lazy_flag[pos] = true;
             lazy_eval(pos, node_left, node_right);
-        }else{
+        } else {
 
             /*
              * recursion
@@ -160,7 +160,7 @@ int main() {
             ll s, t, x;
             cin >> s >> t >> x;
             LST.update_query(s, t + 1, x);
-        }else{
+        } else {
             ll s, t;
             cin >> s >> t;
             cout << LST.get_query(s, t + 1) << '\n';
