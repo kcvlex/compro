@@ -2,7 +2,7 @@
 #define DEBUG_FILE
 #endif
 
-#include "util.cpp"
+// #include "util.cpp"
 
 #define DEBUG_MODE
 #ifdef DEBUG_MODE
@@ -86,20 +86,37 @@ void debug_func_mult(const V<string> &names, const Head &head, const Tail&... ar
     debug_func_mult(1, names, args...);
 }
 
-V<string> split_names(string &&s) {
-    replace(ALL(s), ' ', ',');
+V<string> split_names(string s) {
+    V<string> nested = { "()", "{}", "[]", "<>" };
     V<string> ret;
-    istringstream ss(s);
-    string t;
-    while(getline(ss, t, ',')) if(t.size()) ret.push_back(move(t));
+    string now;
+    s += ',';
+    ll depth = 0;
+    bool pre_splited_comma = false;
+    for(char c : s) {
+        for(const auto &ele : nested) {
+            if(c == ele[0]) depth++;
+            if(c == ele[1]) depth--;
+        }
+        if(depth == 0 && c == ',') {
+            ret.push_back(now);
+            now = "";
+            pre_splited_comma = true;
+        } else {
+            if(!(pre_splited_comma && c == ' ')) now += c;
+            pre_splited_comma = false;
+        }
+    }
     return move(ret);
 }
 
+/*
 int main() {
     cout << to_string(make_tuple(1333, "tapu", 3.14, "tapya~~")) << endl;
     cout << to_string(make_pair("tapu", make_pair("tapu", make_pair("tapu", "tapi")))) << endl;
     return 0;
 }
+*/
 
 #ifdef DEBUG_FILE
 #undef DEBUG_FILE
