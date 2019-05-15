@@ -5,11 +5,13 @@ template <typename T> using VV = V<V<T>>;
 using ll = int64_t;
 
 struct RollingHash {
-    const V<ll> &bases;
-    const V<ll> &mods;
+    const V<ll> bases;
+    const V<ll> mods;
     VV<ll> pows;
     VV<ll> hashs;
-    RollingHash(const string &s, const V<ll> &bases = { 1007 }, const V<ll> &mods = { (ll)1e9 + 7 }) 
+
+    template <typename T>
+    RollingHash(const V<T> &s, const V<ll> bases = { 1007 }, const V<ll> mods = { (ll)1e9 + 7 }) 
         : bases(bases), mods(mods) 
     {
         assert(bases.size() == mods.size());

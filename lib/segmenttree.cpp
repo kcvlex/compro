@@ -43,9 +43,9 @@ public:
     T sub_query(ll a, ll b, ll k, ll l, ll r) {
         if(r <= a || b <= l) {
             return identity_ele;
-        }else if(a <= l && r <= b) {
+        } else if(a <= l && r <= b) {
             return node[k];
-        }else{
+        } else {
             T left = sub_query(a, b, k * 2 + 1, l, (l + r) / 2);
             T right = sub_query(a, b, k * 2 + 2, (l + r) / 2, r);
             return comp(left, right);

@@ -1,0 +1,100 @@
+automaton.cpp:35:35: error: type/value mismatch at argument 1 in template parameter list for ‘template<class _Tp, long unsigned int _Nm> struct std::array’
+     using Edge = array<Label, V<ll>>;
+                                   ^~
+automaton.cpp:35:35: note:   expected a type, got ‘Label’
+automaton.cpp:35:35: error: type/value mismatch at argument 2 in template parameter list for ‘template<class _Tp, long unsigned int _Nm> struct std::array’
+automaton.cpp:35:35: note:   expected a constant of type ‘long unsigned int’, got ‘V<long int>’ {aka ‘std::vector<long int, std::allocator<long int> >’}
+automaton.cpp:36:21: error: ‘Edge’ was not declared in this scope
+     using Edges = V<Edge>;
+                     ^~~~
+automaton.cpp:36:25: error: template argument 1 is invalid
+     using Edges = V<Edge>;
+                         ^
+automaton.cpp:37:40: error: type/value mismatch at argument 1 in template parameter list for ‘template<class _Tp, long unsigned int _Nm> struct std::array’
+     using DEdge = array<Label, V<States>>;
+                                        ^~
+automaton.cpp:37:40: note:   expected a type, got ‘Label’
+automaton.cpp:37:40: error: type/value mismatch at argument 2 in template parameter list for ‘template<class _Tp, long unsigned int _Nm> struct std::array’
+automaton.cpp:37:40: note:   expected a constant of type ‘long unsigned int’, got ‘V<std::bitset<_Nb> >’
+automaton.cpp:41:5: error: ‘Edges’ does not name a type
+     Edges edges;
+     ^~~~~
+automaton.cpp:43:41: error: ‘Edges’ has not been declared
+     Automaton(ll start, V<ll> finish_v, Edges edges)
+                                         ^~~~~
+automaton.cpp:95:35: error: ‘Edge’ was not declared in this scope
+                       map<States, Edge> &dfa_edges)
+                                   ^~~~
+automaton.cpp:95:39: error: template argument 2 is invalid
+                       map<States, Edge> &dfa_edges)
+                                       ^
+automaton.cpp:95:39: error: template argument 4 is invalid
+automaton.cpp:121:47: error: ‘DEdge’ was not declared in this scope
+                             const map<States, DEdge> &dedges)
+                                               ^~~~~
+automaton.cpp:121:52: error: template argument 2 is invalid
+                             const map<States, DEdge> &dedges)
+                                                    ^
+automaton.cpp:121:52: error: template argument 4 is invalid
+automaton.cpp: In constructor ‘Automaton<Q, Label>::Automaton(ll, V<long int>, int)’:
+automaton.cpp:45:11: error: class ‘Automaton<Q, Label>’ does not have any field named ‘finish’
+           finish(vec2states(finish_v)),
+           ^~~~~~
+automaton.cpp:46:11: error: class ‘Automaton<Q, Label>’ does not have any field named ‘edges’
+           edges(edges)
+           ^~~~~
+automaton.cpp: In constructor ‘Automaton<Q, Label>::Automaton(ll, V<long int>)’:
+automaton.cpp:51:38: error: there are no arguments to ‘Edges’ that depend on a template parameter, so a declaration of ‘Edges’ must be available [-fpermissive]
+         : Automaton(start, finish_v, Edges(Q)) {}
+                                      ^~~~~
+automaton.cpp:51:38: note: (if you use ‘-fpermissive’, G++ will accept your code, but allowing the use of an undeclared name is deprecated)
+automaton.cpp: In member function ‘void Automaton<Q, Label>::add_edge(ll, ll, ll)’:
+automaton.cpp:54:9: error: ‘edges’ was not declared in this scope
+         edges[now][label].push_back(nxt);
+         ^~~~~
+automaton.cpp: In member function ‘Automaton<Q, Label> Automaton<Q, Label>::nfa2dfa()’:
+automaton.cpp:61:21: error: ‘DEdge’ was not declared in this scope
+         map<States, DEdge> dfa_edges;
+                     ^~~~~
+automaton.cpp:61:26: error: template argument 2 is invalid
+         map<States, DEdge> dfa_edges;
+                          ^
+automaton.cpp:61:26: error: template argument 4 is invalid
+automaton.cpp: In member function ‘Automaton<Q, Label>::States Automaton<Q, Label>::nxt_states(const States&, ll)’:
+automaton.cpp:85:26: error: ‘edges’ was not declared in this scope
+             for(ll nxt : edges[now][label]) {
+                          ^~~~~
+automaton.cpp: In member function ‘void Automaton<Q, Label>::trans_states(std::set<std::bitset<_Nb> >&, std::set<std::bitset<_Nb> >, std::queue<std::bitset<_Nb> >&, int&)’:
+automaton.cpp:104:23: error: ‘finish’ was not declared in this scope
+             if((nxt & finish).any()) finish_states_set.insert(nxt);
+                       ^~~~~~
+automaton.cpp:104:23: note: suggested alternative: ‘finish_v’
+             if((nxt & finish).any()) finish_states_set.insert(nxt);
+                       ^~~~~~
+                       finish_v
+automaton.cpp: In member function ‘Automaton<Q, Label> Automaton<Q, Label>::create_dfa(const std::set<std::bitset<_Nb> >&, const std::set<std::bitset<_Nb> >&, const int&)’:
+automaton.cpp:124:9: error: ‘Edges’ was not declared in this scope
+         Edges dfa_edges(states_id.size());
+         ^~~~~
+automaton.cpp:124:9: note: suggested alternative: ‘dedges’
+         Edges dfa_edges(states_id.size());
+         ^~~~~
+         dedges
+automaton.cpp:125:31: error: there are no arguments to ‘begin’ that depend on a template parameter, so a declaration of ‘begin’ must be available [-fpermissive]
+         for(const auto &ele : dedges) {
+                               ^~~~~~
+automaton.cpp:125:31: error: there are no arguments to ‘end’ that depend on a template parameter, so a declaration of ‘end’ must be available [-fpermissive]
+automaton.cpp:129:21: error: ‘dfa_edges’ was not declared in this scope
+                     dfa_edges[id][label].push_back(nxt_states);
+                     ^~~~~~~~~
+automaton.cpp:129:21: note: suggested alternative: ‘dedges’
+                     dfa_edges[id][label].push_back(nxt_states);
+                     ^~~~~~~~~
+                     dedges
+automaton.cpp:142:65: error: ‘dfa_edges’ was not declared in this scope
+         return move(Automaton<Q, Label>(start_id, dfa_finish_v, dfa_edges));
+                                                                 ^~~~~~~~~
+automaton.cpp:142:65: note: suggested alternative: ‘dedges’
+         return move(Automaton<Q, Label>(start_id, dfa_finish_v, dfa_edges));
+                                                                 ^~~~~~~~~
+                                                                 dedges

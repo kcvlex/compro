@@ -1,16 +1,16 @@
-#include<bits/stdc++.h>
+#include <bits/stdc++.h>
+#include "../util.cpp"
 using namespace std;
 using ll = int64_t;
-const ll nopt = -1;
 
 template <int Size = 30>
 class Lca {
-private:
+    const ll nopt;
     ll N;
     ll root;
-    vector<ll> depth;
-    vector<vector<ll>> edge;
-    vector<array<ll, Size>> parents;
+    V<ll> depth;
+    VV<ll> edge;
+    V<array<ll, Size>> parents;
 
     void dfs(ll now, ll pre, ll d) {
         parents[now][0] = pre;
@@ -24,38 +24,31 @@ private:
 
 public:
     Lca(ll N, ll root, const vector<vector<ll>> &e)
-        : N(N), 
-          root(root), 
-          edge(e) 
+        : nopt(-1),
+          N(N),
+          root(root),
+          edge(e),
+          parents(N, nopt),
+          depth(N),
     {
-        parents.resize(N);
-        depth.resize(N);
-        for(ll i = 0; i < N; i++) {
-            for(ll j = 0; j < Size; j++) {
-                parents[i][j] = nopt;
-            }
-        }
-
         dfs(root, nopt, 0);
 
         for(ll i = 1; i < Size; i++) {
             for(ll node = 0; node < N; node++) {
                 if(parents[node][i - 1] == nopt) {
                     parents[node][i] = nopt;
-                }else{
+                } else {
                     parents[node][i] = parents[parents[node][i - 1]][i - 1];
                 }
             }
         }
     }
 
-    Lca(ll n, const vector<vector<ll>> &e) {
-        Lca(n, 0, e);
+    Lca(ll n, const vector<vector<ll>> &e) : Lca(n, 0, e) 
+    {
     }
 
-    ll get_depth(ll node) {
-        return depth[node];
-    }
+    ll get_depth(ll node) { return depth[node]; }
 
     ll get_parents(ll node, ll relative_depth) {
         ll ret = node;
@@ -78,7 +71,7 @@ public:
             if(p1 == p2) {
                 ok = mid;
                 ret = p1;
-            }else{
+            } else {
                 ng = mid;
             }
         }

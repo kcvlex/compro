@@ -9,7 +9,7 @@ private:
     template <typename U> using Edges = vector<Edge<U>>;
     template <typename U> using PQ = priority_queue<pair<ll, U>, vector<pair<ll, U>>, function<bool(pair<ll, U>, pair<ll, U>)>>;
     
-    vector<Edges<T>> edges;
+    const vector<Edges<T>> &edges;
     T inf;
     T identity_ele;
         
