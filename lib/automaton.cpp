@@ -31,12 +31,22 @@ auto make_v(T init, size_t s, Tail... tail) {
 */
 
 template <size_t Q, size_t Label>
-struct Automaton {
+class Automaton {
+    
+    template <size_t S>
+    struct BitsetComparator {
+        bool operator()(const bitset<S> &s1, const bitset<S> &s2) {
+            return s1.to_string() < s2.to_string();
+        }
+    };
+    
+public:
     using State = ll;
     using States = bitset<Q>;
+    using StatesComparator = BitsetComparator<Q>;
+    using StatesSet = set<States, StatesComparator>;
     using Edge = array<V<ll>, Label>;
     using Edges = V<Edge>;
-    using DEdge = array<V<States>, Label>;
 
     ll start;
     V<ll> finish_v;
@@ -55,25 +65,28 @@ struct Automaton {
         : Automaton(start, finish_v, Edges(Q)) {}
 
     void add_edge(ll now, ll nxt, ll label) {
+        // cout << label << " : " << now << " -> " << nxt << endl;
         edges[now][label].push_back(nxt); 
     }
-    
+
     Automaton<Q, Label> nfa2dfa() {
-        set<States> states_set;
-        set<States> finish_states_set;
+        StatesSet states_set;
+        StatesSet finish_states_set;
         queue<States> que;
-        map<States, DEdge> dfa_edges;
-        states_set.insert(start_state());
+        map<States, array<StatesSet, Label>, StatesComparator> dfa_edges;
         que.push(start_state());
+
+        states_set.insert(start_state());
 
         while(que.size()) {
             trans_states(states_set, finish_states_set, que, dfa_edges);
         }
-        
+
         return move(create_dfa(states_set, finish_states_set, dfa_edges));
     }
 
 private:
+    // TODO: 前計算したほうが良いかもしれないね
     States vec2states(const V<ll> &finish_v) {
         States ret(0);
         for(ll e : finish_v) ret.set(e, 1);
@@ -82,37 +95,38 @@ private:
 
     States start_state() { return move(States(0).set(start, 1)); }
 
-    States nxt_states(const States &now, ll label) {
+    States next_states(const States &now, ll label) {
         States ret(0);
         for(ll q = 0; q < Q; q++) {
             if(!now.test(q)) continue;
-            for(ll nxt : edges[now][label]) {
+            for(auto nxt : edges[q][label]) {
                 ret.set(nxt, 1);
             }
         }
         return move(ret);
     }
 
-    void trans_states(set<States> &states_set, 
-                      set<States> finish_states_set,
+    void trans_states(StatesSet &states_set,
+                      StatesSet &finish_states_set,
                       queue<States> &que, 
-                      map<States, Edge> &dfa_edges)
+                      map<States, array<StatesSet, Label>, StatesComparator> &dfa_edges)
     {
         States now = que.front();
         que.pop();
         
         for(ll label = 0; label < Label; label++) {
-            auto nxt = nxt_states(now, label);
+            auto nxt = next_states(now, label);
+            if(nxt == States(0)) continue;
+            dfa_edges[now][label].insert(nxt);
             if(states_set.find(nxt) != states_set.end()) continue;
             states_set.insert(nxt);
             if((nxt & finish_states).any()) finish_states_set.insert(nxt);
-            dfa_edges[now][label].push_back(nxt);
             que.push(nxt);
         }
     }
 
-    map<States, ll> create_states_id(const set<States> &states_set) {
-        map<States, ll> states_id;
+    map<States, ll, StatesComparator> create_states_id(const StatesSet &states_set) {
+        map<States, ll, StatesComparator> states_id;
         for(const auto &states : states_set) {
             auto id = states_id.size();
             states_id[states] = id;
@@ -120,17 +134,17 @@ private:
         return move(states_id);
     }
 
-    Automaton<Q, Label> create_dfa(const set<States> &states_set,
-                            const set<States> &finish_states_set,
-                            const map<States, DEdge> &dedges)
+    Automaton<Q, Label> create_dfa(const StatesSet &states_set,
+                                   const StatesSet &finish_states_set,
+                                   const map<States, array<StatesSet, Label>, StatesComparator> &dedges)
     {
         auto states_id = create_states_id(states_set);
         Edges dfa_edges(states_id.size());
         for(const auto &ele : dedges) {
             ll id = states_id[ele.first];
             for(ll label = 0; label < Label; label++) {
-                for(ll nxt_states : ele.second[label]) {
-                    dfa_edges[id][label].push_back(nxt_states);
+                for(auto next_states : ele.second[label]) {
+                    dfa_edges[id][label].push_back(states_id[next_states]);
                 }
             }
         }
