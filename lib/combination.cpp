@@ -2,20 +2,19 @@
 using namespace std;
 using ll = int64_t;
 
+template <ll MOD>
 class Combination {
 private:
     template <typename T> using V = vector<ll>;
     ll N;
-    ll MOD;
     V<ll> factv, rfactv;
 
 public:
     /*
      * MOD must be a prime number.
      */
-    Combination(ll N, ll MOD)
+    Combination<MOD> (ll N)
         : N(N), 
-          MOD(MOD),
           factv(N + 1, 1),
           rfactv(N + 1)
     {
