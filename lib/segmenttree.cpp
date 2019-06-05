@@ -18,7 +18,7 @@ public:
         this->size = tmp;
         this->identity_ele = identity_ele;
         this->comp = comp;
-        node.resize(2 * size - 1);
+        node = V<T>(2 * size - 1, identity_ele);
         for(ll i = 0; i < v.size(); i++) {
             node[i + size - 1] = v[i];
         }
