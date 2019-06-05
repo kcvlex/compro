@@ -63,7 +63,6 @@ public:
 
     Dinic(const VV<PLL> &v) : Dinic(v, 5e15) {};
 
-
     ll max_flow(ll S, ll T) {
         ll ret = 0;
         while(true) {
