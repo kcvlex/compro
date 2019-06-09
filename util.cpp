@@ -1,9 +1,9 @@
+// #define DEBUGGING
 #include <bits/stdc++.h>
 using namespace std;
 #define endl '\n'
 #define ALL(V) (V).begin(), (V).end()
 #define ALLR(V) (V).rbegin(), (V).rend()
-// #define DEBUGGING
 
 template <typename T> using V = vector<T>;
 template <typename T> using VV = V<V<T>>;
@@ -20,7 +20,7 @@ template <typename T, typename... Tail> void chmax(T &t, const Tail&... tail) { 
 template <typename T> const T& clamp(const T &t, const T &low, const T &high) { return max(low, min(high, t)); }
 template <typename T> void chclamp(T &t, const T &low, const T &high) { t = clamp(t, low, high); }
 
-namespace __init {
+namespace init__ {
 
 struct InitIO {
     InitIO() {
