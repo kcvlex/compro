@@ -129,3 +129,18 @@ struct MinCostFlow {
         return ret;
     }
 };
+
+// solution for http://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=GRL_6_B&lang=jp
+int main() {
+    ll N, E, F;
+    cin >> N >> E >> F;
+    MinCostFlow mcf(N);
+    for(ll i = 0; i < E; i++) {
+        ll a, b, cap, cost;
+        cin >> a >> b >> cap >> cost;
+        mcf.add_edge(a, b, cap, cost);
+    }
+
+    cout << mcf.calc(0, N - 1, F) << endl;
+    return 0;
+}
