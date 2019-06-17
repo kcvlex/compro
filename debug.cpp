@@ -23,8 +23,8 @@ template <typename... Args> string to_string(const tuple<Args...> &t);
 
 template <size_t N, typename... Args> 
 struct TupleStringConverter {
-    static string __to_string(const tuple<Args...> &t) {
-        string ret = TupleStringConverter<N - 1, Args...>::__to_string(t);
+    static string to_string__(const tuple<Args...> &t) {
+        string ret = TupleStringConverter<N - 1, Args...>::to_string__(t);
         ret = ret + ", " + to_string(get<N>(t));
         return move(ret);
     }
@@ -32,7 +32,7 @@ struct TupleStringConverter {
 
 template <typename... Args>
 struct TupleStringConverter<0, Args...> {
-    static string __to_string(const tuple<Args...> &t) { return to_string(get<0>(t)); }
+    static string to_string__(const tuple<Args...> &t) { return to_string(get<0>(t)); }
 };
 
 string to_string(const string &s) { return s; }
@@ -44,7 +44,7 @@ string to_string(const P<T, U> &p) {
 
 template <typename... Args>
 string to_string(const tuple<Args...> &t) {
-    return "(" + move(TupleStringConverter<(sizeof...(Args)) - 1, Args...>::__to_string(t)) + ")";
+    return "(" + move(TupleStringConverter<(sizeof...(Args)) - 1, Args...>::to_string__(t)) + ")";
 }
 
 template <typename T>
