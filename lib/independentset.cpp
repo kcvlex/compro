@@ -86,46 +86,19 @@ struct IndependentSet {
 
 
 // slution for https://code-thanks-festival-2017.contest.atcoder.jp/tasks/code_thanks_festival_2017_g
-ll N, M;
-vector<string> ID;
-vector<vector<ll>> fneeds(1e5 + 10);
-vector<vector<ll>> edges(40);
-bool bad[40][40];
-
 int main(){
-    ios::sync_with_stdio(false);
+    ll N, M;
     cin >> N >> M;
-    edges.resize(M);
-    ll last1 = 0;
-    for(ll i = 0; i < N; i++){
-        ll n;
-        cin >> n;
-        if(n == 1){
-            last1 = i;
-        }else{
-            string s;
-            cin >> s;
-            auto ite = find(ID.begin(), ID.end(), s);
-            if(ite == ID.end()){
-                ID.push_back(s);
-            }
-            ite = find(ID.begin(), ID.end(), s);
-            ll num = ite - ID.begin();
-            fneeds[last1].push_back(num);
-        }
+    vector<vector<ll>> edges(N);
+    for(ll i = 0; i < M; i++){
+        ll a, b;
+        cin >> a >> b;
+        a--;
+        b--;
+        edges[a].push_back(b);
+        edges[b].push_back(a);
     }
-    for(auto &v : fneeds){
-        if(v.empty()) continue;
-        sort(v.begin(), v.end());
-        auto ite = unique(v.begin(), v.end());
-        v.erase(ite, v.end());
-        for(ll i = 0; i < v.size(); i++) for(ll j = 0; j < v.size(); j++) edges[v[i]].push_back(v[j]);
-    }
-    for(auto &v : edges){
-        sort(v.begin(), v.end());
-        auto ite = unique(v.begin(), v.end());
-        v.erase(ite, v.end());
-    }
-    cout << IndependentSet<40>(edges).calc().count() << endl;
+    auto tmp = IndependentSet<40>(edges).calc();
+    cout << tmp.count() << endl;
     return 0;
 }
