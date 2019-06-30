@@ -1,62 +1,89 @@
 #include <bits/stdc++.h>
 using namespace std;
 using ll = int64_t;
-using P = pair<ll, ll>;
 
-template <int N>
-bitset<N> independent_set(const vector<vector<ll>> &edges){
-    ll fstl = 0, fstr = edges.size() / 2;
-    ll scdl = fstr, scdr = edges.size();
-    auto is_fst = [&](const ll n){ return fstl <= n && n < fstr; };
-    auto align = [&](const ll n){ return is_fst(n) ? n : n - scdl; };
-    vector<bitset<N>> allc, halfc;
-    for(ll i = 0; i < edges.size(); i++){
-        bitset<N> bsa(0), bsh(0);
-        for(ll nxt : edges[i]){
-            auto tmp = bitset<N>(1ll << nxt);
-            bsa |= tmp;
-            bool is_same = (is_fst(i) == is_fst(nxt));
-            if(is_same) bsh |= bitset<N>(1ll << (align(nxt)));
-        }
-        allc.push_back(bsa);
-        halfc.push_back(bsh);
+template <typename T> using V = vector<T>;
+template <typename T> using VV = V<V<T>>;
+using ll = int64_t;
+using PLL = pair<ll, ll>;
+
+template <typename T> const T& var_min(const T &t) { return t; }
+template <typename T> const T& var_max(const T &t) { return t; }
+template <typename T, typename... Tail> const T& var_min(const T &t, const Tail&... tail) { return min(t, var_min(tail...)); }
+template <typename T, typename... Tail> const T& var_max(const T &t, const Tail&... tail) { return max(t, var_max(tail...)); }
+template <typename T, typename... Tail> void chmin(T &t, const Tail&... tail) { t = var_min(t, tail...); }
+template <typename T, typename... Tail> void chmax(T &t, const Tail&... tail) { t = var_max(t, tail...); }
+template <typename T> const T& clamp(const T &t, const T &low, const T &high) { return max(low, min(high, t)); }
+template <typename T> void chclamp(T &t, const T &low, const T &high) { t = clamp(t, low, high); }
+
+template <size_t N, size_t Half = 20>
+struct IndependentSet {
+    using BS = bitset<N>;
+    V<BS> edges;
+    
+    IndependentSet(const VV<ll> &edges_arg) : edges(edge2edge(edges_arg)) {}
+
+    V<BS> edge2edge(const VV<ll> &edges) {
+        V<BS> ret(N);
+        for(ll i = 0; i < N; i++) for(ll j : edges[i]) ret[i].set(j, 1);
+        return move(ret);
     }
-    vector<vector<bitset<N>>> dp = {
-        vector<bitset<N>>(1ll << (fstr - fstl), bitset<N>(0)), 
-        vector<bitset<N>>(1ll << (scdr - scdl), bitset<N>(0)),
-    };
-    for(ll i = 0; i < edges.size(); i++){
-        ll which = !is_fst(i);
-        ll now = align(i);
-        ll upper = (1 << now);
-        bitset<N> bs(1 << now);
-        for(ll j = 0; j < upper; j++){
-            bitset<N> subS = dp[which][j];
-            bitset<N> update = (bitset<N>(j) | bs);
-            dp[which][update.to_ullong()] = dp[which][j];
-            for(ll k = 0; k < N / 2 + 1; k++){
-                auto tmp = bitset<N>(j) & (~bitset<N>(1 << k));
-                tmp = dp[which][tmp.to_ullong()];
-                if((tmp & halfc[i]).any()) continue;
-                tmp |= bs;
-                if(dp[which][update.to_ullong()].count() < tmp.count()) dp[which][update.to_ullong()] = tmp; 
+
+    const BS& max_bs(const BS &a, const BS &b) { return a.count() < b.count() ? b : a; }
+
+    // [begin_idx, end_idx)
+    V<BS> calc_dp(ll begin_idx, ll end_idx) {
+        ll offset = begin_idx;
+        ll node_cnt = end_idx - begin_idx;
+        auto make_idx = [&](ll node_idx) { return node_idx - offset; };
+        V<BS> dp(1ll << node_cnt, 0);
+        for(ll S = 0; S < (1ll << node_cnt); S++) {
+            BS bs(S);
+            bool ok = true;
+            for(ll i = begin_idx; i < end_idx; i++) {
+                for(ll j = i + 1; j < end_idx; j++) {
+                    ll iidx = make_idx(i);
+                    ll jidx = make_idx(j);
+                    ok &= (bs.test(iidx) & bs.test(jidx) & edges[iidx].test(jidx)) ? false : true;
+                }
+            }
+            dp[S] = (ok ? bs : BS(0));
+            for(ll i = begin_idx; i < end_idx; i++) {
+                ll iidx = make_idx(i);
+                ll pre_set = S ^ (1ll << iidx);
+                dp[S] = bs.test(iidx) ? max_bs(dp[S], dp[pre_set]) : dp[S];
             }
         }
+        return move(dp);
     }
-    bitset<N> ret(0);
-    for(ll i = 0; i < (1 << (fstr - fstl)); i++){
-        bitset<N> bsi(dp[0][i]);
-        bitset<N> nxts(0);
-        for(ll d = 0; d < N; d++) if(bsi.test(d)) nxts |= allc[d];
-        nxts = ~nxts;
-        nxts <<= (N - scdr);
-        nxts >>= (N - scdr);
-        nxts >>= (fstr - fstl);
-        bitset<N> tmp = bsi | (dp[1][nxts.to_ullong()] << (fstr - fstl));
-        if(ret.count() < tmp.count()) ret = tmp;
+
+    BS calc() {
+        ll first_half = min<ll>(N, Half);
+        ll latter_half = N - first_half;
+        
+        auto first_half_dp = calc_dp(0, first_half);
+        
+        if(latter_half == 0) return first_half_dp.back();
+        
+        auto latter_half_dp = calc_dp(first_half, N);
+        ll latter_offset = first_half;
+        
+        BS ret = 0;
+        for(ll S = 0; S < (1ll << first_half); S++) {
+            BS bs(S);
+            BS ng_nodes(0);
+            for(ll i = 0; i < first_half; i++) ng_nodes |= (bs.test(i) ? edges[i] : BS(0));
+            ng_nodes.flip();
+            ng_nodes >>= latter_offset;
+            BS update = first_half_dp[S] | (latter_half_dp[ng_nodes.to_ullong()] << latter_offset);
+            ret = max_bs(ret, update);
+        }
+
+        return move(ret);
     }
-    return ret;
-}
+};
+
+
 
 // slution for https://code-thanks-festival-2017.contest.atcoder.jp/tasks/code_thanks_festival_2017_g
 ll N, M;
@@ -87,7 +114,6 @@ int main(){
             fneeds[last1].push_back(num);
         }
     }
-    set<P> se;
     for(auto &v : fneeds){
         if(v.empty()) continue;
         sort(v.begin(), v.end());
@@ -100,6 +126,6 @@ int main(){
         auto ite = unique(v.begin(), v.end());
         v.erase(ite, v.end());
     }
-    cout << independent_set<40>(edges).count() << endl;
+    cout << IndependentSet<40>(edges).calc().count() << endl;
     return 0;
 }
