@@ -3,14 +3,14 @@
 using namespace std;
 using ll = int64_t;
 
-template <int Size = 30>
+template <size_t Size = 30>
 class Lca {
     const ll nopt;
     ll N;
     ll root;
     V<ll> depth;
     VV<ll> edge;
-    V<array<ll, Size>> parents;
+    VV<ll> parents;
 
     void dfs(ll now, ll pre, ll d) {
         parents[now][0] = pre;
@@ -28,9 +28,9 @@ public:
           N(N),
           root(root),
           edge(e),
-          parents(N, nopt),
-          depth(N),
+          parents(N, V<ll>(Size))
     {
+        depth.resize((size_t)N);
         dfs(root, nopt, 0);
 
         for(ll i = 1; i < Size; i++) {
@@ -52,7 +52,7 @@ public:
 
     ll get_parents(ll node, ll relative_depth) {
         ll ret = node;
-        for(ll i = 0; (1 << i) <= relative_depth; i++) {
+        for(ll i = 0; (1 << i) <= relative_depth && ret != -1; i++) {
             if(relative_depth & (1 << i)) {
                 ret = parents[ret][i];
             }
@@ -79,7 +79,3 @@ public:
     }
 };
 
-int main() {
-    //TODO: test
-    return 0;
-}

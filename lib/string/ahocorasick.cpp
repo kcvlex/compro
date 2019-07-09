@@ -83,6 +83,7 @@ struct Trie {
     void set_label_list(V<Label> label_list) { this->label_list = label_list; }
     const V<Label>& get_label_list() { assert(!label_list.empty()); return label_list; }
 
+    size_t get_node_count() const { return node_loc_idx; }
     Node& get_root() { return nodes_loc[root_idx]; }
     Node& get_node(size_t idx) { return nodes_loc[idx]; }
 
@@ -157,28 +158,98 @@ template <typename Label, size_t MaxChildren>
 struct AhoCorasick {
     Trie<Label, MaxChildren + 1> trie;
     const size_t failed_idx;
+    V<ull> count_correct;
+    V<string> accepts_id_to_str;
+    VV<ll> accepts_id_list;
 
     AhoCorasick(function<size_t(const Label&)> label_map, size_t max_loc_size = 1e6) 
         : trie(label_map, max_loc_size), 
-          failed_idx(MaxChildren) 
+          failed_idx(MaxChildren),
+          accepts_id_list(max_loc_size),
+          accepts_id_to_str(max_loc_size)
     {
+        count_correct.assign(trie.get_node_count(), 0);
+        V<string> accepts_str(trie.node_loc);
+        for(size_t i = 0; i < trie.node_loc; i++) {
+            auto &node = trie.get_node(i);
+            if(!node.status.first) continue;
+            accepts_str[i] = node.status.second;
+            accepts_id_to_str.push_back(accepts[i]);
+        }
+
+        {
+            sort(ALL(accepts_id_to_str));
+            auto ite = unique(ALL(accepts_id_to_str));
+            accepts_id_to_str.erase(ite, accepts_id_to_str.end());
+        }
+
+        for(size_t i = 0; i < trie.node_loc; i++) if(accepts_str[i].size()) {
+            accepts_id_list[i].push_back(make_accept_id(accepts_str[i]));
+        }
     }
 
-    void set_initial_failed_edge() {
+    size_t make_accept_id(const string &s) {
+        return distance(accepts_idx_to_str.begin(),
+                        lower_bound(ALL(accepts_idx_to_str), s));
+    }
+
+    queue<size_t> init_bfs() {
+        queue<size_t> que;
         for(size_t idx = 0; idx < failed_idx; idx++) {
             if(trie.get_root().has_child(idx)) {
                 auto &nxt_node = trie.get_node(trie.get_root().children_idx[idx]);
                 nxt_node.children_idx[failed_idx] = trie.root_idx;
+                que.push(idx);
             } else {
                 get_root().children_idx[idx] = trie.root_idx;
             }
         }
+        return que;
+    }
+
+    size_t suffix_link_node_idx(size_t current_node_idx, size_t label_id) {
+        size_t idx = trie.get_node(current_node_idx).children_idx[failed_idx];
+        while(trie.get_node(idx).children_idx[label_id] == -1) idx = trie.get_node(idx).children_idx[label_id];
+        return idx;
     }
 
     template <typename T>
     void create_trie(const V<T> &dictionary) {
         for(const auto &ele : dictionary) trie.create_node(ele);
 
-        set_initial_failed_edge();
+        auto que = init_bfs();
+        while(que.size()) {
+            auto current_idx = que.front();
+            que.pop();
+            const auto &current_node = trie.get_node(current_idx);
+            count_correct[current_idx] += count_correct[current_node.children_idx[failed_idx]];
+            for(size_t label_id = 0; label_id < MaxChildren; label_id++) {
+                if(!current_node.has_child(label_id)) continue;
+                size_t next_idx = current_node.children_idx[label_id];
+                auto &next_node = trie.get_node(next_idx);
+                next_node.children_idx[failed_idx] = suffix_link_node_idx(current_idx, label_id);
+                auto &next_node_fail = trie.get_node(next_node.children_idx[failed_idx]);
+
+                V<ll> accept_v;
+                set_union(ALL(accepts_str_idx[next_idx]), ALL(accepts_str_idx[next_node_fail.next_children[label_id]]), back_insert(accept_v));
+                accepts_str[next_idx] = move(accept_v);
+
+                que.push(next_idx);
+            }
+        }
     }
-}
+
+    V<ull> query(const string &str) {
+        V<uint64_t> res;
+        auto cur_idx = 0;
+        for(auto &&c : str) {
+            auto label_id = label_map(c);
+            do {
+                cur_idx = trie.get_node(cur_idx).children_idx[label_id];
+            } while(cur_idx == failed_idx);
+            for(auto &&acc_idx : accepts[cur_idx]) res[acc_idx]++;
+        }
+        return res;
+    }
+
+};

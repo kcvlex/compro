@@ -52,18 +52,19 @@ auto make_v(T init, size_t s, Tail... tail) {
 
 template <typename Label, size_t MaxChildren>
 struct Trie {
-    template <size_t Size>
+    template <typename T, size_t Size>
     struct Node__ {
         ull depth;
         array<size_t, Size> children_idx;
         size_t parent_idx;
+        pair<bool, T> status;
 
-        Node__(ull depth, size_t parent_idx) : depth(depth), parent_idx(parent_idx) { for(auto &ele : children_idx) ele = numeric_limits<size_t>::max(); } 
+        Node__(ull depth, size_t parent_idx) : depth(depth), parent_idx(parent_idx), status(false, T()) { for(auto &ele : children_idx) ele = numeric_limits<size_t>::max(); } 
         Node__() : Node(0, numeric_limits<size_t>::max()) {}
         bool has_child(size_t idx) const { return children_idx[idx] != numeric_limits<size_t>::max(); }
     };
 
-    using Node = Node__<MaxChildren>;
+    using Node = Node__<V<Label>, MaxChildren>;
 
     V<Node> nodes_loc;
     size_t node_loc_idx;
@@ -85,13 +86,29 @@ struct Trie {
     using LabelInfo = pair<LabelStatus, Label>;
     using IterateLabel = function<LabelInfo()>;
     
-    void create_node(IterateLabel &ite_label, size_t node_depth, size_t node_idx) {
+    template <typename Iterator>
+    struct IteratorWrapper {
+        Iterator current, last;
+        IteratorWrapper(Iterator current, Iterator last) : current(current), last(last) {}
+        LabelInfo operator()() {
+            if(current == last) return make_pair(LabelStatus::Finish, Label());
+            auto label = *current;
+            advance(current, 1);
+            return make_pair(LabelStatus::Continue, label);
+        }
+    };
+
+    void create_node(IterateLabel &ite_label, size_t node_depth, size_t node_idx, V<Label> &&history) {
         auto label_info = ite_label();
-        if(label_info.first == LabelStatus::Finish) return;
+        if(label_info.first == LabelStatus::Finish) {
+            get_node(node_idx).status = make_pair(true, move(history));
+            return;
+        }
 
         auto &node = get_node(node_idx);
         const Label &label = label_info.second;
         size_t label_id = label_map(label);
+        history.push_back(label);
 
         if(!node.has_child(label_id)) {
             size_t loc_idx = node_loc_idx++;
@@ -99,7 +116,7 @@ struct Trie {
             node.children_idx[label_id] = loc_idx;
         }
         
-        create_node(ite_label, node_depth + 1, node.children_idx[label_id]);
+        create_node(ite_label, node_depth + 1, node.children_idx[label_id], move(history));
     }
 
     size_t search_node(IterateLabel &ite_label, size_t node_idx) {
@@ -114,34 +131,12 @@ struct Trie {
         else return search_node(ite_label, node.children_idx[label_id]);
     }
 
-    IterateLabel create_ite_label(const string &str) {
-        static size_t idx = 0;
-        idx = 0;
-        auto ret = [&] {
-            if(str.size() <= idx) return make_pair(LabelStatus::Finish, static_cast<char>(0));
-            char c = str[idx];
-            idx++;
-            return pair<LabelStatus, char>(LabelStatus::Continue, c);
-        };
-        return ret;
-    }
+    template <typename Iterator> IterateLabel create_ite_label(Iterator current, Iterator last) { return IteratorWrapper<Iterator>(current, last); }
 
-    IterateLabel create_ite_label(const V<Label> &vec) {
-        static size_t idx = 0;
-        idx = 0;
-        auto ret = [&] {
-            if(vec.size() <= idx) return make_pair(LabelStatus::Finish, Label());
-            Label t = vec[idx];
-            idx++;
-            return make_pair(LabelStatus::Continue, t);
-        };
-        return ret;
-    }
-
-    void create_node(IterateLabel &ite_label) { create_node(ite_label, 0, root_idx); }
+    void create_node(IterateLabel &ite_label) { create_node(ite_label, 0, root_idx, V<Label>()); }
     size_t search_node(IterateLabel &ite_label) { return search_node(ite_label, root_idx); }
-    template <typename T> void create_node(const T &t) { auto ite_label = create_ite_label(t); create_node(ite_label); }
-    template <typename T> size_t search_node(const T &t) { auto ite_label = create_ite_label(t); return search_node(ite_label); }
+    template <typename T> void create_node(const T &t) { auto ite_label = create_ite_label(ALL(t)); create_node(ite_label); }
+    template <typename T> size_t search_node(const T &t) { auto ite_label = create_ite_label(ALL(t)); return search_node(ite_label); }
 };
 
 // solution for https://atcoder.jp/contests/arc087/tasks/arc087_c

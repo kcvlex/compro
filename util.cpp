@@ -7,9 +7,9 @@ using namespace std;
 
 template <typename T> using V = vector<T>;
 template <typename T> using VV = V<V<T>>;
-template <typename T, typename U> using P = pair<T, U>;
 using ll = int64_t;
-using PLL = P<ll, ll>;
+using ull = uint64_t;
+using PLL = pair<ll, ll>;
 
 template <typename T> const T& var_min(const T &t) { return t; }
 template <typename T> const T& var_max(const T &t) { return t; }

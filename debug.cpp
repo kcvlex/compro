@@ -17,7 +17,7 @@
 #define DEBUG_ENDL_S(S) ((S).size() ? "\n" : "") << flush;
 
 string to_string(const string &s);
-template <typename T, typename U> string to_string(const P<T, U> &p);
+template <typename T, typename U> string to_string(const pair<T, U> &p);
 template <typename T> string to_string(const V<T> &v);
 template <typename... Args> string to_string(const tuple<Args...> &t);
 
@@ -38,7 +38,7 @@ struct TupleStringConverter<0, Args...> {
 string to_string(const string &s) { return s; }
 
 template <typename T, typename U>
-string to_string(const P<T, U> &p) {
+string to_string(const pair<T, U> &p) {
     return move(to_string(tuple_cat(p)));
 }
 
