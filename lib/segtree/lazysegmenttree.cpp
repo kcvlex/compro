@@ -11,10 +11,11 @@ private:
     vector<T> node;
     vector<L> lazy;
     vector<bool> lazy_flag;
-    function<T (T, T)> merge_node;
-    function<T (T, L)> apply_lazy_value;
-    function<L (L, L)> update_lazy_value;
-    function<L (ll, ll, L)> create_lazy_value;
+    function<T(T, T)> merge_node;
+    function<T(T, L)> apply_lazy_value;
+    function<L(L, L)> update_lazy_value;
+    function<L(ll, ll, L)> create_lazy_value;
+    function<L(L)> prop_lazy_value;
     
 public:
     LazySegmentTree(const vector<T> &v, 
@@ -23,13 +24,15 @@ public:
                     const decltype(merge_node)        &merge_node,
                     const decltype(apply_lazy_value)  &apply_lazy_value,
                     const decltype(update_lazy_value) &update_lazy_value,
-                    const decltype(create_lazy_value) &create_lazy_value) 
+                    const decltype(create_lazy_value) &create_lazy_value,
+                    const decltype(prop_lazy_value)   &prop_lazy_value = [](L v) { return v; })
         : init_node(init_node),
           init_lazy(init_lazy),
           merge_node(merge_node),
           apply_lazy_value(apply_lazy_value),
           update_lazy_value(update_lazy_value),
-          create_lazy_value(create_lazy_value)
+          create_lazy_value(create_lazy_value),
+          prop_lazy_value(prop_lazy_value)
     {
         ll tmp = 1;
         while(tmp < v.size()) tmp *= 2;
@@ -60,8 +63,8 @@ public:
          * whether the node is the bottom of tree or not.
          */
         if(right - left > 1) {
-            for(ll idx : {2 * pos + 1, 2 * pos + 2}) {
-                lazy[idx] = update_lazy_value(lazy[idx], lazy[pos]);
+            for(ll idx = 2 * pos + 1; idx <= 2 * pos + 2; idx++) {
+                lazy[idx] = update_lazy_value(lazy[idx], prop_lazy_value(lazy[pos]));
                 lazy_flag[idx] = true;
             }
         }
@@ -140,8 +143,10 @@ public:
     }
 };
 
+// solution for http://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=DSL_2_F
+
+#ifdef VERIFY
 int main() {
-    // solution for http://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=DSL_2_F
     ll N;
     cin >> N;
     ll init = (1ll << 31) - 1;
@@ -168,3 +173,4 @@ int main() {
     }
     return 0;
 }
+#endif
