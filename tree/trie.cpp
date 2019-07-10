@@ -146,7 +146,7 @@ int main() {
     V<ll> imos(1e5 + 10);
     imos[0] = 2;
     Trie<char, 2> trie([](char c) { return c - '0'; });
-    
+
     for(ll i = 0; i < N; i++) {
         string s;
         cin >> s;

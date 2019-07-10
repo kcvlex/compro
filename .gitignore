@@ -8,3 +8,5 @@ yukicoder
 csa
 gcj
 fb
+*.h
+*.gch
