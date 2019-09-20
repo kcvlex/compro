@@ -3,65 +3,60 @@ using namespace std;
 using ll = int64_t;
 
 template <typename T, typename L>
-class LazySegmentTree{
+class LazySegmentTree {
 private:
-    ll N;
+    using Merge = function<T(T, T)>;
+    using Apply = function<T(T, L)>;
+    using Update = function<L(L, L)>;
+    using CalcLazyValue = function<L(ssize_t, ssize_t, L)>;
+    using Prop = function<L(L)>;
+
+    size_t arr_size;
     T init_node;
     L init_lazy;
     vector<T> node;
     vector<L> lazy;
     vector<bool> lazy_flag;
-    function<T(T, T)> merge_node;
-    function<T(T, L)> apply_lazy_value;
-    function<L(L, L)> update_lazy_value;
-    function<L(ll, ll, L)> create_lazy_value;
-    function<L(L)> prop_lazy_value;
+    Merge merge_node;
+    Apply apply_lazy_value;
+    Update update_lazy_value;
+    CalcLazyValue calc_lazy_value;
+    Prop prop_lazy_value;
     
 public:
-    LazySegmentTree(const vector<T> &v, 
-                    const T &init_node,
-                    const L &init_lazy, 
-                    const decltype(merge_node)        &merge_node,
-                    const decltype(apply_lazy_value)  &apply_lazy_value,
-                    const decltype(update_lazy_value) &update_lazy_value,
-                    const decltype(create_lazy_value) &create_lazy_value,
-                    const decltype(prop_lazy_value)   &prop_lazy_value = [](L v) { return v; })
+    LazySegmentTree(vector<T> v, 
+                    T init_node,
+                    L init_lazy, 
+                    Merge merge_node,
+                    Apply apply_lazy_value,
+                    Update update_lazy_value,
+                    CalcLazyValue calc_lazy_value,
+                    Prop prop_lazy_value = [](L l) { return l; })
         : init_node(init_node),
           init_lazy(init_lazy),
           merge_node(merge_node),
           apply_lazy_value(apply_lazy_value),
           update_lazy_value(update_lazy_value),
-          create_lazy_value(create_lazy_value),
+          calc_lazy_value(calc_lazy_value),
           prop_lazy_value(prop_lazy_value)
     {
-        ll tmp = 1;
-        while(tmp < v.size()) tmp *= 2;
-        N = tmp;
-        node.resize(2 * N - 1, init_node);
-        lazy.resize(2 * N - 1, init_lazy);
-        lazy_flag.resize(2 * N - 1, false);
-        for(ll i = 0; i < v.size(); i++) {
-            node[i + N - 1] = v[i];
+        {
+            arr_size = 1;
+            while(arr_size < v.size()) arr_size *= 2;
         }
-        for(ll i = N - 2; 0 <= i; i--) {
-            node[i] = merge_node(node[i * 2 + 1], node[i * 2 + 2]);
-        }
+        node.resize(2 * arr_size - 1, init_node);
+        lazy.resize(2 * arr_size - 1, init_lazy);
+        lazy_flag.resize(2 * arr_size - 1, false);
+        for(ll i = 0; i < v.size(); i++) node[i + arr_size - 1] = v[i];
+        for(ll i = arr_size - 2; 0 <= i; i--) node[i] = merge_node(node[i * 2 + 1], node[i * 2 + 2]);
     }
 
-    /*
-     * node[pos] -> [left, right)
-     */
     void lazy_eval(ll pos, ll left, ll right) {
-        if(!lazy_flag[pos]) {
-            return;
-        }
+        if(!lazy_flag[pos]) return;
 
         node[pos] = apply_lazy_value(node[pos], lazy[pos]);
         lazy_flag[pos] = false;
 
-        /* 
-         * whether the node is the bottom of tree or not.
-         */
         if(right - left > 1) {
             for(ll idx = 2 * pos + 1; idx <= 2 * pos + 2; idx++) {
                 lazy[idx] = update_lazy_value(lazy[idx], prop_lazy_value(lazy[pos]));
@@ -72,74 +67,36 @@ public:
         lazy[pos] = init_lazy;
     }
 
-    /*
-     * If you want to call this func from out of class, in many cases you don't have to change the args pos, node_left, node_right.
-     * Be careful that the range is half-open interval.
-     * [left, right), [node_left, node_right)
-     * @param left:         lower limit of interval of query
-     * @param right:        upper limit of interval of query
-     * @param val:          the value gave from query
-     * @param node_left:    lower limit of interval of the node points.
-     * @param node_right:   upper limit of interval of the node points.
-     */
     void update_query(ll left, ll right, L val, ll pos = 0, ll node_left = 0, ll node_right = -1) {
-        if(node_right < 0) {
-            node_right = N;
-        }
+        if(node_right < 0) node_right = arr_size;
 
-        /*
-         * Execute lazy evaluation.
-         */
         lazy_eval(pos, node_left, node_right);
 
-        /*
-         * If the node is out of inrerval, return.
-         */
-        if(right <= node_left || node_right <= left) {
-            return;
-        }
-
-
-        /*
-         * If the node cover the interval complety, update this->lazy and execute lazy_eval.
-         * Else recursion.
-         */
+        if(right <= node_left || node_right <= left) return;
+        
         if(left <= node_left && node_right <= right) {
-            lazy[pos] = create_lazy_value(node_left, node_right, val);
+            lazy[pos] = calc_lazy_value(node_left, node_right, val);
             lazy_flag[pos] = true;
             lazy_eval(pos, node_left, node_right);
         } else {
-
-            /*
-             * recursion
-             */
-            update_query(left, right, val, 2 * pos + 1, node_left, (node_left + node_right) / 2);
-            update_query(left, right, val, 2 * pos + 2, (node_left + node_right) / 2, node_right);
-
+            ll mid = (node_left + node_right) / 2;
+            update_query(left, right, val, 2 * pos + 1, node_left, mid);
+            update_query(left, right, val, 2 * pos + 2, mid, node_right);
             node[pos] = merge_node(node[2 * pos + 1], node[2 * pos + 2]);
         }
     }
 
     T get_query(ll left, ll right, ll pos = 0, ll node_left = 0, ll node_right = -1) {
-        if(node_right < 0) {
-            node_right = N;
-        }
-
-        /*
-         * Evaluate the node[pos]
-         */
+        if(node_right < 0) node_right = arr_size;
+        
         lazy_eval(pos, node_left, node_right);
 
-        if(node_right <= left || right <= node_left) {
-            return init_node;
-        }
-        if(left <= node_left && node_right <= right) {
-            return node[pos];
-        }
+        if(node_right <= left || right <= node_left) return init_node;
+        if(left <= node_left && node_right <= right) return node[pos];
 
-        ll split = (node_left + node_right) / 2;
-        return merge_node(get_query(left, right, 2 * pos + 1, node_left, split),
-                          get_query(left, right, 2 * pos + 2, split, node_right));
+        ll mid = (node_left + node_right) / 2;
+        return merge_node(get_query(left, right, 2 * pos + 1, node_left, mid),
+                          get_query(left, right, 2 * pos + 2, mid, node_right));
     }
 };
 
