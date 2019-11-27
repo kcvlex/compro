@@ -33,7 +33,7 @@ template <uint64_t Mod, uint64_t PrimitiveRoot>
 struct NTT {
     V<uint64_t> root_pow_lis, root_inv_lis;
     size_t max_size_log;
-    
+
     NTT(size_t max_size_log) 
         : max_size_log(max_size_log),
           root_pow_lis(max_size_log),
