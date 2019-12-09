@@ -1,45 +1,36 @@
-#include <bits/stdc++.h>
-using namespace std;
-using ll = int64_t;
-using ull = uint64_t;
+#include "../template.cpp"
 
-#define VERIFY
-
-template <typename Key>
-struct SplayTreeNode {
-    using node_ptr = SplayTreeNode<Key>*;
-    node_ptr parent, left, right;
+template <typename Key> struct SplayTreeNode {
+    using node_ptr = SplayTreeNode<Key> *;
     Key key;
+    node_ptr par, l, r;
     size_t size;
-    
-    SplayTreeNode(Key key, node_ptr parent) : key(key), parent(parent), left(nullptr), right(nullptr), size(1) {}
+
+    SplayTreeNode(Key key, node_ptr par)
+        : key(key), par(par), l(nullptr), r(nullptr), size(1) {}
     SplayTreeNode(Key key) : SplayTreeNode(key, nullptr) {}
     SplayTreeNode() : SplayTreeNode(Key()) {}
 
-    bool is_left() const {
-        return parent != nullptr && parent->left == this;
-    }
+    bool is_l() const { return par != nullptr && par->l == this; }
 
-    bool is_root() const {
-        return parent == nullptr;
-    }
+    bool is_root() const { return par == nullptr; }
 
-    void rotate(bool left_ch) {
+    void rotate(bool l_ch) {
         if(is_root()) return;
-        auto p = parent;
-        auto pp = p->parent;
-        parent = pp;
-        if(pp != nullptr) (p->is_left() ? pp->left : pp->right) = this;
-        if(left_ch) {
-            p->left = right;
-            if(right != nullptr) right->parent = p;
-            right = p;
-            p->parent = this;
+        auto p = par;
+        auto pp = p->par;
+        par = pp;
+        if(pp != nullptr) (p->is_l() ? pp->l : pp->r) = this;
+        if(l_ch) {
+            p->l = r;
+            if(r != nullptr) r->par = p;
+            r = p;
+            p->par = this;
         } else {
-            p->right = left;
-            if(left != nullptr) left->parent = p;
-            left = p;
-            p->parent = this;
+            p->r = l;
+            if(l != nullptr) l->par = p;
+            l = p;
+            p->par = this;
         }
         p->update_size();
         update_size();
@@ -47,20 +38,16 @@ struct SplayTreeNode {
 
     void update_size() {
         size = 1;
-        if(left != nullptr) size += left->size;
-        if(right != nullptr) size += right->size;
+        if(l != nullptr) size += l->size;
+        if(r != nullptr) size += r->size;
     }
 
-    void rotate() {
-        rotate(is_left());
-    }
+    void rotate() { rotate(is_l()); }
 
-    void zig() {
-        rotate();
-    }
+    void zig() { rotate(); }
 
     void zig_zig() {
-        parent->rotate();
+        par->rotate();
         rotate();
     }
 
@@ -71,26 +58,79 @@ struct SplayTreeNode {
 
     void splay() {
         while(!is_root()) {
-            if(parent->is_root()) rotate();
-            else if(is_left() ^ parent->is_left()) zig_zag();
+            if(par->is_root()) rotate();
+            else if(is_l() ^ par->is_l()) zig_zag();
             else zig_zig();
         }
     }
+
+    node_ptr set_l(node_ptr nl) {
+        l = nl;
+        if(nl) nl->par = this;
+        update_size();
+        return this;
+    }
+
+    node_ptr set_r(node_ptr nr) {
+        r = nr;
+        if(nr) nr->par = this;
+        update_size();
+        return this;
+    }
+
+    node_ptr cut_l() {
+        auto ret = l;
+        if(l) l->par = nullptr;
+        l = nullptr;
+        update_size();
+        return ret;
+    }
+
+    node_ptr cut_r() {
+        auto ret = r;
+        if(r) r->par = nullptr;
+        r = nullptr;
+        update_size();
+        return ret;
+    }
 };
 
-template <typename Key>
-struct SplayTree {
+template <typename STree> STree merge(STree t1, STree t2);
+template <typename STree, typename Key> pair<STree, STree> split(STree tree, Key k);
+
+template <typename Key, typename Comp = less<Key>> struct SplayTree {
     using Node = SplayTreeNode<Key>;
+    using Tree = SplayTree<Key, Comp>;
     using node_ptr = typename SplayTreeNode<Key>::node_ptr;
-    using Compare = function<bool(Key, Key)>;
-    Compare comp;  // min
     node_ptr root;
 
-    SplayTree(Compare comp) : comp(comp), root(nullptr) {}
+    SplayTree(node_ptr root) : root(root) {};
+    SplayTree() : SplayTree(nullptr) {}
 
-    node_ptr find(Key key) {
-        search(key);
-        return (root != nullptr && root->key == key) ? root : nullptr;
+    bool comp(Key x, Key y) { return Comp()(x, y); }
+
+    node_ptr find_max() {
+        node_ptr cur = root;
+        while(cur && cur->r) cur = cur->r;
+        splay(cur);
+        return cur;
+    }
+
+    // TODO: ifk isn't found
+    node_ptr find(Key k) {
+        auto cur = root;
+        while(cur) {
+            if(cur->key == k) break;
+            if(comp(k, cur->key)) {
+                if(cur->l) cur = cur->l;
+                else break;
+            } else if(comp(cur->key, k)) {
+                if(cur->r) cur = cur->r;
+                else break;
+            }
+        }
+        if(cur) splay(cur);
+        return cur;
     }
 
     void insert(Key key) {
@@ -98,52 +138,42 @@ struct SplayTree {
             root = new Node(key);
             return;
         }
-        node_ptr node = search(key);
-        if(node->key != key) {
-            node_ptr new_node = new Node(key, node);
-            (comp(key, node->key) ? node->left : node->right) = new_node;
-            new_node->parent = node;
-            splay(new_node);
-        } else {
-            splay(node);
-        }
+        Tree lt, rt;
+        tie(lt, rt) = split(*this, key);
+        root = new Node(key);
+        root->set_l(lt.root);
+        root->set_r(rt.root);
     }
 
-    void erase(node_ptr node) {
-        splay(node);
-        if(node->left == nullptr) {
-            root = node->right;
-            if(node->right != nullptr) node->right->parent = nullptr;
-        } else if(node->left->right == nullptr) {
-            root = node->left;
-            root->right = node->right;
-            if(node->right != nullptr) node->right->parent = root;
-            root->parent = nullptr;
-            root->update_size();
-        } else {
-            assert(node == root);
-            node_ptr cur = node->left;
-            while(cur->right != nullptr) cur = cur->right;
-            auto bottom = cur->parent;
-            root = cur;
-            root->parent = nullptr;
-            bottom->right = root->left;
-            if(root->left != nullptr) root->left->parent = bottom;
-            root->left = node->left;
-            root->right = node->right;
-            node->left->parent = root;
-            if(node->right != nullptr) node->right->parent = root;
-            while(bottom != nullptr) {
-                bottom->update_size();
-                bottom = bottom->parent;
+    void erase(Key x) { 
+        auto nx = this->find(x);
+        if(nx == nullptr || nx->key != x) return;
+        Tree lt, rt;
+        tie(lt, rt) = split(*this, nx->key);
+
+        {
+            node_ptr tmp = nullptr;
+            if(lt.root && lt.root->key == x) {
+                tmp = lt.root;
+                lt.root = lt.root->cut_l();
+            } else if(rt.root && rt.root->key == x) {
+                tmp = rt.root;
+                rt.root = rt.root->cut_r();
             }
+            if(tmp) delete tmp;
         }
-    }
 
-    void erase(Key key) {
-        node_ptr node = search(key);
-        if(node->key != key) return;
-        erase(node);
+        if(lt.root && rt.root) {
+            lt.find_max();
+            lt.root->set_r(rt.root);
+            root = lt.root;
+        } else if(lt.root) {
+            root = lt.root;
+        } else if(rt.root) {
+            root = rt.root;
+        } else {
+            root = nullptr;
+        }
     }
 
     ll query(size_t ord) {
@@ -151,58 +181,63 @@ struct SplayTree {
         node_ptr cur = root;
         ll ret = 0;
         while(cnt) {
-            auto left_size = (cur->left == nullptr ? 0 : cur->left->size);
-            if(left_size + 1 == cnt) {
+            auto l_size = (cur->l == nullptr ? 0 : cur->l->size);
+            if(l_size + 1 == cnt) {
                 ret = cur->key;
                 break;
             }
-            if(left_size + 1 < cnt) {
-                cnt -= left_size + 1;
-                cur = cur->right;
+            if(l_size + 1 < cnt) {
+                cnt -= l_size + 1;
+                cur = cur->r;
             } else {
-                cur = cur->left;
+                cur = cur->l;
             }
         }
-        erase(cur);
+        erase(cur->key);
         return ret;
     }
-
-    void dump() { dump(root); }
 
     void splay(node_ptr node) {
         node->splay();
         root = node;
     }
-
-private:
-    node_ptr search(Key key) {
-        node_ptr cur = root;
-        while(cur != nullptr) {
-            if(cur->key == key) break;
-            if(comp(key, cur->key)) {
-                if(cur->left) cur = cur->left;
-                else break;
-            } else {
-                if(cur->right) cur = cur->right;
-                else break;
-            }
-        }
-        return cur;
-    }
 };
 
+template <typename STree>
+STree merge(STree t1, STree t2) {
+    if(!t1.root) return t2;
+    if(!t2.root) return t1;
+    auto t1_max = t1.find_max();
+    t1.splay(t1_max);
+    t1.root->set_r(t2.root);
+    return t1;
+}
+
+template <typename STree, typename Key>
+pair<STree, STree> split(STree tree, Key k) {
+    tree.find(k);
+    auto root = tree.root;
+    auto nl = root->cut_l();
+    auto nr = root->cut_r();
+    if(tree.comp(k, root->key)) nr = root->set_r(nr);
+    else nl = root->set_l(nl);
+    return make_pair(STree(nl), STree(nr));
+}
+
+const ll inf = 5e15;
+
 // solution for https://atcoder.jp/contests/arc033/tasks/arc033_3
-#ifdef VERIFY
 int main() {
-    SplayTree<ll> sp_tree([](ll a, ll b) { return a < b; });
     ll Q;
     cin >> Q;
+    SplayTree<ll> st;
     while(Q--) {
-        ll T, X;
-        cin >> T >> X;
-        if(T == 1) sp_tree.insert(X);
-        else cout << sp_tree.query(X) << endl;
+        ll t, x;
+        cin >> t >> x;
+        //st.dump();
+        if(t == 1) st.insert(x);
+        else cout << st.query(x) << endl;
     }
     return 0;
 }
-#endif
+
