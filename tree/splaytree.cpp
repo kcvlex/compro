@@ -22,18 +22,12 @@ template <typename Key> struct SplayTreeNode {
         par = pp;
         if(pp != nullptr) (p->is_l() ? pp->l : pp->r) = this;
         if(l_ch) {
-            p->l = r;
-            if(r != nullptr) r->par = p;
-            r = p;
-            p->par = this;
+            p->set_l(r);
+            set_r(p);
         } else {
-            p->r = l;
-            if(l != nullptr) l->par = p;
-            l = p;
-            p->par = this;
+            p->set_r(l);
+            set_l(p);
         }
-        p->update_size();
-        update_size();
     }
 
     void update_size() {
@@ -64,35 +58,27 @@ template <typename Key> struct SplayTreeNode {
         }
     }
 
-    node_ptr set_l(node_ptr nl) {
-        l = nl;
-        if(nl) nl->par = this;
+    node_ptr set_ch(node_ptr ch, bool is_l) {
+        node_ptr &n = (is_l ? l : r);
+        n = ch;
+        if(ch) ch->par = this;
         update_size();
         return this;
     }
 
-    node_ptr set_r(node_ptr nr) {
-        r = nr;
-        if(nr) nr->par = this;
-        update_size();
-        return this;
-    }
-
-    node_ptr cut_l() {
-        auto ret = l;
-        if(l) l->par = nullptr;
-        l = nullptr;
+    node_ptr cut_ch(bool is_l) {
+        node_ptr &ch = (is_l ? l : r);
+        node_ptr ret = (is_l ? l : r);
+        if(ch) ch->par = nullptr;
+        ch = nullptr;
         update_size();
         return ret;
     }
 
-    node_ptr cut_r() {
-        auto ret = r;
-        if(r) r->par = nullptr;
-        r = nullptr;
-        update_size();
-        return ret;
-    }
+    node_ptr set_l(node_ptr nl) { return set_ch(nl, true); }
+    node_ptr set_r(node_ptr nr) { return set_ch(nr, false); }
+    node_ptr cut_l() { return cut_ch(true); }
+    node_ptr cut_r() { return cut_ch(false); }
 };
 
 template <typename STree> STree merge(STree t1, STree t2);
@@ -240,4 +226,3 @@ int main() {
     }
     return 0;
 }
-
