@@ -17,12 +17,12 @@ class DynamicSegmentTree {
     ll heap_idx;
 
     T sub_query(ll a, ll b, ll node_idx, ll l, ll r) {
-        if(r <= a || b <= l) return identity_ele;
-        if(node_idx == -1) return identity_ele;
+        if (r <= a || b <= l) return identity_ele;
+        if (node_idx == -1) return identity_ele;
         
         const auto &node = nodes_heap[node_idx];
         
-        if(a <= l && r <= b) {
+        if (a <= l && r <= b) {
             return node.val;
         } else {
             T left = sub_query(a, b, node.left_idx, l, (l + r) / 2);
@@ -41,7 +41,7 @@ class DynamicSegmentTree {
     ll update_child_node(ll node_idx, bool left) {
         auto &node = nodes_heap[node_idx];
         ll &idx = (left ? node.left_idx : node.right_idx);
-        if(idx == -1) idx = create_node(identity_ele);
+        if (idx == -1) idx = create_node(identity_ele);
         auto &nxt = nodes_heap[idx];
         nxt.parent_idx = node_idx;
         return idx;
@@ -61,17 +61,17 @@ public:
           sup(1)
           
     {
-        while(this->sup < sup) (this->sup) *= 2;
+        while (this->sup < sup) (this->sup) *= 2;
     }
 
     void update(ll pos, T value) {
         ll node_idx = 0;
         ll left = 0, right = sup;
         ll parent_idx = -1; 
-        while(right - left > 1) {
+        while (right - left > 1) {
             ll mid = (left + right) / 2;
             parent_idx = node_idx;
-            if(pos < mid) {
+            if (pos < mid) {
                 node_idx = update_child_node(node_idx, true);
                 right = mid;
             } else {
@@ -83,7 +83,7 @@ public:
         nodes_heap[node_idx] = value;
         nodes_heap[node_idx].parent_idx = node_idx;
 
-        while(parent_idx != -1) {
+        while (parent_idx != -1) {
             auto &node = nodes_heap[parent_idx];
             ll lidx = node.left_idx;
             ll ridx = node.right_idx;
@@ -125,7 +125,7 @@ int main() {
                                PDD(1.0, 0.0), 5e6);
 
     double maxv = 1, minv = 1;
-    for(ll i = 0; i < M; i++) {
+    for (ll i = 0; i < M; i++) {
         ll p;
         double a, b;
         cin >> p >> a >> b;

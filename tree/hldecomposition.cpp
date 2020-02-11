@@ -27,10 +27,10 @@ struct HeavyLightDecomposition {
         ll ret = 1;
         parent_node_idx[cur] = pre;
         ll max_size = 0, max_size_to = -1;
-        for(ll nxt : graph[cur]) {
-            if(nxt == pre) continue;
+        for (ll nxt : graph[cur]) {
+            if (nxt == pre) continue;
             ll res = count_size(nxt, cur);
-            if(max_size < res) {
+            if (max_size < res) {
                 max_size = res;
                 max_size_to = nxt;
             }
@@ -48,10 +48,10 @@ struct HeavyLightDecomposition {
         head[cur] = (get_decomposed_id(pre) == -1 ? cur :
                      component_id[cur] == component_id[pre] ? head[pre] : cur);
 
-        if(heavy_edge_to[cur] != -1) build_component(heavy_edge_to[cur], cur, decomposed_id_counter, total_hl);
+        if (heavy_edge_to[cur] != -1) build_component(heavy_edge_to[cur], cur, decomposed_id_counter, total_hl);
 
-        for(ll nxt : graph[cur]) {
-            if(nxt == pre || nxt == heavy_edge_to[cur]) continue;
+        for (ll nxt : graph[cur]) {
+            if (nxt == pre || nxt == heavy_edge_to[cur]) continue;
             build_component(nxt, cur, decomposed_id_counter, ++total_hl);
         }
     }
@@ -68,9 +68,9 @@ struct HeavyLightDecomposition {
     T query(ll n1, ll n2, const function<T(ll, ll)> &calc_component, T identity, const function<T(T, T)> &merge) {
         T lval = identity, rval = identity;
         T result = identity;
-        while(true) {
-            if(component_id[n1] != component_id[n2]) {
-                if(decomposed_id[n1] < decomposed_id[n2]) {
+        while (true) {
+            if (component_id[n1] != component_id[n2]) {
+                if (decomposed_id[n1] < decomposed_id[n2]) {
                     T tmp = calc_component(decomposed_id[head[n2]], decomposed_id[n2] + 1);
                     rval = merge(tmp, rval);
                     n2 = parent_node_idx[head[n2]];
@@ -112,7 +112,7 @@ int main() {
     ll N;
     cin >> N;
     edges.resize(N);
-    for(ll i = 1; i < N; i++) {
+    for (ll i = 1; i < N; i++) {
         ll u, v;
         cin >> u >> v;
         u--; v--;
@@ -136,7 +136,7 @@ int main() {
     ll Q;
     cin >> Q;
     ll ans = 0;
-    while(Q--) {
+    while (Q--) {
         ll a, b;
         cin >> a >> b;
         a--; b--;

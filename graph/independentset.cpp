@@ -60,7 +60,7 @@ struct IndependentSet {
     IndependentSet(const VV<ll> &edges_arg) {
         node_num = edges_arg.size();
         edges.resize(node_num);
-        for(size_t i = 0; i < node_num; i++) for(size_t j : edges_arg[i]) edges[i].set(j, 1);
+        for (size_t i = 0; i < node_num; i++) for (size_t j : edges_arg[i]) edges[i].set(j, 1);
     }
 
     const BS& max_bs(const BS &a, const BS &b) { return a.count() < b.count() ? b : a; }
@@ -71,17 +71,17 @@ struct IndependentSet {
         size_t node_cnt = end_idx - begin_idx;
         auto make_idx = [&](size_t node_idx) { return node_idx - offset; };
         V<BS> dp(1ll << node_cnt, 0);
-        for(size_t S = 0; S < (1ll << node_cnt); S++) {
+        for (size_t S = 0; S < (1ll << node_cnt); S++) {
             BS bs(S);
             bool ok = true;
-            for(size_t i = begin_idx; i < end_idx; i++) {
+            for (size_t i = begin_idx; i < end_idx; i++) {
                 auto bs_i = bs;
                 auto iidx = make_idx(i);
                 bs_i.set(iidx, 0);
                 ok &= (bs.test(iidx) && (bs_i & (edges[i] >> offset)) != BS(0)) ? false : true;
             }
             dp[S] = (ok ? bs : BS(0));
-            for(size_t i = begin_idx; i < end_idx; i++) {
+            for (size_t i = begin_idx; i < end_idx; i++) {
                 size_t iidx = make_idx(i);
                 size_t pre_set = S ^ (1ll << iidx);
                 dp[S] = bs.test(iidx) ? max_bs(dp[S], dp[pre_set]) : dp[S];
@@ -94,18 +94,18 @@ struct IndependentSet {
         size_t first_half = min(node_num, Half);
         auto first_half_dp = calc_dp(0, first_half);
 
-        if(node_num == first_half) return first_half_dp.back();
+        if (node_num == first_half) return first_half_dp.back();
         
         auto latter_half_dp = calc_dp(first_half, node_num);
         size_t latter_offset = first_half;
         
         BS ret(0);
         BS modify_prefix(0);
-        for(size_t i = node_num; i < N; i++) modify_prefix.set(i, 1);
-        for(size_t S = 0; S < (1ll << first_half); S++) {
+        for (size_t i = node_num; i < N; i++) modify_prefix.set(i, 1);
+        for (size_t S = 0; S < (1ll << first_half); S++) {
             BS bs(S);
             BS ng_nodes(0);
-            for(size_t i = 0; i < first_half; i++) ng_nodes |= (bs.test(i) ? edges[i] : BS(0));
+            for (size_t i = 0; i < first_half; i++) ng_nodes |= (bs.test(i) ? edges[i] : BS(0));
             BS ok_nodes = ~ng_nodes;
             ok_nodes ^= modify_prefix;
             ok_nodes >>= latter_offset;
@@ -122,7 +122,7 @@ int main(){
     ll N, M;
     cin >> N >> M;
     vector<vector<ll>> edges(N);
-    for(ll i = 0; i < M; i++){
+    for (ll i = 0; i < M; i++){
         ll a, b;
         cin >> a >> b;
         a--;

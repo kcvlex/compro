@@ -18,10 +18,10 @@ struct UnionFind {
     void unit(ll x, ll y) {
         ll px = find(x);
         ll py = find(y);
-        if(px == py) {
+        if (px == py) {
             return;
         }
-        if(rank[px] < rank[py]) {
+        if (rank[px] < rank[py]) {
             swap(px, py);
         }
         parent[py] = px;

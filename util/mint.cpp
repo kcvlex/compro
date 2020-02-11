@@ -29,7 +29,7 @@ struct modint {
     constexpr inline modint pow(modint a, ll b) {
         modint tmp = a;
         modint ret(1);
-        while(b) {
+        while (b) {
             ret *= (b & 1 ? a : 1);
             tmp *= tmp;
             b /= 2;

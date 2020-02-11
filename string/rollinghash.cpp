@@ -15,12 +15,12 @@ struct RollingHash {
         : bases(bases), mods(mods) 
     {
         assert(bases.size() == mods.size());
-        for(ll i = 0; i < mods.size(); i++) {
+        for (ll i = 0; i < mods.size(); i++) {
             ll mod = mods[i];
             ll base = bases[i];
             V<ll> hash(s.size() + 1, 0);
             V<ll> _pow(s.size() + 1, 1);
-            for(ll j = 0; j < s.size(); j++) {
+            for (ll j = 0; j < s.size(); j++) {
                 hash[j + 1] = (hash[j] + (s[j] - 'a')) * base % mod;
                 _pow[j + 1] = _pow[j] * base % mod;
             }
@@ -32,7 +32,7 @@ struct RollingHash {
     // [l, r)
     V<ll> get_hash(ll l, ll r) {
         V<ll> ret;
-        for(ll i = 0; i < mods.size(); i++) {
+        for (ll i = 0; i < mods.size(); i++) {
             ll h = hashs[i][r] - hashs[i][l] * pows[i][r - l] % mods[i];
             h += mods[i];
             h %= mods[i];

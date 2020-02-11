@@ -4,15 +4,14 @@ using ll = int64_t;
 
 template <ll MOD>
 class Combination {
-private:
     ll N;
     V<ll> factv, ifactv;
 
 public:
     Combination<MOD>(ll N) : N(N), factv(N + 1, 1), ifactv(N + 1) {
-        for(ll i = 1; i <= N; i++) factv[i] = factv[i - 1] * i % MOD;
+        for (ll i = 1; i <= N; i++) factv[i] = factv[i - 1] * i % MOD;
         ifactv.back() = inv(factv.back());
-        for(ll i = N - 1; 0 <= i; i--) ifactv[i] = (i + 1) * ifactv[i + 1] % MOD;
+        for (ll i = N - 1; 0 <= i; i--) ifactv[i] = (i + 1) * ifactv[i + 1] % MOD;
     }
 
     ll fact(ll n) { return factv[n]; }

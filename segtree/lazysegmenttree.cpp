@@ -42,23 +42,23 @@ public:
     {
         {
             arr_size = 1;
-            while(arr_size < v.size()) arr_size *= 2;
+            while (arr_size < v.size()) arr_size *= 2;
         }
         node.resize(2 * arr_size - 1, init_node);
         lazy.resize(2 * arr_size - 1, init_lazy);
         lazy_flag.resize(2 * arr_size - 1, false);
-        for(ll i = 0; i < v.size(); i++) node[i + arr_size - 1] = v[i];
-        for(ll i = arr_size - 2; 0 <= i; i--) node[i] = merge_node(node[i * 2 + 1], node[i * 2 + 2]);
+        for (ll i = 0; i < v.size(); i++) node[i + arr_size - 1] = v[i];
+        for (ll i = arr_size - 2; 0 <= i; i--) node[i] = merge_node(node[i * 2 + 1], node[i * 2 + 2]);
     }
 
     void lazy_eval(ll pos, ll left, ll right) {
-        if(!lazy_flag[pos]) return;
+        if (!lazy_flag[pos]) return;
 
         node[pos] = apply_lazy_value(node[pos], lazy[pos]);
         lazy_flag[pos] = false;
 
-        if(right - left > 1) {
-            for(ll idx = 2 * pos + 1; idx <= 2 * pos + 2; idx++) {
+        if (right - left > 1) {
+            for (ll idx = 2 * pos + 1; idx <= 2 * pos + 2; idx++) {
                 lazy[idx] = update_lazy_value(lazy[idx], prop_lazy_value(lazy[pos]));
                 lazy_flag[idx] = true;
             }
@@ -68,13 +68,13 @@ public:
     }
 
     void update_query(ll left, ll right, L val, ll pos = 0, ll node_left = 0, ll node_right = -1) {
-        if(node_right < 0) node_right = arr_size;
+        if (node_right < 0) node_right = arr_size;
 
         lazy_eval(pos, node_left, node_right);
 
-        if(right <= node_left || node_right <= left) return;
+        if (right <= node_left || node_right <= left) return;
         
-        if(left <= node_left && node_right <= right) {
+        if (left <= node_left && node_right <= right) {
             lazy[pos] = calc_lazy_value(node_left, node_right, val);
             lazy_flag[pos] = true;
             lazy_eval(pos, node_left, node_right);
@@ -87,12 +87,12 @@ public:
     }
 
     T get_query(ll left, ll right, ll pos = 0, ll node_left = 0, ll node_right = -1) {
-        if(node_right < 0) node_right = arr_size;
+        if (node_right < 0) node_right = arr_size;
         
         lazy_eval(pos, node_left, node_right);
 
-        if(node_right <= left || right <= node_left) return init_node;
-        if(left <= node_left && node_right <= right) return node[pos];
+        if (node_right <= left || right <= node_left) return init_node;
+        if (left <= node_left && node_right <= right) return node[pos];
 
         ll mid = (node_left + node_right) / 2;
         return merge_node(get_query(left, right, 2 * pos + 1, node_left, mid),
@@ -115,10 +115,10 @@ int main() {
             [](ll l, ll r, ll v) { return v; });
     ll Q;
     cin >> Q;
-    for(ll QQ = 0; QQ < Q; QQ++) {
+    for (ll QQ = 0; QQ < Q; QQ++) {
         ll qn;
         cin >> qn;
-        if(qn == 0) {
+        if (qn == 0) {
             ll s, t, x;
             cin >> s >> t >> x;
             LST.update_query(s, t + 1, x);

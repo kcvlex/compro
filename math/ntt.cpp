@@ -42,7 +42,7 @@ struct NTT {
         auto root_max_pow = this->pow(PrimitiveRoot, (Mod - 1) / (1ll << max_size_log));
         root_pow_lis[0] = root_max_pow;
         root_inv_lis[0] = this->inv(root_max_pow);
-        for(size_t i = 1; i < root_pow_lis.size(); i++) {
+        for (size_t i = 1; i < root_pow_lis.size(); i++) {
             root_pow_lis[i] = root_pow_lis[i - 1] * root_pow_lis[i - 1] % Mod;
             root_inv_lis[i] = root_inv_lis[i - 1] * root_inv_lis[i - 1] % Mod;
         }
@@ -57,7 +57,7 @@ struct NTT {
     V<uint64_t> build_rev_bit(size_t len) {
         uint64_t r = 0, s = 0, max_v = len;
         V<uint64_t> ret(len);
-        for(auto &&ele : ret) {
+        for (auto &&ele : ret) {
             // assert(r < max_v * 2);
             ele = s;
             r += 2;
@@ -73,18 +73,18 @@ struct NTT {
         
         {
             size_t arr_idx = 0;
-            for(auto &&idx : rev_bit) res[idx] = (arr_idx < arr.size() ? arr[arr_idx++] : 0);
+            for (auto &&idx : rev_bit) res[idx] = (arr_idx < arr.size() ? arr[arr_idx++] : 0);
         }
 
         size_t unit_size = 2;
         size_t root_pow_idx = 0;
         const auto &root_lis = (inverse ? root_inv_lis : root_pow_lis);
-        while(unit_size <= res.size()) {
+        while (unit_size <= res.size()) {
             uint64_t root = root_lis[root_pow_idx];
             uint64_t root_pow = 1;
             auto unit_cnt = res.size() / unit_size;
-            for(size_t offset = 0; offset < unit_size / 2; offset++) {
-                for(size_t unit_counter = 0; unit_counter < unit_cnt; unit_counter++) {
+            for (size_t offset = 0; offset < unit_size / 2; offset++) {
+                for (size_t unit_counter = 0; unit_counter < unit_cnt; unit_counter++) {
                     auto i = unit_counter * unit_size + offset;
                     auto j = i + unit_size / 2;
                     auto cur_val_i = res[i], cur_val_j = res[j];
@@ -97,9 +97,9 @@ struct NTT {
             unit_size *= 2;
             root_pow_idx++;
         }
-        if(inverse) {
+        if (inverse) {
             auto inv_len = inv(len);
-            for(auto &&ele : res) (ele *= inv_len) %= Mod;
+            for (auto &&ele : res) (ele *= inv_len) %= Mod;
         }
 
         return res;
@@ -108,11 +108,11 @@ struct NTT {
     V<uint64_t> convolution(const V<uint64_t> &arr_a, const V<uint64_t> &arr_b) {
         auto lower_size = arr_a.size() + arr_b.size() - 1;
         size_t conv_size = 1;
-        while(conv_size < lower_size) conv_size *= 2;
+        while (conv_size < lower_size) conv_size *= 2;
         auto rev_bit = build_rev_bit(conv_size);
         auto ntt_a = ntt(arr_a, false, rev_bit);
         auto ntt_b = ntt(arr_b, false, rev_bit);
-        for(size_t i = 0; i < conv_size; i++) (ntt_a[i] *= ntt_b[i]) %= Mod;
+        for (size_t i = 0; i < conv_size; i++) (ntt_a[i] *= ntt_b[i]) %= Mod;
         return ntt(ntt_a, true, rev_bit);
     }
 };
@@ -124,15 +124,15 @@ int main() {
     cin >> N;
 #if 1
     V<uint64_t> A(N + 1), B(N + 1);
-    for(int i = 0; i < N; i++) cin >> A[i + 1] >> B[i + 1];
+    for (int i = 0; i < N; i++) cin >> A[i + 1] >> B[i + 1];
     auto conv = ntt.convolution(A, B);
-    for(int i = 1; i <= 2 * N; i++) cout << conv[i] << endl;
+    for (int i = 1; i <= 2 * N; i++) cout << conv[i] << endl;
 #else 
     V<uint64_t> A(N), B(N);
-    for(int i = 0; i < N; i++) cin >> A[i] >> B[i];
+    for (int i = 0; i < N; i++) cin >> A[i] >> B[i];
     auto conv = ntt.convolution(A, B);
     cout << 0 << endl;
-    for(int i = 0; i < 2 * N - 1; i++) cout << conv[i] << endl;
+    for (int i = 0; i < 2 * N - 1; i++) cout << conv[i] << endl;
 #endif
     return 0;
 }

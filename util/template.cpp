@@ -3,12 +3,12 @@
 #define endl '\n'
 #define ALL(V) (V).begin(), (V).end()
 #define ALLR(V) (V).rbegin(), (V).rend()
-template <typename T> using V = std::vector<T>;
-template <typename T> using VV = V<V<T>>;
 using ll = std::int64_t;
 using ull = std::uint64_t;
 using PLL = std::pair<ll, ll>;
 using TLL = std::tuple<ll, ll, ll>;
+template <typename T> using V = std::vector<T>;
+template <typename T> using VV = V<V<T>>;
 template <typename T> const T& var_min(const T &t) { return t; }
 template <typename T> const T& var_max(const T &t) { return t; }
 template <typename T, typename... Tail> const T& var_min(const T &t, const Tail&... tail) { return std::min(t, var_min(tail...)); }
@@ -23,6 +23,7 @@ template <typename T> T make_v(T init) { return init; }
 template <typename T, typename... Tail> auto make_v(T init, size_t s, Tail... tail) { return V<decltype(mv_rec)>(s, mv_rec); }
 #undef mv_rec
 using namespace std;
+
 #ifdef DEBUGGING
 #include "../../debug/debug.cpp"
 #else

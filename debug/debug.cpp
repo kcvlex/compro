@@ -50,7 +50,7 @@ string to_string(const tuple<Args...> &t) {
 template <typename T>
 string to_string(const V<T> &v) {
     string ret = "{";
-    for(const T &t : v) {
+    for (const T &t : v) {
         ret += to_string(t);
         ret += ", ";
     }
@@ -60,7 +60,7 @@ string to_string(const V<T> &v) {
 
 template <typename T>
 void debug_func(const T &t, const string &s) {
-    if(s.size()) cout << s << " = ";
+    if (s.size()) cout << s << " = ";
     cout << to_string(t) << DEBUG_ENDL_S(s);
 }
 
@@ -93,17 +93,17 @@ V<string> split_names(string s) {
     s += ',';
     ll depth = 0;
     bool pre_splited_comma = false;
-    for(char c : s) {
-        for(const auto &ele : nested) {
-            if(c == ele[0]) depth++;
-            if(c == ele[1]) depth--;
+    for (char c : s) {
+        for (const auto &ele : nested) {
+            if (c == ele[0]) depth++;
+            if (c == ele[1]) depth--;
         }
-        if(depth == 0 && c == ',') {
+        if (depth == 0 && c == ',') {
             ret.push_back(now);
             now = "";
             pre_splited_comma = true;
         } else {
-            if(!(pre_splited_comma && c == ' ')) now += c;
+            if (!(pre_splited_comma && c == ' ')) now += c;
             pre_splited_comma = false;
         }
     }

@@ -12,8 +12,8 @@ class StronglyConnectedComponents {
 
     void dfs(ll now) {
         used_dfs[now] = 1;
-        for(ll next : E[now]) {
-            if(used_dfs[next]) {
+        for (ll next : E[now]) {
+            if (used_dfs[next]) {
                 continue;
             }
             dfs(next);
@@ -24,8 +24,8 @@ class StronglyConnectedComponents {
     void dfs(ll now, V<bool> &used, vector<ll> &ret) {
         used[now] = 1;
         ret.push_back(now);
-        for(ll next : inv_E[now]) {
-            if(used[next]) {
+        for (ll next : inv_E[now]) {
+            if (used[next]) {
                 continue;
             }
             dfs(next, used, ret);
@@ -33,8 +33,8 @@ class StronglyConnectedComponents {
     }
 
     void write_num() {
-        for(ll i = 0; i < E.size(); i++) {
-            if(!used_dfs[i]) {
+        for (ll i = 0; i < E.size(); i++) {
+            if (!used_dfs[i]) {
                 dfs(i);
             }
         }
@@ -47,8 +47,8 @@ public:
           number(E.size()),
           used_dfs(E.size(), false)
     {
-        for(ll i = 0; i < E.size(); i++) {
-            for(ll nxt : E[i]) {
+        for (ll i = 0; i < E.size(); i++) {
+            for (ll nxt : E[i]) {
                 inv_E[nxt].push_back(i);
             }
         }
@@ -59,12 +59,12 @@ public:
         VV<ll> ret;
         V<ll> vertex_vec;
         V<bool> used(E.size());
-        for(ll i = 0; i < E.size(); i++) {
+        for (ll i = 0; i < E.size(); i++) {
             vertex_vec.push_back(i);
         }
         sort(vertex_vec.begin(), vertex_vec.end(), [&](ll a, ll b) { return number[a] > number[b]; });
-        for(ll vertex : vertex_vec) {
-            if(used[vertex]) {
+        for (ll vertex : vertex_vec) {
+            if (used[vertex]) {
                 continue;
             }
             V<ll> to_insert;

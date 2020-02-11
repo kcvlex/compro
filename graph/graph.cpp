@@ -35,7 +35,7 @@ struct Graph {
     template <typename Attr...>
     void add_edge(ll x, ll y, bool directed, Attr&&... attr) {
         add__edge(x, y, forward<Attr>(attr)...);
-        if(!directed) add_edge__(y, x, forward<Attr>(attr)...);
+        if (!directed) add_edge__(y, x, forward<Attr>(attr)...);
     }
 
     size_t size() const { return node_num; }

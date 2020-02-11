@@ -71,16 +71,16 @@ struct MinCostFlow {
         PathInfo pi(vertex_num);
         dist[start] = 0;
         pq.emplace(0, start);
-        while(pq.size()) {
+        while (pq.size()) {
             ll d, from;
             tie(d, from) = pq.top();
             pq.pop();
-            if(dist[from] < d) continue;
-            for(ll i = 0; i < edges[from].size(); i++) {
+            if (dist[from] < d) continue;
+            for (ll i = 0; i < edges[from].size(); i++) {
                 ll to, cap, cost, rev_idx;
                 tie(to, cap, cost, rev_idx) = edges[from][i];
                 ll d_nxt = d + cost + potential[from] - potential[to];
-                if(cap <= 0 || dist[to] <= d_nxt) continue;
+                if (cap <= 0 || dist[to] <= d_nxt) continue;
                 dist[to] = d_nxt;
                 pi[to] = make_pair(from, i);
                 pq.emplace(d_nxt, to);
@@ -95,28 +95,28 @@ struct MinCostFlow {
     ll calc(ll start, ll goal, ll flow) {
         ll ret = 0;
         V<ll> dist(vertex_num, inf);
-        while(flow > 0) {
+        while (flow > 0) {
             Distances dist;
             PathInfo pi;
             tie(dist, pi) = dijk(start);
 
-            if(dist[goal] == inf) return -1;
-            for(ll i = 0; i < vertex_num; i++) potential[i] += dist[i];
+            if (dist[goal] == inf) return -1;
+            for (ll i = 0; i < vertex_num; i++) potential[i] += dist[i];
             
             ll max_flow = flow;
-            for(ll now = goal; now != start; now = pi[now].first) {
+            for (ll now = goal; now != start; now = pi[now].first) {
                 ll pre_node, pre_edge_idx;
                 tie(pre_node, pre_edge_idx) = pi[now];
                 auto &edge = edges[pre_node][pre_edge_idx];
                 chmin(max_flow, get_cap(edge));
             }
 
-            if(max_flow == 0) return -1;
+            if (max_flow == 0) return -1;
 
             flow -= max_flow;
             ret += max_flow * potential[goal];
 
-            for(ll now = goal; now != start; now = pi[now].first) {
+            for (ll now = goal; now != start; now = pi[now].first) {
                 ll pre_node, pre_edge_idx;
                 tie(pre_node, pre_edge_idx) = pi[now];
                 auto &edge = edges[pre_node][pre_edge_idx];
@@ -135,7 +135,7 @@ int main() {
     ll N, E, F;
     cin >> N >> E >> F;
     MinCostFlow mcf(N);
-    for(ll i = 0; i < E; i++) {
+    for (ll i = 0; i < E; i++) {
         ll a, b, cap, cost;
         cin >> a >> b >> cap >> cost;
         mcf.add_edge(a, b, cap, cost);

@@ -59,7 +59,7 @@ struct Trie {
         size_t parent_idx;
         pair<bool, T> status;
 
-        Node__(ull depth, size_t parent_idx) : depth(depth), parent_idx(parent_idx), status(false, T()) { for(auto &ele : children_idx) ele = numeric_limits<size_t>::max(); } 
+        Node__(ull depth, size_t parent_idx) : depth(depth), parent_idx(parent_idx), status(false, T()) { for (auto &ele : children_idx) ele = numeric_limits<size_t>::max(); } 
         Node__() : Node(0, numeric_limits<size_t>::max()) {}
         bool has_child(size_t idx) const { return children_idx[idx] != numeric_limits<size_t>::max(); }
     };
@@ -93,7 +93,7 @@ struct Trie {
     
     void create_node(IterateLabel &ite_label, size_t node_depth, size_t node_idx, V<Label> &&history) {
         auto label_info = ite_label();
-        if(label_info.first == LabelStatus::Finish) {
+        if (label_info.first == LabelStatus::Finish) {
             get_node(node_idx).status = make_pair(true, move(history));
             return;
         }
@@ -103,7 +103,7 @@ struct Trie {
         size_t label_id = label_map(label);
         history.push_back(label);
 
-        if(!node.has_child(label_id)) {
+        if (!node.has_child(label_id)) {
             size_t loc_idx = node_loc_idx++;
             nodes_loc[loc_idx] = Node(node_depth + 1, node_idx);
             node.children_idx[label_id] = loc_idx;
@@ -115,12 +115,12 @@ struct Trie {
     size_t search_node(IterateLabel &ite_label, size_t node_idx) {
         auto &node = get_node(node_idx);
         auto label_info = ite_label();
-        if(label_info.first == LabelStatus::Finish) return node.depth;
+        if (label_info.first == LabelStatus::Finish) return node.depth;
 
         const Label &label = label_info.second;
         size_t label_id = label_map(label);
 
-        if(!node.has_child(label_id)) return node.depth;
+        if (!node.has_child(label_id)) return node.depth;
         else return search_node(ite_label, node.children_idx[label_id]);
     }
 
@@ -128,7 +128,7 @@ struct Trie {
         static size_t idx = 0;
         idx = 0;
         auto ret = [&] {
-            if(str.size() <= idx) return make_pair(LabelStatus::Finish, static_cast<char>(0));
+            if (str.size() <= idx) return make_pair(LabelStatus::Finish, static_cast<char>(0));
             char c = str[idx];
             idx++;
             return pair<LabelStatus, char>(LabelStatus::Continue, c);
@@ -140,7 +140,7 @@ struct Trie {
         static size_t idx = 0;
         idx = 0;
         auto ret = [&] {
-            if(vec.size() <= idx) return make_pair(LabelStatus::Finish, Label());
+            if (vec.size() <= idx) return make_pair(LabelStatus::Finish, Label());
             Label t = vec[idx];
             idx++;
             return make_pair(LabelStatus::Continue, t);
@@ -170,9 +170,9 @@ struct AhoCorasick {
     {
         count_correct.assign(trie.get_node_count(), 0);
         V<string> accepts_str(trie.node_loc);
-        for(size_t i = 0; i < trie.node_loc; i++) {
+        for (size_t i = 0; i < trie.node_loc; i++) {
             auto &node = trie.get_node(i);
-            if(!node.status.first) continue;
+            if (!node.status.first) continue;
             accepts_str[i] = node.status.second;
             accepts_id_to_str.push_back(accepts[i]);
         }
@@ -183,7 +183,7 @@ struct AhoCorasick {
             accepts_id_to_str.erase(ite, accepts_id_to_str.end());
         }
 
-        for(size_t i = 0; i < trie.node_loc; i++) if(accepts_str[i].size()) {
+        for (size_t i = 0; i < trie.node_loc; i++) if (accepts_str[i].size()) {
             accepts_id_list[i].push_back(make_accept_id(accepts_str[i]));
         }
     }
@@ -195,8 +195,8 @@ struct AhoCorasick {
 
     queue<size_t> init_bfs() {
         queue<size_t> que;
-        for(size_t idx = 0; idx < failed_idx; idx++) {
-            if(trie.get_root().has_child(idx)) {
+        for (size_t idx = 0; idx < failed_idx; idx++) {
+            if (trie.get_root().has_child(idx)) {
                 auto &nxt_node = trie.get_node(trie.get_root().children_idx[idx]);
                 nxt_node.children_idx[failed_idx] = trie.root_idx;
                 que.push(idx);
@@ -209,22 +209,22 @@ struct AhoCorasick {
 
     size_t suffix_link_node_idx(size_t current_node_idx, size_t label_id) {
         size_t idx = trie.get_node(current_node_idx).children_idx[failed_idx];
-        while(trie.get_node(idx).children_idx[label_id] == -1) idx = trie.get_node(idx).children_idx[label_id];
+        while (trie.get_node(idx).children_idx[label_id] == -1) idx = trie.get_node(idx).children_idx[label_id];
         return idx;
     }
 
     template <typename T>
     void create_trie(const V<T> &dictionary) {
-        for(const auto &ele : dictionary) trie.create_node(ele);
+        for (const auto &ele : dictionary) trie.create_node(ele);
 
         auto que = init_bfs();
-        while(que.size()) {
+        while (que.size()) {
             auto current_idx = que.front();
             que.pop();
             const auto &current_node = trie.get_node(current_idx);
             count_correct[current_idx] += count_correct[current_node.children_idx[failed_idx]];
-            for(size_t label_id = 0; label_id < MaxChildren; label_id++) {
-                if(!current_node.has_child(label_id)) continue;
+            for (size_t label_id = 0; label_id < MaxChildren; label_id++) {
+                if (!current_node.has_child(label_id)) continue;
                 size_t next_idx = current_node.children_idx[label_id];
                 auto &next_node = trie.get_node(next_idx);
                 next_node.children_idx[failed_idx] = suffix_link_node_idx(current_idx, label_id);
@@ -242,12 +242,12 @@ struct AhoCorasick {
     V<ull> query(const string &str) {
         V<uint64_t> res;
         auto cur_idx = 0;
-        for(auto &&c : str) {
+        for (auto &&c : str) {
             auto label_id = label_map(c);
             do {
                 cur_idx = trie.get_node(cur_idx).children_idx[label_id];
-            } while(cur_idx == failed_idx);
-            for(auto &&acc_idx : accepts[cur_idx]) res[acc_idx]++;
+            } while (cur_idx == failed_idx);
+            for (auto &&acc_idx : accepts[cur_idx]) res[acc_idx]++;
         }
         return res;
     }

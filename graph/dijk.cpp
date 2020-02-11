@@ -24,19 +24,19 @@ public:
         d[start] = identity_ele;
         PQ<T> q([&](const Edge<T> &a, const Edge<T> &b) {return a.second > b.second;});
         q.push(make_pair(start, 0));
-        while(q.size()) {
+        while (q.size()) {
             ll now;
             T dis;
             tie(now, dis) = q.top();
             q.pop();
-            if(d[now] < dis) {
+            if (d[now] < dis) {
                 continue;
             }
-            for(const auto &e : edges[now]) {
+            for (const auto &e : edges[now]) {
                 ll nxt;
                 T cost;
                 tie(nxt, cost) = e;
-                if(d[nxt] == inf || dis + cost < d[nxt]) {
+                if (d[nxt] == inf || dis + cost < d[nxt]) {
                     d[nxt] = dis + cost;
                     q.push(make_pair(nxt, dis + cost));
                 }

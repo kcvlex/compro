@@ -19,8 +19,8 @@ class LiChaoTree {
     ll get_x_coor(ll xidx) { return xidx < x_coors.size() ? x_coors[xidx] : inf; }
 
     void add_line_(Line line, ll node_idx, ll lidx, ll ridx) {
-        if(nodes.size() <= node_idx) return;
-        if(nodes[node_idx] == invalid) {
+        if (nodes.size() <= node_idx) return;
+        if (nodes[node_idx] == invalid) {
             nodes[node_idx] = line;
             return;
         }
@@ -30,23 +30,23 @@ class LiChaoTree {
         ll mx = get_x_coor(midx);
         ll rx = get_x_coor(ridx);
         
-        if(lx == inf) return;
+        if (lx == inf) return;
         
         bool left_comp  = comp_bool(calc_y(line, lx), calc_y(nodes[node_idx], lx));
         bool mid_comp   = comp_bool(calc_y(line, mx), calc_y(nodes[node_idx], mx));
         bool right_comp = comp_bool(calc_y(line, rx), calc_y(nodes[node_idx], rx));
 
-        if(left_comp && right_comp) {
+        if (left_comp && right_comp) {
             nodes[node_idx] = line;
             return;
         }
-        if(!left_comp && !right_comp) return;
-        if(mid_comp) {
+        if (!left_comp && !right_comp) return;
+        if (mid_comp) {
             swap(line, nodes[node_idx]);
             left_comp = !left_comp;
             right_comp = !right_comp;
         }
-        if(left_comp) add_line_(line, 2 * node_idx + 1, lidx, midx);
+        if (left_comp) add_line_(line, 2 * node_idx + 1, lidx, midx);
         else          add_line_(line, 2 * node_idx + 2, midx, ridx);
     }
 
@@ -61,16 +61,16 @@ public:
           invalid(invalid)
     {
         ll tmp = 1;
-        while(tmp < x_coors.size()) tmp *= 2;
+        while (tmp < x_coors.size()) tmp *= 2;
         node_begin_idx = tmp - 1;
         this->x_coors.resize(tmp);
         nodes.resize(2 * tmp - 1, invalid);
-        for(ll i = 0; i < x_coors.size(); i++) this->x_coors[i] = x_coors[i];
-        for(ll i = x_coors.size(); i < tmp; i++) this->x_coors[i] = inf;
+        for (ll i = 0; i < x_coors.size(); i++) this->x_coors[i] = x_coors[i];
+        for (ll i = x_coors.size(); i < tmp; i++) this->x_coors[i] = inf;
     }
 
     ll calc_y(Line line, ll x) {
-        if(line == invalid) return identity_ele;
+        if (line == invalid) return identity_ele;
         ll a, b;
         tie(a, b) = line;
         return a * x + b;
@@ -85,12 +85,12 @@ public:
         ll node_idx = xidx + node_begin_idx;
         ll x = x_coors[xidx];
         ll ret = identity_ele;
-        while(true) {
-            if(nodes[node_idx] != invalid) {
+        while (true) {
+            if (nodes[node_idx] != invalid) {
                 ll y = calc_y(node_idx, x);
                 ret = comp(ret, y);
             }
-            if(!node_idx) break;
+            if (!node_idx) break;
             node_idx = (node_idx - 1) / 2;
         }
         return ret;

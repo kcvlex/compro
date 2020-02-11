@@ -59,7 +59,7 @@ struct Trie {
         size_t parent_idx;
         pair<bool, T> status;
 
-        Node__(ull depth, size_t parent_idx) : depth(depth), parent_idx(parent_idx), status(false, T()) { for(auto &ele : children_idx) ele = numeric_limits<size_t>::max(); } 
+        Node__(ull depth, size_t parent_idx) : depth(depth), parent_idx(parent_idx), status(false, T()) { for (auto &ele : children_idx) ele = numeric_limits<size_t>::max(); } 
         Node__() : Node(0, numeric_limits<size_t>::max()) {}
         bool has_child(size_t idx) const { return children_idx[idx] != numeric_limits<size_t>::max(); }
     };
@@ -91,7 +91,7 @@ struct Trie {
         Iterator current, last;
         IteratorWrapper(Iterator current, Iterator last) : current(current), last(last) {}
         LabelInfo operator()() {
-            if(current == last) return make_pair(LabelStatus::Finish, Label());
+            if (current == last) return make_pair(LabelStatus::Finish, Label());
             auto label = *current;
             advance(current, 1);
             return make_pair(LabelStatus::Continue, label);
@@ -100,7 +100,7 @@ struct Trie {
 
     void create_node(IterateLabel &ite_label, size_t node_depth, size_t node_idx, V<Label> &&history) {
         auto label_info = ite_label();
-        if(label_info.first == LabelStatus::Finish) {
+        if (label_info.first == LabelStatus::Finish) {
             get_node(node_idx).status = make_pair(true, move(history));
             return;
         }
@@ -110,7 +110,7 @@ struct Trie {
         size_t label_id = label_map(label);
         history.push_back(label);
 
-        if(!node.has_child(label_id)) {
+        if (!node.has_child(label_id)) {
             size_t loc_idx = node_loc_idx++;
             nodes_loc[loc_idx] = Node(node_depth + 1, node_idx);
             node.children_idx[label_id] = loc_idx;
@@ -122,12 +122,12 @@ struct Trie {
     size_t search_node(IterateLabel &ite_label, size_t node_idx) {
         auto &node = get_node(node_idx);
         auto label_info = ite_label();
-        if(label_info.first == LabelStatus::Finish) return node.depth;
+        if (label_info.first == LabelStatus::Finish) return node.depth;
 
         const Label &label = label_info.second;
         size_t label_id = label_map(label);
 
-        if(!node.has_child(label_id)) return node.depth;
+        if (!node.has_child(label_id)) return node.depth;
         else return search_node(ite_label, node.children_idx[label_id]);
     }
 
@@ -147,7 +147,7 @@ int main() {
     imos[0] = 2;
     Trie<char, 2> trie([](char c) { return c - '0'; });
 
-    for(ll i = 0; i < N; i++) {
+    for (ll i = 0; i < N; i++) {
         string s;
         cin >> s;
         auto d = trie.search_node(s);
@@ -159,13 +159,13 @@ int main() {
     }
  
     ll gxor = 0;
-    for(ll i = 1; i < imos.size() - 1; i++) imos[i + 1] += imos[i];
+    for (ll i = 1; i < imos.size() - 1; i++) imos[i + 1] += imos[i];
 
-    for(ll i = 0; i < imos.size(); i++) {
-        if(imos[i] % 2 == 0) continue;
+    for (ll i = 0; i < imos.size(); i++) {
+        if (imos[i] % 2 == 0) continue;
         bitset<64> bs(L - i);
-        for(ll j = 0; j <= 63; j++) {
-            if(!bs.test(j)) continue;
+        for (ll j = 0; j <= 63; j++) {
+            if (!bs.test(j)) continue;
             gxor ^= (1ll << j);
             break;
         }

@@ -20,6 +20,6 @@ struct GenNum {
 
 int main() {
     GenNum gn(0, 7 + 1);
-    for(ll i = 0; i < 30; i++) cout << gn.gen_num() << endl;
+    for (ll i = 0; i < 30; i++) cout << gn.gen_num() << endl;
     return 0;
 }

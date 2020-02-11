@@ -20,8 +20,8 @@ struct Matrix {
     
     Mat operator + (const Mat &other) const {
         Mat ret(this->mat);
-        for(ll i = 0; i < N; i++){
-            for(ll j = 0; j < M; j++){
+        for (ll i = 0; i < N; i++){
+            for (ll j = 0; j < M; j++){
                 ret.mat[i][j] += other.mat[i][j];
             }
         }
@@ -35,8 +35,8 @@ struct Matrix {
 
     Mat operator - (const Mat &other) const {
         Mat ret(this->mat);
-        for(ll i = 0; i < N; i++){
-            for(ll j = 0; j < M; j++){
+        for (ll i = 0; i < N; i++){
+            for (ll j = 0; j < M; j++){
                 ret.mat[i][j] -= other.mat[i][j];
             }
         }
@@ -51,10 +51,10 @@ struct Matrix {
     template <size_t K>
     Matrix<N, K> operator * (const Matrix<M, K> &other) const {
         Mat ret(init);
-        for(ll n = 0; n < N; n++){
-            for(ll k = 0; k < K; k++){
+        for (ll n = 0; n < N; n++){
+            for (ll k = 0; k < K; k++){
                 T tmp = init;
-                for(ll i = 0; i < M; i++){
+                for (ll i = 0; i < M; i++){
                     tmp += (this->mat)[n][i] * other.mat[i][k];
                 }
                 ret.mat[n][k] = tmp;
@@ -79,10 +79,10 @@ int main(){
     Matrix<3, 3> ma(arr, 0);
     auto tmp = ma * ma;
     auto mat = tmp.mat;
-    for(ll i = 0; i < mat.size(); i++){ for(ll j = 0; j < mat[i].size(); j++) cout << mat[i][j] << ", "; cout << endl; }
+    for (ll i = 0; i < mat.size(); i++){ for (ll j = 0; j < mat[i].size(); j++) cout << mat[i][j] << ", "; cout << endl; }
 //    (ma *= ma) *= ma;
     ma *= ma;
     mat = ma.mat;
-    for(ll i = 0; i < mat.size(); i++){ for(ll j = 0; j < mat[i].size(); j++) cout << mat[i][j] << ", "; cout << endl; }
+    for (ll i = 0; i < mat.size(); i++){ for (ll j = 0; j < mat[i].size(); j++) cout << mat[i][j] << ", "; cout << endl; }
     return 0;
 }

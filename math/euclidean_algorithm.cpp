@@ -10,7 +10,7 @@ PLL error_pll = make_pair(-1, -1);
 TLL error_tll = make_tuple(-1, -1, -1);
 
 TLL ext_euclidean(ll a, ll b) {
-    if(b == 0) {
+    if (b == 0) {
         return make_tuple(1, 0, a);
     }
     ll xr, yr, g;
@@ -23,7 +23,7 @@ TLL ext_euclidean(ll a, ll b) {
 TLL ext_euclidean(ll a, ll b, ll d) {
     ll x, y, g;
     tie(x, y, g) = ext_euclidean(a, b);
-    if(d % g) {
+    if (d % g) {
         return error_tll;
     } else {
         ll mul = d / g;
@@ -32,13 +32,13 @@ TLL ext_euclidean(ll a, ll b, ll d) {
 }
 
 PLL chinese_remainder(ll b1, ll m1, ll b2, ll m2) {
-    if(b1 > b2) {
+    if (b1 > b2) {
         swap(b1, b2);
         swap(m1, m2);
     }
     ll p, q, g;
     tie(p, q, g) = ext_euclidean(m1, m2);
-    if((b2 - b1) % g) {
+    if ((b2 - b1) % g) {
         return error_pll;
     }
     ll m = m1 / g * m2;
@@ -50,9 +50,9 @@ PLL chinese_remainder(ll b1, ll m1, ll b2, ll m2) {
 PLL chinese_remainder(const V<ll> &bv, const V<ll> &mv) {
     assert(bv.size() == mv.size());
     ll b = 0, m = 1;
-    for(ll i = 0; i < bv.size(); i++) {
+    for (ll i = 0; i < bv.size(); i++) {
         tie(b, m) = chinese_remainder(b, m, bv[i], mv[i]);
-        if(b == -1) {
+        if (b == -1) {
             return error_pll;
         }
     }

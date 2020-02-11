@@ -78,7 +78,7 @@ public:
 
         states_set.insert(start_state());
 
-        while(que.size()) {
+        while (que.size()) {
             trans_states(states_set, finish_states_set, que, dfa_edges);
         }
 
@@ -89,7 +89,7 @@ private:
     // TODO: 前計算したほうが良いかもしれないね
     States vec2states(const V<ll> &finish_v) {
         States ret(0);
-        for(ll e : finish_v) ret.set(e, 1);
+        for (ll e : finish_v) ret.set(e, 1);
         return move(ret);
     }
 
@@ -97,9 +97,9 @@ private:
 
     States next_states(const States &now, ll label) {
         States ret(0);
-        for(ll q = 0; q < Q; q++) {
-            if(!now.test(q)) continue;
-            for(auto nxt : edges[q][label]) {
+        for (ll q = 0; q < Q; q++) {
+            if (!now.test(q)) continue;
+            for (auto nxt : edges[q][label]) {
                 ret.set(nxt, 1);
             }
         }
@@ -114,20 +114,20 @@ private:
         States now = que.front();
         que.pop();
         
-        for(ll label = 0; label < Label; label++) {
+        for (ll label = 0; label < Label; label++) {
             auto nxt = next_states(now, label);
-            if(nxt == States(0)) continue;
+            if (nxt == States(0)) continue;
             dfa_edges[now][label].insert(nxt);
-            if(states_set.find(nxt) != states_set.end()) continue;
+            if (states_set.find(nxt) != states_set.end()) continue;
             states_set.insert(nxt);
-            if((nxt & finish_states).any()) finish_states_set.insert(nxt);
+            if ((nxt & finish_states).any()) finish_states_set.insert(nxt);
             que.push(nxt);
         }
     }
 
     map<States, ll, StatesComparator> create_states_id(const StatesSet &states_set) {
         map<States, ll, StatesComparator> states_id;
-        for(const auto &states : states_set) {
+        for (const auto &states : states_set) {
             auto id = states_id.size();
             states_id[states] = id;
         }
@@ -140,17 +140,17 @@ private:
     {
         auto states_id = create_states_id(states_set);
         Edges dfa_edges(states_id.size());
-        for(const auto &ele : dedges) {
+        for (const auto &ele : dedges) {
             ll id = states_id[ele.first];
-            for(ll label = 0; label < Label; label++) {
-                for(auto next_states : ele.second[label]) {
+            for (ll label = 0; label < Label; label++) {
+                for (auto next_states : ele.second[label]) {
                     dfa_edges[id][label].push_back(states_id[next_states]);
                 }
             }
         }
 
         V<ll> dfa_finish_v;
-        for(const auto &states : finish_states_set) {
+        for (const auto &states : finish_states_set) {
             dfa_finish_v.push_back(states_id[states]);
         }
         sort(ALL(dfa_finish_v));
