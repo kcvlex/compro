@@ -22,12 +22,18 @@ template <typename Key> struct SplayTreeNode {
         par = pp;
         if (pp != nullptr) (p->is_l() ? pp->l : pp->r) = this;
         if (l_ch) {
-            p->set_l(r);
-            set_r(p);
+            p->l = r;
+            if (r != nullptr) r->par = p;
+            r = p;
+            p->par = this;
         } else {
-            p->set_r(l);
-            set_l(p);
+            p->r = l;
+            if (l != nullptr) l->par = p;
+            l = p;
+            p->par = this;
         }
+        p->update_size();
+        update_size();
     }
 
     void update_size() {
@@ -58,27 +64,35 @@ template <typename Key> struct SplayTreeNode {
         }
     }
 
-    node_ptr set_ch(node_ptr ch, bool is_l) {
-        node_ptr &n = (is_l ? l : r);
-        n = ch;
-        if (ch) ch->par = this;
+    node_ptr set_l(node_ptr nl) {
+        l = nl;
+        if(nl) nl->par = this;
         update_size();
         return this;
     }
 
-    node_ptr cut_ch(bool is_l) {
-        node_ptr &ch = (is_l ? l : r);
-        node_ptr ret = (is_l ? l : r);
-        if (ch) ch->par = nullptr;
-        ch = nullptr;
+    node_ptr set_r(node_ptr nr) {
+        r = nr;
+        if(nr) nr->par = this;
+        update_size();
+        return this;
+    }
+
+    node_ptr cut_l() {
+        auto ret = l;
+        if(l) l->par = nullptr;
+        l = nullptr;
         update_size();
         return ret;
     }
 
-    node_ptr set_l(node_ptr nl) { return set_ch(nl, true); }
-    node_ptr set_r(node_ptr nr) { return set_ch(nr, false); }
-    node_ptr cut_l() { return cut_ch(true); }
-    node_ptr cut_r() { return cut_ch(false); }
+    node_ptr cut_r() {
+        auto ret = r;
+        if(r) r->par = nullptr;
+        r = nullptr;
+        update_size();
+        return ret;
+    }
 };
 
 template <typename STree> STree merge(STree t1, STree t2);
@@ -97,30 +111,30 @@ template <typename Key, typename Comp = less<Key>> struct SplayTree {
 
     node_ptr find_max() {
         node_ptr cur = root;
-        while (cur && cur->r) cur = cur->r;
+        while(cur && cur->r) cur = cur->r;
         splay(cur);
         return cur;
     }
 
-    // TODO: ifk isn't found
+    // TODO: if k isn't found
     node_ptr find(Key k) {
         auto cur = root;
-        while (cur) {
-            if (cur->key == k) break;
-            if (comp(k, cur->key)) {
-                if (cur->l) cur = cur->l;
+        while(cur) {
+            if(cur->key == k) break;
+            if(comp(k, cur->key)) {
+                if(cur->l) cur = cur->l;
                 else break;
-            } else if (comp(cur->key, k)) {
-                if (cur->r) cur = cur->r;
+            } else if(comp(cur->key, k)) {
+                if(cur->r) cur = cur->r;
                 else break;
             }
         }
-        if (cur) splay(cur);
+        if(cur) splay(cur);
         return cur;
     }
 
     void insert(Key key) {
-        if (root == nullptr) {
+        if(root == nullptr) {
             root = new Node(key);
             return;
         }
@@ -133,29 +147,29 @@ template <typename Key, typename Comp = less<Key>> struct SplayTree {
 
     void erase(Key x) { 
         auto nx = this->find(x);
-        if (nx == nullptr || nx->key != x) return;
+        if(nx == nullptr || nx->key != x) return;
         Tree lt, rt;
         tie(lt, rt) = split(*this, nx->key);
 
         {
             node_ptr tmp = nullptr;
-            if (lt.root && lt.root->key == x) {
+            if(lt.root && lt.root->key == x) {
                 tmp = lt.root;
                 lt.root = lt.root->cut_l();
-            } else if (rt.root && rt.root->key == x) {
+            } else if(rt.root && rt.root->key == x) {
                 tmp = rt.root;
                 rt.root = rt.root->cut_r();
             }
-            if (tmp) delete tmp;
+            if(tmp) delete tmp;
         }
 
-        if (lt.root && rt.root) {
+        if(lt.root && rt.root) {
             lt.find_max();
             lt.root->set_r(rt.root);
             root = lt.root;
-        } else if (lt.root) {
+        } else if(lt.root) {
             root = lt.root;
-        } else if (rt.root) {
+        } else if(rt.root) {
             root = rt.root;
         } else {
             root = nullptr;
@@ -191,8 +205,8 @@ template <typename Key, typename Comp = less<Key>> struct SplayTree {
 
 template <typename STree>
 STree merge(STree t1, STree t2) {
-    if (!t1.root) return t2;
-    if (!t2.root) return t1;
+    if(!t1.root) return t2;
+    if(!t2.root) return t1;
     auto t1_max = t1.find_max();
     t1.splay(t1_max);
     t1.root->set_r(t2.root);
@@ -205,7 +219,7 @@ pair<STree, STree> split(STree tree, Key k) {
     auto root = tree.root;
     auto nl = root->cut_l();
     auto nr = root->cut_r();
-    if (tree.comp(k, root->key)) nr = root->set_r(nr);
+    if(tree.comp(k, root->key)) nr = root->set_r(nr);
     else nl = root->set_l(nl);
     return make_pair(STree(nl), STree(nr));
 }
@@ -217,12 +231,13 @@ int main() {
     ll Q;
     cin >> Q;
     SplayTree<ll> st;
-    while (Q--) {
+    while(Q--) {
         ll t, x;
         cin >> t >> x;
         //st.dump();
-        if (t == 1) st.insert(x);
+        if(t == 1) st.insert(x);
         else cout << st.query(x) << endl;
     }
     return 0;
 }
+

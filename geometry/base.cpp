@@ -13,6 +13,18 @@ struct DualPoints : public pair<Point, Point> {
     const Point& operator [](size_t idx) const { return idx == 0 ? first : second; }
 };
 
+struct get_xy {
+    double &x, &y;
+
+    get_xy(double &x, double &y) : x(x), y(y) { }
+
+    get_xy& operator =(const Point &p) {
+        x = real(p);
+        y = imag(p);
+        return *this;
+    }
+};
+
 struct Line : public DualPoints {
     using DualPoints::DualPoints;
 };

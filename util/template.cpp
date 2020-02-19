@@ -1,8 +1,8 @@
 // #define DEBUGGING
 #include <bits/stdc++.h>
 #define endl '\n'
-#define ALL(V) (V).begin(), (V).end()
-#define ALLR(V) (V).rbegin(), (V).rend()
+#define ALL(V) begin(V), end(V)
+#define ALLR(V) rbegin(V), rend(V)
 using ll = std::int64_t;
 using ull = std::uint64_t;
 using PLL = std::pair<ll, ll>;

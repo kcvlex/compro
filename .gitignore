@@ -11,3 +11,4 @@ fb
 *.h
 *.gch
 a.out
+icpc-library

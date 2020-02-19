@@ -1,76 +1,55 @@
-#include <bits/stdc++.h>
-using namespace std;
-using ll = int64_t;
-template <typename T> using V = vector<T>;
-template <typename T> using VV = V<V<T>>;
+#include "../util/template.cpp"
+#include "graph.cpp"
 
+template <typename G>
 class StronglyConnectedComponents {
-    VV<ll> E, inv_E;
-    V<ll> number;
-    V<bool> used_dfs;
-    ll to_write_num = 0;
+    const G &graph;
+    G rgraph;
+    V<ll> label;
+    V<ll> result;
 
-    void dfs(ll now) {
-        used_dfs[now] = 1;
-        for (ll next : E[now]) {
-            if (used_dfs[next]) {
-                continue;
-            }
-            dfs(next);
-        }
-        number[now] = to_write_num++;
-    }
-
-    void dfs(ll now, V<bool> &used, vector<ll> &ret) {
-        used[now] = 1;
-        ret.push_back(now);
-        for (ll next : inv_E[now]) {
-            if (used[next]) {
-                continue;
-            }
-            dfs(next, used, ret);
+    void dfs1(ll cur, ll &l) {
+        label[cur] = l++;
+        for (const G::Edge &e : graph[cur]) {
+            ll nxt;
+            tie(nxt, ignore) = e;
+            if (label[nxt] != -1) continue;
+            dfs1(nxt, l);
         }
     }
 
-    void write_num() {
-        for (ll i = 0; i < E.size(); i++) {
-            if (!used_dfs[i]) {
-                dfs(i);
-            }
+    void write_label() {
+        ll l = 0;
+        for (ll i = 0; i < graph.size(); i++) if (label[i] == -1) dfs1(i, l);
+    }
+
+    void dfs2(ll cur, ll l) {
+        result[cur] = l;
+        for (const G::Edge &e : rgraph[cur]) {
+            ll nxt;
+            tie(nxt, ignore) = e;
+            if (result[nxt] != -1) continue;
+            dfs2(nxt, l);
         }
+    }
+
+    void build_scc() {
+        ll l = 0;
+        for (ll i = (ll)graph.size() - 1; 0 <= i; i--) if (label[i] == -1) dfs2(i, l++);
     }
 
 public:
-    StronglyConnectedComponents(const VV<ll> &E) 
-        : E(E),
-          inv_E(E.size(), V<ll>(0)),
-          number(E.size()),
-          used_dfs(E.size(), false)
+    StronglyConnectedComponents(const G &graph)
+        : graph(graph), label(graph.size(), -1), result(graph.size(), -1) 
     {
-        for (ll i = 0; i < E.size(); i++) {
-            for (ll nxt : E[i]) {
-                inv_E[nxt].push_back(i);
-            }
-        }
-        write_num();
+        rgraph = graph.build_inv();
     }
 
-    VV<ll> scc() {
-        VV<ll> ret;
-        V<ll> vertex_vec;
-        V<bool> used(E.size());
-        for (ll i = 0; i < E.size(); i++) {
-            vertex_vec.push_back(i);
-        }
-        sort(vertex_vec.begin(), vertex_vec.end(), [&](ll a, ll b) { return number[a] > number[b]; });
-        for (ll vertex : vertex_vec) {
-            if (used[vertex]) {
-                continue;
-            }
-            V<ll> to_insert;
-            dfs(vertex, used, to_insert);
-            ret.push_back(to_insert);
-        }
-        return ret;
+    V<ll> build() {
+        write_label();
+        build_scc();
+        return result;
     }
 };
+
+using SCC = StronglyConnectedComponents<Graph<true>>;
