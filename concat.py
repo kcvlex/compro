@@ -73,9 +73,9 @@ class ListUpFiles:
                 path = PathFixer(cwd).move(included_file).get()
                 if path in self.__appended:
                     continue
-                self.__file_list.append(path)
                 self.__appended.add(path)
                 self.__listup_rec(path)
+        self.__file_list.append(cur_file)
 
     def listup(self):
         self.__listup_rec(self.src)
@@ -83,9 +83,9 @@ class ListUpFiles:
 
 
 def write_to_file(fr, fw):
-    fw.writelines(filter(
-        lambda l: l.find('#include \"') == -1, 
-        fr.readlines()))
+    lis = filter(lambda l: l.find('#include \"') == -1, fr.readlines())
+    lis = filter(lambda l: l.find('#pragma once') == -1, lis)
+    fw.writelines(lis)
 
 
 def concat_files(flie_list, fw):
@@ -94,20 +94,23 @@ def concat_files(flie_list, fw):
             write_to_file(fr, fw)
 
 
-def rewrite_src(src):
+def rewrite_src(src, dst):
     file_list = ListUpFiles(src).listup()
-    file_list.append(src)
+    print(file_list)
     output_filename = './tmp.txt'
     with open(output_filename, mode='w') as fw:
         concat_files(file_list, fw)
-    with open(src, mode='w') as fw:
+    with open(dst, mode='w') as fw:
         with open(output_filename) as fr:
             fw.writelines(fr.readlines())
 
 
 def main(src):
-    path = PathFixer(os.getcwd()).move(src).get()
-    rewrite_src(path)
+    src = PathFixer(os.getcwd()).move(src).get()
+    ext = '.cpp'
+    remove_ext = src[:-len(ext)]
+    dst = remove_ext + '_submit' + ext
+    rewrite_src(src, dst)
 
 
 if __name__ == '__main__':

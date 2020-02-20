@@ -1,3 +1,4 @@
+#pragma once
 // #define DEBUGGING
 #include <bits/stdc++.h>
 #define endl '\n'
@@ -25,7 +26,7 @@ template <typename T, typename... Tail> auto make_v(T init, size_t s, Tail... ta
 using namespace std;
 
 #ifdef DEBUGGING
-#include "../../debug/debug.cpp"
+#include "/home/taroy/kyopuro/debug/debug.cpp"
 #else
 #define DEBUG(...) 0
 #define DEBUG_SEPARATOR_LINE 0

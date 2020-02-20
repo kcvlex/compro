@@ -12,3 +12,5 @@ fb
 *.gch
 a.out
 icpc-library
+input.txt
+*_submit.cpp

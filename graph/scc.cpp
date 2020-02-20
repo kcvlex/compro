@@ -1,6 +1,8 @@
 #include "../util/template.cpp"
 #include "graph.cpp"
 
+namespace graph {
+
 template <typename G>
 class StronglyConnectedComponents {
     const G &graph;
@@ -9,13 +11,14 @@ class StronglyConnectedComponents {
     V<ll> result;
 
     void dfs1(ll cur, ll &l) {
-        label[cur] = l++;
-        for (const G::Edge &e : graph[cur]) {
+        label[cur] = -2;
+        for (const graph::Edge &e : graph[cur]) {
             ll nxt;
             tie(nxt, ignore) = e;
             if (label[nxt] != -1) continue;
             dfs1(nxt, l);
         }
+        label[cur] = l++;
     }
 
     void write_label() {
@@ -25,7 +28,7 @@ class StronglyConnectedComponents {
 
     void dfs2(ll cur, ll l) {
         result[cur] = l;
-        for (const G::Edge &e : rgraph[cur]) {
+        for (const graph::Edge &e : rgraph[cur]) {
             ll nxt;
             tie(nxt, ignore) = e;
             if (result[nxt] != -1) continue;
@@ -35,7 +38,10 @@ class StronglyConnectedComponents {
 
     void build_scc() {
         ll l = 0;
-        for (ll i = (ll)graph.size() - 1; 0 <= i; i--) if (label[i] == -1) dfs2(i, l++);
+        V<ll> ord(rgraph.size());
+        iota(ALL(ord), 0ll);
+        sort(ALL(ord), [&](ll i, ll j) { return label[i] > label[j]; });
+        for (ll n : ord) if (result[n] == -1) dfs2(n, l++);
     }
 
 public:
@@ -52,4 +58,6 @@ public:
     }
 };
 
-using SCC = StronglyConnectedComponents<Graph<true>>;
+}
+
+using SCC = graph::StronglyConnectedComponents<graph::Graph<true>>;
