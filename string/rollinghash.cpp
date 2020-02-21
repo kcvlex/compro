@@ -1,48 +1,43 @@
-#include <bits/stdc++.h>
-using namespace std;
-template <typename T> using V = vector<T>;
-template <typename T> using VV = V<V<T>>;
-using ll = int64_t;
+#include "../util/template.cpp"
 
+namespace str {
+
+template <size_t Size>
 struct RollingHash {
-    const V<ll> bases;
-    const V<ll> mods;
-    VV<ll> pows;
-    VV<ll> hashs;
+    const array<ll, Size> mods, bases;
+    array<V<ll>, Size> pows, hashs;
 
-    template <typename T>
-    RollingHash(const V<T> &s, const V<ll> bases = { 1007 }, const V<ll> mods = { (ll)1e9 + 7 }) 
-        : bases(bases), mods(mods) 
-    {
-        assert(bases.size() == mods.size());
-        for (ll i = 0; i < mods.size(); i++) {
+    template <ForwardIterator>
+    RollingHash(ForwardIterator first, ForwardIterator last, array<ll, Size> mods, array<ll, Size> bases) {
+        copy(ALL(mods), this->mods);
+        copy(ALL(bases), this->bases);
+        for (ll i = 0; i < Size; i++) {
+            auto ite = first;
             ll mod = mods[i];
             ll base = bases[i];
-            V<ll> hash(s.size() + 1, 0);
-            V<ll> _pow(s.size() + 1, 1);
-            for (ll j = 0; j < s.size(); j++) {
-                hash[j + 1] = (hash[j] + (s[j] - 'a')) * base % mod;
-                _pow[j + 1] = _pow[j] * base % mod;
+            auto size = distance(first, last);
+            V<ll> hash(size + 1, 0);
+            V<ll> pow_(size + 1, 1);
+            for (ll j = 0; j < size; j++) {
+                hash[j + 1] = ((hash[j] * base) + *ite) % mod;
+                pow_[j + 1] = pow_[j] * base % mod;
+                advance(ite, 1);
             }
-            hashs.push_back(move(hash));
-            pows.push_back(move(_pow));
+            pows[i] = move(pow_);
+            hashs[i] = move(hash);
         }
     }
 
     // [l, r)
-    V<ll> get_hash(ll l, ll r) {
-        V<ll> ret;
+    template <ForwardIterator>
+    void substr(ll l, ll r, ForwardIterator ite) {
         for (ll i = 0; i < mods.size(); i++) {
-            ll h = hashs[i][r] - hashs[i][l] * pows[i][r - l] % mods[i];
-            h += mods[i];
-            h %= mods[i];
-            ret.push_back(h);
+            ll h = hashs[i][r] - hashs[i][l] * pows[i][r - l] % mod + mod;
+            if (mod <= h) h -= mod;
+            *ite = h;
+            ite++;
         }
-        return move(ret);
     }
 };
 
-int main() {
-    //TODO : test
-    return 0;
 }
