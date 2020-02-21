@@ -23,7 +23,6 @@ namespace init__ { struct InitIO { InitIO() { std::cin.tie(nullptr); std::ios_ba
 template <typename T> T make_v(T init) { return init; }
 template <typename T, typename... Tail> auto make_v(T init, size_t s, Tail... tail) { return V<decltype(mv_rec)>(s, mv_rec); }
 #undef mv_rec
-using namespace std;
 
 #ifdef DEBUGGING
 #include "/home/taroy/kyopuro/debug/debug.cpp"
