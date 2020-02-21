@@ -1,60 +1,53 @@
-#include<bits/stdc++.h>
-using namespace std;
-using ll = int64_t;
-class FordFulkerson {
-    struct Edge {
-        ll to, cap, rev_index;
-    } ;
-private:
-    vector<vector<Edge>> v;
-    ll n;
-    bool *used;
-    const ll INF = numeric_limits<ll>::max();
+#pragma once
 
-    int dfs(ll now, ll goal, ll f) {
-        if (now == goal) return f;
-        used[now] = 1;
-        for (Edge &e : v[now]) {
-            if (used[e.to]) {
-                continue;
-            }
-            if (e.cap <= 0) {
-                continue;
-            }
-            ll d = dfs(e.to, goal, min(f, e.cap));
-            if (d > 0) {
-                e.cap -= d;
-                v[e.to][e.rev_index].cap += d;
-                return d;
+#include "../util/template.cpp"
+#include "../graph/graph.cpp"
+#include "../graph/flow-graph.cpp"
+
+namespace flow {
+    
+using graph::Node;
+using graph::Capacity;
+
+template <bool Directed>
+class FordFulkerson {
+    graph::FlowGraph<Directed> flow_graph;
+    const graph::Capacity inf;
+    V<bool> used;
+    Node src, sink;
+
+    Capacity dfs(Node cur, Capacity f) {
+        if (cur == sink) return f;
+        used[cur] = true;
+        for (auto &&e : flow_graph[cur]) {
+            if (used[e.to()]) continue;
+            if (e.cap() <= Capacity()) continue;
+            auto rec = dfs(e.to(), min(f, e.cap()));
+            if (Capacity() < rec) {
+                e.cap() -= rec;
+                flow_graph[e.to()][e.rev_idx()].cap() += rec;
+                return rec;
             }
         }
         return 0;
     }
 
 public:
-    FordFulkerson(const vector<vector<pair<ll, ll>>> &v) {
-        this->n = v.size();
-        for (int i = 0; i < n; i++) {
-            this->v.push_back(vector<Edge>(0));
-        }
-        for (int i = 0; i < n; i++) {
-            for (auto e : v[i]) {
-                this->v[i].push_back((Edge) {e.first, e.second, (ll)this->v[e.first].size()} );
-                this->v[e.first].push_back((Edge) {i, 0, (ll)this->v[i].size() - 1} );
-            }
-        }
-        used = new bool[n];
-    }
+    FordFulkerson(graph::FlowGraph<Directed> flow_graph, const Capacity &inf) :
+        flow_graph(flow_graph), inf(inf), used(flow_graph.size()) { }
 
-    ll max_flow(ll start, ll goal) {
-        ll ret = 0;
-        while (1) {
-            memset(used, 0, n);
-            ll add = dfs(start, goal, INF);
-            if (add == 0) {
-                return ret;
-            }
-            ret += add;
+    Capacity max_flow(Node src, Node sink) {
+        this->src = src;
+        this->sink = sink;
+        auto ret = Capacity();
+        while (true) {
+            fill(ALL(used), false);
+            auto tmp = dfs(src, inf);
+            if (tmp == Capacity()) break;
+            ret += tmp;
         }
+        return ret;
     }
-} ;
+};
+
+}

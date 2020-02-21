@@ -1,80 +1,81 @@
-#include <bits/stdc++.h>
-using namespace std;
-using ll = int64_t;
-template <typename T> using V = vector<T>;
-template <typename T> using VV = V<V<T>>;
-template <typename T, typename U> using P = pair<T, U>;
-using PLL = P<ll, ll>;
+#pragma once
 
-class Dinic {
-    struct Edge {
-        ll to, cap, rev_idx;
-    };
+#include "../util/template.cpp"
+#include "../graph/flow-graph.cpp"
+
+namespace flow {
     
-    VV<Edge> edges;
-    const ll inf;
+using graph::Node;
+using graph::Capacity;
 
-    V<ll> bfs(ll S) {
-        V<ll> dist(edges.size(), -1);
-        queue<PLL> que;
-        que.emplace(S, 0);
-        dist[S] = 0;
+template <bool Directed>
+class Dinic {
+    graph::FlowGraph<Directed> flow_graph;
+    const graph::Capacity cinf;
+    V<ll> dists;
+    const ll dinf = 5e15;
+    V<ssize_t> watched_idx;
+    Node src, sink;
+
+    void bfs(Node start) {
+        V<ll> dists(flow_graph.size(), dinf);
+        dists[start] = 0;
+        queue<pair<ll, Node>> que;
+        que.emplace(0, start);
         while (que.size()) {
-            ll now, d;
-            tie(now, d) = que.front();
+            ll d;
+            Node cur;
+            tie(d, cur) = que.front();
             que.pop();
-            for (const auto &e : edges[now]) {
-                if (e.cap <= 0) continue;
-                ll nxt = e.to;
-                if (dist[nxt] != -1 && dist[nxt] <= d + 1) continue;
-                dist[nxt] = d + 1;
-                que.emplace(nxt, d + 1);
+            for (const auto &e : flow_graph[cur]) {
+                Node nxt;
+                Capacity cap;
+                tie(nxt, cap, ignore) = e;
+                if (cap <= Capacity()) continue;
+                if (dists[nxt] <= d + 1) continue;
+                dists[nxt] = d + 1;
+                que.emplace(d + 1, nxt);
             }
         }
-        return move(dist);
+        this->dists = move(dists);
     }
 
-    ll dfs(ll now, ll pre, ll T, ll flow, const V<ll> &dist, V<ll> &watched) {
-        if (now == T) return flow;
-        for (ll i = watched[now] + 1; i < edges[now].size(); i++) {
-            watched[now]++;
-            auto &e = edges[now][i];
-            if (dist[e.to] <= dist[now]) continue;
-            if (e.cap <= 0) continue;
-            if (e.to == pre) continue;
-            ll f = dfs(e.to, now, T, min(flow, e.cap), dist, watched);
-            e.cap -= f;
-            edges[e.to][e.rev_idx].cap += f;
-            if (f > 0) return f;
+    Capacity dfs(Node cur, Node pre, Capacity flow) {
+        if (cur == sink) return flow;
+        for (auto idx = watched_idx[cur] + 1; idx < flow_graph[cur].size(); idx++) {
+            watched_idx[cur]++;
+            auto &e = flow_graph[cur][idx];
+            if (dists[e.to()] <= dists[cur]) continue;
+            if (e.cap() <= Capacity()) continue;
+            if (e.to() == pre) continue;
+            auto f = dfs(e.to(), cur, min(flow, e.cap()));
+            e.cap() -= f;
+            flow_graph[e.to()][e.rev_idx()].cap() += f;
+            if (Capacity() < f) return f;
         }
-        return 0;
+        return Capacity();
     }
 
-public: 
-    Dinic(const VV<PLL> &v, ll inf) : inf(inf) {
-        edges.resize(v.size());
-        for (ll i = 0; i < v.size(); i++) {
-            for (auto e : v[i]) {
-                edges[i].push_back((Edge) {e.first, e.second, (ll)edges[e.first].size()} );
-                edges[e.first].push_back((Edge) {i, 0, (ll)edges[i].size() - 1} );
-            }
-        }
-    }
+public:
+    Dinic(graph::FlowGraph<Directed> flow_graph, const Capacity &cinf) :
+        flow_graph(flow_graph), cinf(cinf), watched_idx(flow_graph.size()) { }
 
-    Dinic(const VV<PLL> &v) : Dinic(v, 5e15) {};
-
-    ll max_flow(ll S, ll T) {
-        ll ret = 0;
+    Capacity max_flow(Node src, Node sink) {
+        this->src = src;
+        this->sink = sink;
+        auto ret = Capacity();
         while (true) {
-            auto dist = bfs(S);
-            if (dist[T] == -1) break;
-            V<ll> watched(edges.size(), -1);
+            bfs(src);
+            if (dists[sink] == dinf) break;
+            fill(ALL(watched_idx), -1);
             while (true) {
-                ll tmp = dfs(S, -1, T, inf, dist, watched);
-                if (tmp == 0) break;
+                auto tmp = dfs(src, -1, cinf);
+                if (tmp == Capacity()) break;
                 ret += tmp;
             }
         }
         return ret;
     }
 };
+
+}
