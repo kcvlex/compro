@@ -97,12 +97,8 @@ def concat_files(flie_list, fw):
 def rewrite_src(src, dst):
     file_list = ListUpFiles(src).listup()
     # print(file_list)
-    output_filename = './tmp.txt'
-    with open(output_filename, mode='w') as fw:
-        concat_files(file_list, fw)
     with open(dst, mode='w') as fw:
-        with open(output_filename) as fr:
-            fw.writelines(fr.readlines())
+        concat_files(file_list, fw)
 
 
 def main(src):
