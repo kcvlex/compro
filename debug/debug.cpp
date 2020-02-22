@@ -14,12 +14,20 @@
 
 namespace {
 
-template <typename Ite> using iterator_value_type = typename std::iterator_traits<Ite>::value_type;
-template <typename Ite, typename T> using iterator_type_check = std::is_same<iterator_value_type<Ite>, T>;
-template <typename Ite, typename T, typename R, bool Which> using enable_if_iterator_type = 
-    typename std::conditional<Which,
-             typename std::enable_if<iterator_type_check<Ite, T>::value, R>::type,
-             typename std::enable_if<!iterator_type_check<Ite, T>::value, R>::type>::type;
+struct Begin {
+    template <typename T>
+    auto operator ()(T t) -> decltype(std::begin(std::declval<T>()), std::true_type{}) { return std::true_type{}; }
+    std::false_type operator ()(...) { return std::false_type{}; }
+};
+
+template <typename> struct is_tuple : std::false_type { };
+template <typename ...Args> struct is_tuple<std::tuple<Args...>> : std::true_type { };
+template <typename T> using to_string_overloaded = std::disjunction<std::is_integral<T>, std::is_floating_point<T>>;
+template <typename T> using has_iterator = std::is_same<typename std::invoke_result<Begin, T>::type, std::true_type>;  // maybe buggy
+template <typename T> using apply_iterator = std::conjunction<has_iterator<T>, std::negation<std::is_same<T, std::string>>>;
+
+using const_char = const char *;
+
 }
 
 struct Debugging {
@@ -29,36 +37,47 @@ struct Debugging {
     }
 
     template <typename InputIterator>
-    std::string join(InputIterator first, InputIterator last, std::string delim) {
+    std::string join(InputIterator &&first, InputIterator &&last, std::string delim) {
         std::string ret;
         for (auto ite = first; ite != last; ite = std::next(ite)) {
-            ret += debug_string(*ite) + delim;
+            ret += debug_string<decltype(*ite)>(*ite) + delim;
         }
         return ret.substr(0, ret.size() - delim.size());
     }
 
-    std::string join(const std::vector<std::string> &s, std::string delim) {
-        return join(s.begin(), s.end(), delim);
+#define original_type typename std::remove_reference<T>::type
+    template <typename T>
+    std::string debug_string(T t) {
+        if constexpr (to_string_overloaded<original_type>::value) {
+            return std::to_string(t);
+        } else if constexpr (is_tuple<original_type>::value) {
+            std::array<std::string, std::tuple_size<original_type>::value> arr;
+            std::string delim = ", ";
+            tuple_to_array<0, std::tuple_size<original_type>::value, original_type>(t, arr);
+            return surrounding_brackets(join(arr.begin(), arr.end(), ", "));
+        } else if constexpr (apply_iterator<original_type>::value) {
+            return "{ " + join(std::forward<decltype(std::begin(t))>(std::begin(t)), std::forward<decltype(std::end(t))>(std::end(t)), ", ") + " }";
+        } else {
+            return debug_string__(t);
+        }
     }
+#undef original_type
 
-    template <std::size_t Idx, typename... Args>
-    void tuple_to_array(std::tuple<Args...> t, std::array<std::string, sizeof... (Args)> &arr) {
-        if constexpr (Idx == (sizeof... (Args))) {
+    template <std::size_t Idx, std::size_t Size, typename Tuple>
+    void tuple_to_array(Tuple t, std::array<std::string, Size> &arr) {
+        if constexpr (Idx == Size) {
             return;
         } else {
-            arr[Idx] = debug_string(std::get<Idx>(t));
-            tuple_to_array<Idx + 1, Args...>(t, arr);
+#define element_v std::get<Idx>(t)
+#define element_t decltype(std::get<Idx>(t))
+            arr[Idx] = debug_string<element_t>(std::forward<element_t>(element_v));
+#undef element_v
+#undef element_t
+            tuple_to_array<Idx + 1, Size, Tuple>(t, arr);
         }
     }
 
-    template <typename... Args>
-    std::string debug_string(std::tuple<Args...> t) {
-        std::array<std::string, sizeof... (Args)> arr;
-        std::string delim = ", ";
-        tuple_to_array<0, Args...>(t, arr);
-        return surrounding_brackets(join(arr.begin(), arr.end(), ", "));
-    }
-
+    /*
     template <typename T>
     std::string debug_string(T t) {
         if constexpr (std::is_integral<T>::value || std::is_floating_point<T>::value) {
@@ -67,35 +86,40 @@ struct Debugging {
             return debug_string(std::begin(t), std::end(t));
         }
     }
+    */
 
-    std::string debug_string(std::string s) {
+    std::string debug_string__(const std::string &s) {
         return s;
     }
 
-    std::string debug_string(const char *s) {
+    std::string debug_string__(std::string &&s) {
+        return s;
+    }
+
+    std::string debug_string__(const const_char &s) {
         return std::string(s);
     }
 
-    template <typename T, typename U>
-    std::string debug_string(std::pair<T, U> p) {
-        auto t = std::tuple_cat(p);
-        return debug_string(t);
+    std::string debug_string__(const_char &&s) {
+        return std::string(std::move(s));
     }
 
-    template <typename InputIterator>
-    std::string debug_string(InputIterator first, InputIterator last) {
-        return "{ " + join(first, last, ", ") + " }";
+    template <typename T, typename U>
+    std::string debug_string__(std::pair<T, U> p) {
+        auto &&fst = p.first;
+        auto &&snd = p.second;
+        return surrounding_brackets(debug_string(std::forward<T>(fst) + ", " + std::forward<U>(snd)));
     }
 
     template <typename T>
-    void debug_f(std::string name, T t) {
+    void debug_f(std::string name, T &&t) {
         if (name.size()) std::cout << surrounding_brackets(name) << " = ";
-        std::cout << debug_string(t) << DEBUG_ENDL_S(name);
+        std::cout << debug_string(std::forward<T>(t)) << DEBUG_ENDL_S(name);
     }
 
     template <typename... Args>
     void debug_f(std::string name, Args... args) {
-        return debug_f(name, std::make_tuple(args...));
+        return debug_f(name, std::make_tuple(std::forward<Args>(args)...));
     }
 };
 
@@ -108,7 +132,12 @@ void debug_f(std::string name, Args... args) {
 int main() {
     std::vector<int> vi = { 1, 2, 3, };
     std::vector<std::string> vs = { "ricky", "theta", };
+    std::vector<std::vector<std::string>> vvs = { vs, vs, };
     auto tup = std::make_tuple("ricky", "theta's", std::string("rate : "), 50000000);
-    DEBUG(1333, "tapu", vi, vs, tup);
+    std::map<std::string, std::string> mp = {
+        { std::string("aiu"), "eo", },
+        { std::string("kakiku"), "keko", },
+    };
+    DEBUG(1333, "tapu", vi, vs, tup, vvs, mp);
     return 0;
 }
