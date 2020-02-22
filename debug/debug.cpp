@@ -1,3 +1,5 @@
+#pragma once
+
 #include <bits/stdc++.h>
 
 #define DEBUG_MODE
@@ -135,9 +137,11 @@ struct Debugging {
 
 template <typename... Args>
 void debug_f(std::string name, Args... args) {
-    debug::Debugging debugging;
-    debugging.debug_f(name, args...);
+    static debug::Debugging debugging;
+    debugging.debug_f(name, std::forward<Args>(args)...);
 }
+
+#if 0
 
 int main() {
     std::vector<int> vi = { 1, 2, 3, };
@@ -145,9 +149,12 @@ int main() {
     std::vector<std::vector<std::string>> vvs = { vs, vs, };
     auto tup = std::make_tuple("ricky", "theta's", std::string("rate : "), 50000000);
     std::map<std::string, std::string> mp = {
-        { std::string("aiu"), "eo", },
-        { std::string("kakiku"), "keko", },
+        { "aiu", "eo", },
+        { "kakiku", "keko", },
     };
+    DEBUG(1333, "tapu", vi, vs, tup, vvs, mp);
     DEBUG(1333, "tapu", vi, vs, tup, vvs, mp);
     return 0;
 }
+
+#endif

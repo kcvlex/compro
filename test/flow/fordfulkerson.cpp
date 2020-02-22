@@ -13,7 +13,7 @@ int main() {
         graph.add_edge(u, v, c);
     }
 
-    flow::FordFulkerson<true> ff(graph, inf);
+    flow::FordFulkerson ff(graph, inf);
     cout << ff.max_flow(0, N - 1) << endl;
     return 0;
 }

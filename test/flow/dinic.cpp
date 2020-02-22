@@ -13,7 +13,7 @@ int main() {
         graph.add_edge(u, v, c);
     }
 
-    flow::Dinic<true> d(graph, inf);
+    flow::Dinic d(graph, inf);
     cout << d.max_flow(0, N - 1) << endl;
     return 0;
 }
