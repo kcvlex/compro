@@ -1,12 +1,12 @@
-// #include "util/templage.cpp"
+#include "../util/templage.cpp"
 
 const double eps = 1e-6;
 const long double pi = 3.14159265358979323846264338327950288419716939937510L;
 
-using Point = complex<double>;
+using Point = std::complex<double>;
 
-struct DualPoints : public pair<Point, Point> {
-    using pair<Point, Point>::pair;
+struct DualPoints : public std::pair<Point, Point> {
+    using std::pair<Point, Point>::pair;
 
     Point& operator [](size_t idx) { return idx == 0 ? first : second; }
     
@@ -19,8 +19,8 @@ struct get_xy {
     get_xy(double &x, double &y) : x(x), y(y) { }
 
     get_xy& operator =(const Point &p) {
-        x = real(p);
-        y = imag(p);
+        x = std::real(p);
+        y = std::imag(p);
         return *this;
     }
 };
@@ -34,11 +34,11 @@ struct Seg : public DualPoints {
 };
 
 double dot(const Point &a, const Point &b) {
-    return (conj(a) * b).real();
+    return (std::conj(a) * b).real();
 }
 
 double cross(const Point &a, const Point &b) {
-    return (conj(a) * b).imag();
+    return (std::conj(a) * b).imag();
 }
 
 enum ccwd {
@@ -54,19 +54,19 @@ ccwd ccw(Point a, Point b, Point c) {
     c -= a;
     double p, q;
     {
-        auto tmp = conj(b) * c;
+        auto tmp = std::conj(b) * c;
         p = tmp.real();
         q = tmp.imag();
     }
     if (0 < q) return CoClock;
     if (q < 0) return Clock;
     if (p < 0) return CAB;
-    if (norm(b) < norm(c)) return ABC;
+    if (std::norm(b) < std::norm(c)) return ABC;
     return ACB;
 }
 
 bool is_zero(double a) {
-    return abs(a) <= eps;
+    return std::abs(a) <= eps;
 }
 
 bool is_parallel(const Line &l1, const Line &l2) {
@@ -99,9 +99,9 @@ bool intersect(const Line &l, const Point &p) {
 }
 
 bool intersect(const Seg &s, const Point &p) {
-    double l1 = abs(s[0] - s[1]);
-    double l2 = abs(s[0] - p);
-    double l3 = abs(s[1] - p);
+    double l1 = std::abs(s[0] - s[1]);
+    double l2 = std::abs(s[0] - p);
+    double l3 = std::abs(s[1] - p);
     return is_zero(l2 + l3 - l1);
 }
 
@@ -117,7 +117,7 @@ Point refl(const Line &l, const Point &p) {
 }
 
 double distance(const Line &l, const Point &p) {
-    return abs(p - proj(l, p));
+    return std::abs(p - proj(l, p));
 }
 
 double distance(const Line &p, const Line &q) {
@@ -127,14 +127,14 @@ double distance(const Line &p, const Line &q) {
 
 double distance(const Line &l, const Seg &s) {
     if (intersect(l, s)) return 0;
-    return min(distance(l, s[0]), distance(l, s[1]));
+    return std::min(distance(l, s[0]), distance(l, s[1]));
 }
 
 double distance(const Seg &s, const Point &p) {
     Line l(s[0], s[1]);
     Point pr = proj(l, p);
-    if (intersect(s, pr)) return abs(pr - p);
-    return min(abs(s[0] - p), abs(s[1] - p));
+    if (intersect(s, pr)) return std::abs(pr - p);
+    return std::min(std::abs(s[0] - p), std::abs(s[1] - p));
 }
 
 double distance(const Seg &p, const Seg &q) {
@@ -154,6 +154,6 @@ bool comp_coclock(const Point &p1, const Point &p2) {
 }
 
 Point rotate(const Point &p, double arg) {
-    complex<double> r(cos(arg), sin(arg));
+    std::complex<double> r(std::cos(arg), std::sin(arg));
     return p * r;
 }

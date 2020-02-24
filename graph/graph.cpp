@@ -5,11 +5,11 @@ namespace graph {
 
 using Node = ll;
 using Weight = ll;
-using Edge = pair<Node, Weight>;
+using Edge = std::pair<Node, Weight>;
 
 template <bool Directed>
-struct Graph : public VV<Edge> {
-    using VV<Edge>::VV;
+struct Graph : public vvec<Edge> {
+    using vvec<Edge>::vvec;
 
     void add_edge(Node f, Node t, Weight w = 1) {
         (*this)[f].emplace_back(t, w);
@@ -22,7 +22,7 @@ struct Graph : public VV<Edge> {
             for (const Edge &e : (*this)[i]) {
                 Node j;
                 Weight w;
-                tie(j, w) = e;
+                std::tie(j, w) = e;
                 if (!Directed && j < i) continue;
                 ret.add_edge(j, i, w);
             }

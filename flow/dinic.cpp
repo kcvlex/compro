@@ -8,24 +8,24 @@ namespace flow {
 using graph::Node;
 using graph::Capacity;
 
-template <bool Directed>
+template <typename FlowGraph>
 class Dinic {
-    graph::FlowGraph<Directed> flow_graph;
-    const graph::Capacity cinf;
-    V<ll> dists;
+    FlowGraph flow_graph;
+    const Capacity cinf;
+    vec<ll> dists;
     const ll dinf = 5e15;
-    V<ssize_t> watched_idx;
+    vec<ssize_t> watched_idx;
     Node src, sink;
 
     void bfs(Node start) {
-        V<ll> dists(flow_graph.size(), dinf);
+        vec<ll> dists(flow_graph.size(), dinf);
         dists[start] = 0;
-        queue<pair<ll, Node>> que;
+        std::queue<std::pair<ll, Node>> que;
         que.emplace(0, start);
         while (que.size()) {
             ll d;
             Node cur;
-            tie(d, cur) = que.front();
+            std::tie(d, cur) = que.front();
             que.pop();
             for (const auto &e : flow_graph[cur]) {
                 Node nxt;
@@ -57,7 +57,7 @@ class Dinic {
     }
 
 public:
-    Dinic(graph::FlowGraph<Directed> flow_graph, const Capacity &cinf) :
+    Dinic(FlowGraph flow_graph, const Capacity &cinf) :
         flow_graph(flow_graph), cinf(cinf), watched_idx(flow_graph.size()) { }
 
     Capacity max_flow(Node src, Node sink) {
@@ -67,7 +67,7 @@ public:
         while (true) {
             bfs(src);
             if (dists[sink] == dinf) break;
-            fill(ALL(watched_idx), -1);
+            std::fill(ALL(watched_idx), -1);
             while (true) {
                 auto tmp = dfs(src, -1, cinf);
                 if (tmp == Capacity()) break;

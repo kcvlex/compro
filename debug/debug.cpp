@@ -50,13 +50,32 @@ struct Debugging {
         return "(" + s + ")";
     }
 
+    std::string debug_string__(const std::string &s) {
+        return s;
+    }
+
+    std::string debug_string__(std::string &&s) {
+        return s;
+    }
+
+    std::string debug_string__(const_char s) {
+        return std::string(s);
+    }
+
+    template <typename T, typename U>
+    std::string debug_string__(std::pair<T, U> p) {
+        auto &&fst = p.first;
+        auto &&snd = p.second;
+        return surrounding_brackets(debug_string(std::forward<T>(fst) + ", " + std::forward<U>(snd)));
+    }
+
     template <std::size_t Index, std::size_t Size, typename Tuple>
     void tuple_to_string(Tuple &&t, std::array<std::string, Size> &arr) {
         if constexpr (Index == Size) {
             return;
         } else {
             decltype(auto) ele = std::get<Index>(t);
-            arr[Index] = debug_string<decltype(ele)>(std::forward<decltype(ele)>(ele));
+            arr[Index] = debug_string<decltype(ele)>(std::forward<decltype(ele)>(ele));  // warning : get<Index>(t) may be moved
             tuple_to_string<Index + 1, Size, Tuple>(std::forward<Tuple>(t), arr);
         }
     }
@@ -101,26 +120,7 @@ struct Debugging {
     std::string debug_string(T &&t) {
         return debug_string_orig<T, typename std::remove_reference<T>::type>(std::forward<T>(t));
     }
-
-    std::string debug_string__(const std::string &s) {
-        return s;
-    }
-
-    std::string debug_string__(std::string &&s) {
-        return s;
-    }
-
-    std::string debug_string__(const_char s) {
-        return std::string(s);
-    }
-
-    template <typename T, typename U>
-    std::string debug_string__(std::pair<T, U> p) {
-        auto &&fst = p.first;
-        auto &&snd = p.second;
-        return surrounding_brackets(debug_string(std::forward<T>(fst) + ", " + std::forward<U>(snd)));
-    }
-
+    
     template <typename T>
     void debug_f(std::string name, T &&t) {
         if (name.size()) std::cout << surrounding_brackets(name) << " = ";

@@ -9,11 +9,11 @@ namespace flow {
 using graph::Node;
 using graph::Capacity;
 
-template <bool Directed>
+template <typename FlowGraph>
 class FordFulkerson {
-    graph::FlowGraph<Directed> flow_graph;
+    FlowGraph flow_graph;
     const graph::Capacity inf;
-    V<bool> used;
+    vec<bool> used;
     Node src, sink;
 
     Capacity dfs(Node cur, Capacity f) {
@@ -33,7 +33,7 @@ class FordFulkerson {
     }
 
 public:
-    FordFulkerson(graph::FlowGraph<Directed> flow_graph, const Capacity &inf) :
+    FordFulkerson(FlowGraph flow_graph, const Capacity &inf) :
         flow_graph(flow_graph), inf(inf), used(flow_graph.size()) { }
 
     Capacity max_flow(Node src, Node sink) {
@@ -41,7 +41,7 @@ public:
         this->sink = sink;
         auto ret = Capacity();
         while (true) {
-            fill(ALL(used), false);
+            std::fill(ALL(used), false);
             auto tmp = dfs(src, inf);
             if (tmp == Capacity()) break;
             ret += tmp;

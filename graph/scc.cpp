@@ -3,18 +3,18 @@
 
 namespace graph {
 
-template <typename G>
+template <typename Graph>
 class StronglyConnectedComponents {
-    const G &graph;
-    G rgraph;
-    V<ll> label;
-    V<ll> result;
+    const Graph &graph;
+    Graph rgraph;
+    vec<ll> label;
+    vec<ll> result;
 
     void dfs1(ll cur, ll &l) {
         label[cur] = -2;
         for (const graph::Edge &e : graph[cur]) {
             ll nxt;
-            tie(nxt, ignore) = e;
+            std::tie(nxt, std::ignore) = e;
             if (label[nxt] != -1) continue;
             dfs1(nxt, l);
         }
@@ -30,7 +30,7 @@ class StronglyConnectedComponents {
         result[cur] = l;
         for (const graph::Edge &e : rgraph[cur]) {
             ll nxt;
-            tie(nxt, ignore) = e;
+            std::tie(nxt, std::ignore) = e;
             if (result[nxt] != -1) continue;
             dfs2(nxt, l);
         }
@@ -38,20 +38,20 @@ class StronglyConnectedComponents {
 
     void build_scc() {
         ll l = 0;
-        V<ll> ord(rgraph.size());
-        iota(ALL(ord), 0ll);
-        sort(ALL(ord), [&](ll i, ll j) { return label[i] > label[j]; });
+        vec<ll> ord(rgraph.size());
+        std::iota(ALL(ord), 0ll);
+        std::sort(ALL(ord), [&](ll i, ll j) { return label[i] > label[j]; });
         for (ll n : ord) if (result[n] == -1) dfs2(n, l++);
     }
 
 public:
-    StronglyConnectedComponents(const G &graph)
+    StronglyConnectedComponents(const Graph &graph)
         : graph(graph), label(graph.size(), -1), result(graph.size(), -1) 
     {
         rgraph = graph.build_inv();
     }
 
-    V<ll> build() {
+    vec<ll> build() {
         write_label();
         build_scc();
         return result;

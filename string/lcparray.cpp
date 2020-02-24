@@ -1,6 +1,6 @@
 #include "suffixarray.cpp"
 
-namespace str {
+namespace strings {
 
 class LongestCommonPrefixArray {
     const SuffixArray &sa;

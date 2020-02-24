@@ -5,8 +5,8 @@ namespace graph {
 
 using Capacity = ll;
 
-struct FlowEdge : public tuple<Node, Capacity, ll> {
-    using tuple<Node, Capacity, ll>::tuple;
+struct FlowEdge : public std::tuple<Node, Capacity, ll> {
+    using std::tuple<Node, Capacity, ll>::tuple;
 
     Node& to() {
         return get<0>(*this);
@@ -34,8 +34,8 @@ struct FlowEdge : public tuple<Node, Capacity, ll> {
 };
 
 template <bool Directed>
-struct FlowGraph : public VV<FlowEdge> {
-    using VV<FlowEdge>::VV;
+struct FlowGraph : public vvec<FlowEdge> {
+    using vvec<FlowEdge>::vvec;
 
     void add_edge(Node f, Node t, Capacity c = 1) {
         add_edge_with_rev(f, t, c);
