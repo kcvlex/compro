@@ -26,8 +26,8 @@ struct SegmentTree {
     }
 
     T get_query(ll ql, ll qr, ll nl, ll nr, ll nidx) const {
-        if (qr <= nl || nr <= ql) return id_ele;
-        if (nl <= ql && qr <= nr) return nodes[nidx];
+        if (nr <= ql || qr <= nl) return id_ele;
+        if (ql <= nl && nr <= qr) return nodes[nidx];
         ll mid = (nl + nr) / 2;
         ll lidx, ridx;
         std::tie(lidx, ridx) = get_children_idx(nidx);
@@ -50,10 +50,11 @@ struct SegmentTree {
         }
     }
 
+    // FIXME : test
     T lower_bound(ll idx, std::function<bool(T)> check, T sum) const {
         if (size() - 1 <= idx) return idx - (size() - 1);
         ll lidx, ridx;
-        std::tie(lidx, ridx) = get_children_idx(cur);
+        std::tie(lidx, ridx) = get_children_idx(idx);
         auto lv = merge_f(sum, nodes[lidx]);
         if (check(lv)) return lower_bound(lidx, check, sum);
         else return lower_bound(ridx, check, lv);
@@ -66,7 +67,7 @@ struct SegmentTree {
 private:
     ssize_t ceil_pow2(ssize_t s) {
         ssize_t ret = 1;
-        while (ret < s) ret *= 2;
+        while (ret <= s) ret *= 2;
         return ret;
     }
 
