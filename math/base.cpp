@@ -3,8 +3,8 @@
 namespace math {
 
 template <typename T>
-T pow(const T &n, ll k) {
-    T ret = T();
+constexpr T pow(const T &n, ll k) {
+    T ret = T::mul_id_ele();
     T cur = n;
     while (k) {
         if (k & 1) ret *= cur;
@@ -12,15 +12,6 @@ T pow(const T &n, ll k) {
         k /= 2;
     }
     return ret;
-}
-
-template <typename T, T N, ll K>
-constexpr pow() {
-    if constexpr (K == 0) {
-        return T();
-    } else {
-        return (K & 1 ? N : T()) * pow<T, N * N, K / 2>();
-    }
 }
 
 }

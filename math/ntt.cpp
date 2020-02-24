@@ -1,62 +1,20 @@
-#include <bits/stdc++.h>
-using namespace std;
-#define ALL(V) (V).begin(), (V).end()
+#include "../util/template.cpp"
+#include "modint.cpp"
+#include "base.cpp"
 
-template <typename T> using V = vector<T>;
-template <typename T> using VV = V<V<T>>;
+namespace math {
 
-/*
- * https://lumakernel.github.io/ecasdqina/math/FFT/NTT
-constexpr ll NTT_PRIMES[][2] = {
-    {1224736769, 3}, // 2^24 * 73 + 1,
-    {1053818881, 7}, // 2^20 * 3 * 5 * 67 + 1
-    {1051721729, 6}, // 2^20 * 17 * 59 + 1
-    {1045430273, 3}, // 2^20 * 997 + 1
-    {1012924417, 5}, // 2^21 * 3 * 7 * 23 + 1
-    {1007681537, 3}, // 2^20 * 31^2 + 1
-    {1004535809, 3}, // 2^21 * 479 + 1
-    {998244353, 3},  // 2^23 * 7 * 17 + 1
-    {985661441, 3},  // 2^22 * 5 * 47 + 1
-    {976224257, 3},  // 2^20 * 7^2 * 19 + 1
-    {975175681, 17}, // 2^21 * 3 * 5 * 31 + 1
-    {962592769, 7},  // 2^21 * 3^3 * 17 + 1
-    {950009857, 7},  // 2^21 * 4 * 151 + 1
-    {943718401, 7},  // 2^22 * 3^2 * 5^2 + 1
-    {935329793, 3},  // 2^22 * 223 + 1
-    {924844033, 5},  // 2^21 * 3^2 * 7^2 + 1
-    {469762049, 3},  // 2^26 * 7 + 1
-    {167772161, 3},  // 2^25 * 5 + 1
-};
-*/
+namespace {
 
-template <uint64_t Mod, uint64_t PrimitiveRoot>
-struct NTT {
-    V<uint64_t> root_pow_lis, root_inv_lis;
-    size_t max_size_log;
+template <std::size_t MaxSizeLog>
+class ReverseBit {
+    std::array<vec<ll>, MaxSizeLog> bits;
+    std::array<bool, MaxSizeLog> built;
 
-    NTT(size_t max_size_log) 
-        : max_size_log(max_size_log),
-          root_pow_lis(max_size_log),
-          root_inv_lis(max_size_log)
-    {
-        auto root_max_pow = this->pow(PrimitiveRoot, (Mod - 1) / (1ll << max_size_log));
-        root_pow_lis[0] = root_max_pow;
-        root_inv_lis[0] = this->inv(root_max_pow);
-        for (size_t i = 1; i < root_pow_lis.size(); i++) {
-            root_pow_lis[i] = root_pow_lis[i - 1] * root_pow_lis[i - 1] % Mod;
-            root_inv_lis[i] = root_inv_lis[i - 1] * root_inv_lis[i - 1] % Mod;
-        }
-        reverse(ALL(root_pow_lis));
-        reverse(ALL(root_inv_lis));
-    }
-
-    uint64_t pow(uint64_t n, uint64_t k) { return k == 0 ? 1 : (k & 1 ? n : 1) * this->pow(n * n % Mod, k / 2) % Mod; }
-
-    uint64_t inv(uint64_t n) { return this->pow(n, Mod - 2); }
-
-    V<uint64_t> build_rev_bit(size_t len) {
+    // len is pow(2, n)
+    vec<ll> build_rev_bit(std::size_t len) {
         uint64_t r = 0, s = 0, max_v = len;
-        V<uint64_t> ret(len);
+        vec<ll> ret(len);
         for (auto &&ele : ret) {
             // assert(r < max_v * 2);
             ele = s;
@@ -67,30 +25,118 @@ struct NTT {
         return ret;
     }
 
-    V<uint64_t> ntt(const V<uint64_t> &arr, bool inverse, const V<uint64_t> &rev_bit) {
-        auto len = rev_bit.size();
-        V<uint64_t> res(len);
+    ll get_idx(std::size_t pow2) {
+        ll i;
+        for (i = 0; i < 64; i++) if (pow2 & (1ll << i)) break;
+        return i;
+    }
+
+public:
+    ReverseBit() {
+        std::fill(ALL(built), false);
+    }
+
+    const vec<ll>& get(std::size_t len) {
+        const auto idx = get_idx(len);
+        if (built[idx]) return bits[idx];
+        bits[idx] = std::move(build_rev_bit(len));
+        built[idx] = true;
+        return bits[idx];
+    }
+};
+
+template <ll Mod>
+constexpr bool is_primitive_root(ll r) {
+    modint<Mod> mr(r);
+    for (ll d = 2; d * d <= Mod; d++) {
+        if ((Mod - 1) % d == 0) {
+            if (pow(mr, d).value() == 1) return false;
+            if (pow(mr, (Mod - 1) / d).value() == 1) return false;
+        }
+    }
+    return true;
+}
+
+template <ll Mod>
+constexpr ll find_primitive_root(ll r) {
+    return (is_primitive_root<Mod>(r) ? r : find_primitive_root<Mod>(r + 1));
+}
+
+template <ll Mod>
+constexpr ll find_primitive_root() {
+    return find_primitive_root<Mod>(2);
+}
+
+}  // anonymous
+
+template <ll Mod, ll PrimitiveRoot, std::size_t MaxSizeLog>
+class NTT__ {
+    static constexpr std::size_t max_size = 1ll << MaxSizeLog;
+    static constexpr std::size_t max_conv_size = max_size * 2;
+
+public:
+    using poly = std::array<ll, max_conv_size>;
+
+    NTT__() {
+        auto root_max_pow = this->pow(PrimitiveRoot, (Mod - 1) / (1ll << MaxSizeLog));
+        root_pow_lis[0] = root_max_pow;
+        root_inv_lis[0] = this->inv(root_max_pow);
+        for (size_t i = 1; i < root_pow_lis.size(); i++) {
+            root_pow_lis[i] = root_pow_lis[i - 1] * root_pow_lis[i - 1] % Mod;
+            root_inv_lis[i] = root_inv_lis[i - 1] * root_inv_lis[i - 1] % Mod;
+        }
+        std::reverse(ALL(root_pow_lis));
+        std::reverse(ALL(root_inv_lis));
+    }
+
+    template <typename Container1, typename Container2>
+    const poly& convolution(const Container1 &arr_a, const Container2 &arr_b) {
+        auto lower_size = arr_a.size() + arr_b.size() - 1;
+        std::size_t conv_size = 1;
+        while (conv_size < lower_size) conv_size *= 2;
+        decltype(auto) rev_bit = rev_bits.get(conv_size);
+        ntt(arr_a, false, rev_bit, ntt_a);
+        ntt(arr_b, false, rev_bit, buf);
+        for (std::size_t i = 0; i < conv_size; i++) (ntt_a[i] *= buf[i]) %= Mod;
+        return ntt(ntt_a, true, rev_bit);
+    }
+
+private:
+    std::array<ll, MaxSizeLog> root_pow_lis, root_inv_lis;
+    poly buf, ntt_a;
+    ReverseBit<MaxSizeLog> rev_bits;
+
+    ll pow(ll n, ll k) {
+        modint<Mod> mn(n);
+        return math::pow(mn, k).value();
+    }
+
+    ll inv(ll n) { return modint<Mod>(n).inv().value(); }
+
+    template <typename Container>
+    const poly& ntt(const Container &arr, bool inverse, const vec<ll> &rev_bit) {
+        const auto len = rev_bit.size();
         
         {
             size_t arr_idx = 0;
-            for (auto &&idx : rev_bit) res[idx] = (arr_idx < arr.size() ? arr[arr_idx++] : 0);
+            for (auto &&idx : rev_bit) buf[idx] = (arr_idx < arr.size() ? arr[arr_idx++] : 0);
         }
 
         size_t unit_size = 2;
         size_t root_pow_idx = 0;
         const auto &root_lis = (inverse ? root_inv_lis : root_pow_lis);
-        while (unit_size <= res.size()) {
+        while (unit_size <= len) {
             uint64_t root = root_lis[root_pow_idx];
             uint64_t root_pow = 1;
-            auto unit_cnt = res.size() / unit_size;
+            auto unit_cnt = len / unit_size;
             for (size_t offset = 0; offset < unit_size / 2; offset++) {
                 for (size_t unit_counter = 0; unit_counter < unit_cnt; unit_counter++) {
                     auto i = unit_counter * unit_size + offset;
                     auto j = i + unit_size / 2;
-                    auto cur_val_i = res[i], cur_val_j = res[j];
+                    auto cur_val_i = buf[i], cur_val_j = buf[j];
                     (cur_val_j *= root_pow) %= Mod;
-                    res[i] = (cur_val_i + cur_val_j) % Mod;
-                    res[j] = (cur_val_i + (Mod - cur_val_j)) % Mod;
+                    buf[i] = (cur_val_i + cur_val_j) % Mod;
+                    buf[j] = (cur_val_i + (Mod - cur_val_j)) % Mod;
                 }
                 (root_pow *= root) %= Mod;
             }
@@ -99,40 +145,21 @@ struct NTT {
         }
         if (inverse) {
             auto inv_len = inv(len);
-            for (auto &&ele : res) (ele *= inv_len) %= Mod;
+            for (auto &&ele : buf) (ele *= inv_len) %= Mod;
         }
 
-        return res;
+        return buf;
     }
 
-    V<uint64_t> convolution(const V<uint64_t> &arr_a, const V<uint64_t> &arr_b) {
-        auto lower_size = arr_a.size() + arr_b.size() - 1;
-        size_t conv_size = 1;
-        while (conv_size < lower_size) conv_size *= 2;
-        auto rev_bit = build_rev_bit(conv_size);
-        auto ntt_a = ntt(arr_a, false, rev_bit);
-        auto ntt_b = ntt(arr_b, false, rev_bit);
-        for (size_t i = 0; i < conv_size; i++) (ntt_a[i] *= ntt_b[i]) %= Mod;
-        return ntt(ntt_a, true, rev_bit);
+    template <typename Container1, typename Container2>
+    const void ntt(const Container1 &arr, bool inverse, const vec<ll> &rev_bit, Container2 &out) {
+        ntt(arr, inverse, rev_bit);
+        auto len = rev_bit.size();
+        std::copy(buf.cbegin(), buf.cbegin() + len, out.begin());
     }
 };
 
-// https://atcoder.jp/contests/atc001/tasks/fft_c
-int main() {
-    NTT<1224736769, 3> ntt(20);
-    int N;
-    cin >> N;
-#if 1
-    V<uint64_t> A(N + 1), B(N + 1);
-    for (int i = 0; i < N; i++) cin >> A[i + 1] >> B[i + 1];
-    auto conv = ntt.convolution(A, B);
-    for (int i = 1; i <= 2 * N; i++) cout << conv[i] << endl;
-#else 
-    V<uint64_t> A(N), B(N);
-    for (int i = 0; i < N; i++) cin >> A[i] >> B[i];
-    auto conv = ntt.convolution(A, B);
-    cout << 0 << endl;
-    for (int i = 0; i < 2 * N - 1; i++) cout << conv[i] << endl;
-#endif
-    return 0;
+template <ll Mod, std::size_t MaxSizeLog>
+using NTT = NTT__<Mod, find_primitive_root<Mod>(), MaxSizeLog>;
+
 }
