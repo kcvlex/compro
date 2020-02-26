@@ -47,7 +47,7 @@ public:
 
 template <ll Mod>
 constexpr bool is_primitive_root(ll r) {
-    modint<Mod> mr(r);
+    Modint<Mod> mr(r);
     for (ll d = 2; d * d <= Mod; d++) {
         if ((Mod - 1) % d == 0) {
             if (pow(mr, d).value() == 1) return false;
@@ -107,11 +107,11 @@ private:
     ReverseBit<MaxSizeLog> rev_bits;
 
     ll pow(ll n, ll k) {
-        modint<Mod> mn(n);
+        Modint<Mod> mn(n);
         return math::pow(mn, k).value();
     }
 
-    ll inv(ll n) { return modint<Mod>(n).inv().value(); }
+    ll inv(ll n) { return Modint<Mod>(n).inv().value(); }
 
     template <typename Container>
     const poly& ntt(const Container &arr, bool inverse, const vec<ll> &rev_bit) {

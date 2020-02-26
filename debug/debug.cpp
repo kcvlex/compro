@@ -14,6 +14,8 @@
 #endif
 #define DEBUG_ENDL_S(S) ((S).size()?"\n":"")<<std::flush;
 
+#include "../math/modint.cpp"
+
 namespace debug {
 
 namespace {
@@ -64,9 +66,7 @@ struct Debugging {
 
     template <typename T, typename U>
     std::string debug_string__(std::pair<T, U> p) {
-        auto &&fst = p.first;
-        auto &&snd = p.second;
-        return surrounding_brackets(debug_string(std::forward<T>(fst) + ", " + std::forward<U>(snd)));
+        return debug_string(std::make_tuple(p.first, p.second));
     }
 
     template <std::size_t Index, std::size_t Size, typename Tuple>
@@ -119,6 +119,11 @@ struct Debugging {
     template <typename T>
     std::string debug_string(T &&t) {
         return debug_string_orig<T, typename std::remove_reference<T>::type>(std::forward<T>(t));
+    }
+
+    template <ll Mod>
+    std::string debug_string__(math::Modint<Mod> m) {
+        return "( " + std::to_string(m.mod()) + ", " + std::to_string(m.value()) + " )";
     }
     
     template <typename T>

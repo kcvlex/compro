@@ -1,88 +1,94 @@
-#include<bits/stdc++.h>
-using namespace std;
-using ll = int64_t;
+#include "../util/template.cpp"
 
-template <size_t N, size_t M, typename T = ll>
-struct Matrix {
-    using Column = array<T, M>;
-    using Mat = Matrix<N, M>;
+template <typename T>
+struct Matrix : public vvec<T> {
+    using vvec<T>::vvec;
 
-    array<Column, N> mat;
-    const T init;
-    
-    Matrix(const decltype(mat) &mat, const T &init) : mat(mat), init(init) {}
+    Matrix(ssize_t r, size_t c) : vvec(make_v<T>(T(), r, c)) { }
 
-    Matrix(const T &init) : init(init) {
-        Column initc;
-        fill(initc.begin(), initc.end(), init);
-        fill(mat.begin(), mat.end(), initc);
-    }
-    
-    Mat operator + (const Mat &other) const {
-        Mat ret(this->mat);
-        for (ll i = 0; i < N; i++){
-            for (ll j = 0; j < M; j++){
-                ret.mat[i][j] += other.mat[i][j];
-            }
-        }
+    static Matrix make_id(ssize_t r, ssize_t c, const T &id) {
+        Matrix ret(r, c);
+        for (ssize_t i = 0; i < std::min(r, c); i++) ret[i][i] = id;
         return ret;
     }
 
-    Mat& operator += (const Mat &other) {
-        this->mat = ((*this) + other).mat;
-        return (*this);
+    constexpr ssize_t row() const {
+        return size();
     }
 
-    Mat operator - (const Mat &other) const {
-        Mat ret(this->mat);
-        for (ll i = 0; i < N; i++){
-            for (ll j = 0; j < M; j++){
-                ret.mat[i][j] -= other.mat[i][j];
+    constexpr ssize_t col() const {
+        return (*this)[0].size();
+    }
+
+    constexpr Matrix& operator +=(const Matrix &oth) {
+        // assert(check_add(oth));
+        for (ssize_t i = 0; i < row(); i++) {
+            for (ssize_t j = 0; j < col(); j++) {
+                (*this)[i][j] += oth[i][j];
             }
         }
-        return ret;
+        return *this;
     }
 
-    Mat& operator -= (const Mat &other) {
-        this->mat = ((*this) - other).mat;
+    constexpr Matrix& operator -=(const Matrix &oth) {
+        // assert(check_add(oth));
+        for (ssize_t i = 0; i < row(); i++) {
+            for (ssize_t j = 0; j < col(); j++) {
+                (*this)[i][j] -= oth[i][j];
+            }
+        }
+        return *this;
+    }
+
+    constexpr Matrix& operator *=(const T &t) {
+        for (auto &&v : (*this)) for (auto &&e : v) e *= t;
         return (*this);
     }
 
-    template <size_t K>
-    Matrix<N, K> operator * (const Matrix<M, K> &other) const {
-        Mat ret(init);
-        for (ll n = 0; n < N; n++){
-            for (ll k = 0; k < K; k++){
-                T tmp = init;
-                for (ll i = 0; i < M; i++){
-                    tmp += (this->mat)[n][i] * other.mat[i][k];
+    constexpr Matrix& operator *=(const Matix &oth) {
+        // assert(check_mul(oth));
+        Matrix res(col, oth.row());
+        for (ssize_t i = 0; i < row(); i++) {
+            for (ssize_t k = 0; k < col(); k++) {
+                for (ssize_t j = 0; j < oth.row(); j++) {
+                    res[i][j] += (*this)[i][k] * oth[k][j];
                 }
-                ret.mat[n][k] = tmp;
             }
         }
-        return ret;
+        (*this) = res;
+        return res;
     }
 
-    template <size_t K>
-    Matrix<N, K>& operator *= (const Matrix<M, K> &other) {
-        this->mat = ((*this) * other).mat;
-        return (*this);
+    constexpr Matrix operator +(const Matrix &oth) const {
+        return Matrix(*this) += oth;
+    }
+
+    constexpr Matrix operator -(const Matrix &oth) const {
+        return Matrix(*this) -= oth;
+    }
+
+    constexpr Matrix operator *(const Matirx &oth) const {
+        return Matrix(*this) *= oth;
+    }
+
+    constexpr Matrix operator *(const T &t) const {
+        return Matrix(*this) *= t;
+    }
+   
+private:
+    bool check_add(const Matrix &oth) const {
+        return r == oth.row() && c == oth.col();
+    }
+
+    bool check_mul(const Matrix &oth) const {
+        return c == oth.row();
+    }
+
+    bool check_size() {
+        ssize_t r = size();
+        if (r == 0) return true;
+        ssize_t c = (*this)[0].size();
+        for (ssize_t i = 1; i < r; i++) if (c != (*this)[i].size()) return false;
+        return true;
     }
 };
-
-int main(){
-    array<array<ll, 3>, 3> arr = {
-        array<ll, 3>{1, 2, 3},
-        array<ll, 3>{4, 5, 6},
-        array<ll, 3>{7, 8, 9},
-    };
-    Matrix<3, 3> ma(arr, 0);
-    auto tmp = ma * ma;
-    auto mat = tmp.mat;
-    for (ll i = 0; i < mat.size(); i++){ for (ll j = 0; j < mat[i].size(); j++) cout << mat[i][j] << ", "; cout << endl; }
-//    (ma *= ma) *= ma;
-    ma *= ma;
-    mat = ma.mat;
-    for (ll i = 0; i < mat.size(); i++){ for (ll j = 0; j < mat[i].size(); j++) cout << mat[i][j] << ", "; cout << endl; }
-    return 0;
-}
