@@ -1,5 +1,5 @@
 #pragma once
-#define DEBUGGING
+// #define DEBUGGING
 #include <bits/stdc++.h>
 #define endl '\n'
 #define ALL(v) std::begin(v), std::end(v)

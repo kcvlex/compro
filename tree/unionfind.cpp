@@ -1,34 +1,37 @@
-#include <bits/stdc++.h>
-#include "../util.cpp"
-using namespace std;
-using ll = int64_t;
+#pragma once
+#include "../util/template.cpp"
+
+namespace tree {
 
 struct UnionFind {
-    V<ll> rank;
-    V<ll> parent;
+    vec<ll> rank, par;
+    vec<ssize_t> sz;
 
-    UnionFind(ll N) : rank(N, 0), parent(N) {
-        iota(parent.begin(), parent.end(), 0ll);
+    UnionFind(ll n) : rank(n, 1), par(n), sz(n, 1) {
+        iota(ALL(par), 0);
     }
 
-    ll find(ll child) {
-        return (child == parent[child] ? child : parent[child] = find(parent[child]));
+    ll find(ll n) {
+        return (n == par[n] ? n : par[n] = find(par[n]));
     }
 
-    void unit(ll x, ll y) {
-        ll px = find(x);
-        ll py = find(y);
-        if (px == py) {
-            return;
-        }
-        if (rank[px] < rank[py]) {
-            swap(px, py);
-        }
-        parent[py] = px;
+    bool unit(ll x, ll y) {
+        ll px = find(x), py = find(y);
+        if (px == py) return false;
+        if (rank[px] < rank[py]) std::swap(px, py);
+        par[py] = px;
         rank[px] += (rank[px] == rank[py]);
+        sz[px] += sz[py];
+        return true;
     }
 
     bool same(ll x, ll y) {
-        return (find(x) == find(y));
+        return find(x) == find(y);
+    }
+
+    ssize_t size(ll n) {
+        return sz[find(n)];
     }
 };
+
+}
