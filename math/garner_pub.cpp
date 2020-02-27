@@ -1,7 +1,105 @@
-#include "../util/template.cpp"
-#include "modint.cpp"
+#include <iostream>
+#include <cstddef>
+#include <tuple>
+#include <type_traits>
 
-namespace math {
+using ll = std::int64_t;
+
+namespace compro {
+
+template <typename T>
+constexpr T pow(const T &n, ll k) {
+    T ret = T::mul_id_ele();
+    T cur = n;
+    while (k) {
+        if (k & 1) ret *= cur;
+        cur *= cur;
+        k /= 2;
+    }
+    return ret;
+}
+
+template <ll Mod>
+struct Modint {
+
+    constexpr Modint(ll x) : x(x) { }
+    
+    constexpr Modint() : Modint(0) { }
+    
+    constexpr static Modint<Mod> add_id_ele() { 
+        return Modint<Mod>(0); 
+    }
+    
+    constexpr static Modint<Mod> mul_id_ele() { 
+        return Modint<Mod>(1); 
+    }
+    
+    constexpr ll& value() { 
+        return x; 
+    }
+    
+    constexpr ll value() const {
+        return x; 
+    }
+
+    constexpr Modint& operator +=(const Modint &oth) {
+        x += oth.value();
+        if (Mod < x) x -= Mod;
+        return *this;
+    }
+
+    constexpr Modint& operator -=(const Modint &oth) {
+        x += Mod - oth.value();
+        if (Mod < x) x -= Mod;
+        return *this;
+    }
+
+    constexpr Modint& operator *=(const Modint &oth) {
+        x *= oth.value();
+        x %= Mod;
+        return *this;
+    }
+
+    constexpr Modint& operator /=(const Modint &oth) {
+        (*this) *= oth.inv();
+        return *this;
+    }
+
+    constexpr Modint operator +(const Modint &oth) const {
+        return Modint(x) += oth;
+    }
+
+    constexpr Modint operator -(const Modint &oth) const {
+        return Modint(x) -= oth;
+    }
+
+    constexpr Modint operator *(const Modint &oth) const {
+        return Modint(x) *= oth;
+    }
+
+    constexpr Modint operator /(const Modint &oth) const {
+        return Modint(x) /= oth;
+    }
+
+    constexpr Modint operator -() const {
+        return Modint((x != 0) * (Mod - x)); 
+    }
+
+    template <typename T>
+    constexpr typename std::enable_if<std::is_integral<T>::value, const Modint&>::type
+    operator =(T t) { (*this) = Modint(t); return *this; }
+
+    constexpr Modint inv() const {
+        return ::compro::pow(*this, Mod - 2);
+    }
+
+    constexpr ll mod() const {
+        return Mod;
+    }
+
+private:
+    ll x;
+};
 
 template <ll AimMod, ll... OtherMods>
 struct Garner {
@@ -84,3 +182,19 @@ private:
 };
 
 }
+
+/*
+ * Example
+ */
+
+constexpr ll mods[] = { 1009, 9995147, 9997451, 1000000007, };
+constexpr ll mod = 1000000009;
+
+int main() {
+    ll a, b, c, d;
+    std::cin >> a >> b >> c >> d;
+    compro::Garner<mod, mods[0], mods[1], mods[2], mods[3]> g;
+    std::cout << g.garner(a, b, c, d) << std::endl;
+    return 0;
+}
+
