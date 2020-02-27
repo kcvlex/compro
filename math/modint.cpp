@@ -72,7 +72,10 @@ struct Modint {
 
     template <typename T>
     constexpr typename std::enable_if<std::is_integral<T>::value, const Modint&>::type
-    operator =(T t) { (*this) = Modint(t); return *this; }
+    operator =(T t) {
+        (*this) = Modint(std::forward<T>(t)); 
+        return *this;
+    }
 
     constexpr Modint inv() const {
         return ::math::pow(*this, Mod - 2);
