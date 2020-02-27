@@ -7,15 +7,15 @@ namespace math {
 template <ll Mod>
 struct Modint {
 
-    constexpr Modint(ll x) : x(x) { }
+    constexpr Modint(ll x) : x(x % Mod) { }
     
     constexpr Modint() : Modint(0) { }
     
-    constexpr static Modint<Mod> add_id_ele() { 
+    constexpr Modint<Mod> add_id_ele() const { 
         return Modint<Mod>(0); 
     }
     
-    constexpr static Modint<Mod> mul_id_ele() { 
+    constexpr Modint<Mod> mul_id_ele() const {
         return Modint<Mod>(1); 
     }
     
