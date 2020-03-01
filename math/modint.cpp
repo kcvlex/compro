@@ -29,13 +29,13 @@ struct Modint {
 
     constexpr Modint& operator +=(const Modint &oth) {
         x += oth.value();
-        if (Mod < x) x -= Mod;
+        if (Mod <= x) x -= Mod;
         return *this;
     }
 
     constexpr Modint& operator -=(const Modint &oth) {
         x += Mod - oth.value();
-        if (Mod < x) x -= Mod;
+        if (Mod <= x) x -= Mod;
         return *this;
     }
 
@@ -46,7 +46,8 @@ struct Modint {
     }
 
     constexpr Modint& operator /=(const Modint &oth) {
-        (*this) *= oth.inv();
+        x *= oth.inv();
+        x %= Mod;
         return *this;
     }
 

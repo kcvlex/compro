@@ -85,6 +85,13 @@ class ListUpFiles:
 def write_to_file(fr, fw):
     lis = filter(lambda l: l.find('#include \"') == -1, fr.readlines())
     lis = filter(lambda l: l.find('#pragma once') == -1, lis)
+    lis = list(lis)
+    for i, e in enumerate(lis):
+        if e.find('#define DEBUGGING') != -1:
+            lis = lis[0:i]
+            break
+    lis = filter(lambda l: l.find('DEBUG') == -1, lis)
+
     fw.writelines(lis)
 
 

@@ -1,5 +1,4 @@
 #pragma once
-// #define DEBUGGING
 #include <bits/stdc++.h>
 #define endl '\n'
 #define ALL(v) std::begin(v), std::end(v)
@@ -24,6 +23,7 @@ template <typename T> T make_v(T init) { return init; }
 template <typename T, typename... Tail> auto make_v(T init, size_t s, Tail... tail) { return vec<decltype(mv_rec)>(s, mv_rec); }
 #undef mv_rec
 
+#define DEBUGGING
 #ifdef DEBUGGING
 #include "/home/taroy/kyopuro/debug/debug.cpp"
 #else
