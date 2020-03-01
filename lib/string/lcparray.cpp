@@ -1,5 +1,7 @@
 #include "suffixarray.cpp"
 
+// FIXME : test
+
 namespace strings {
 
 class LongestCommonPrefixArray {
