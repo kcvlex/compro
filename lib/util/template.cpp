@@ -25,7 +25,7 @@ template <typename T, typename... Tail> auto make_v(T init, size_t s, Tail... ta
 
 #define DEBUGGING
 #ifdef DEBUGGING
-#include "/home/taroy/kyopuro/debug/debug.cpp"
+#include "/home/taroy/kyopuro/lib/util/debug.cpp"
 #else
 #define DEBUG(...) 0
 #define DEBUG_SEPARATOR_LINE 0

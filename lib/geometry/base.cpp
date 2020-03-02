@@ -1,9 +1,13 @@
-#include "../util/templage.cpp"
+#include "../../lib/util/template.cpp"
+
+namespace geo {
 
 const double eps = 1e-6;
 const long double pi = 3.14159265358979323846264338327950288419716939937510L;
 
 using Point = std::complex<double>;
+const double err_v = std::numeric_limits<double>::max();
+const Point err_p(err_v, err_v);
 
 struct DualPoints : public std::pair<Point, Point> {
     using std::pair<Point, Point>::pair;
@@ -23,6 +27,13 @@ struct get_xy {
         y = std::imag(p);
         return *this;
     }
+};
+
+struct Circle {
+    Point p;
+    double r;
+
+    Circle(Point p, double r) : p(p), r(r) { }
 };
 
 struct Line : public DualPoints {
@@ -67,6 +78,10 @@ ccwd ccw(Point a, Point b, Point c) {
 
 bool is_zero(double a) {
     return std::abs(a) <= eps;
+}
+
+bool eq(double a, double b) {
+    return is_zero(a - b);
 }
 
 bool is_parallel(const Line &l1, const Line &l2) {
@@ -116,6 +131,10 @@ Point refl(const Line &l, const Point &p) {
     return p + (2. * (pr - p));
 }
 
+double distance(const Point &p1, const Point &p2) {
+    return std::abs(p1 - p2);
+}
+
 double distance(const Line &l, const Point &p) {
     return std::abs(p - proj(l, p));
 }
@@ -156,4 +175,29 @@ bool comp_coclock(const Point &p1, const Point &p2) {
 Point rotate(const Point &p, double arg) {
     std::complex<double> r(std::cos(arg), std::sin(arg));
     return p * r;
+}
+
+int intersect(const Circle &c1, const Circle &c2) {
+    if (c1.r < c2.r) return intersect(c2, c1);
+    double d = distance(c1.p, c2.p);
+    if (d + c2.r < c1.r) return 1;
+    if (eq(d + c2.r, c1.r)) return 2;
+    if (d < c1.r + c2.r) return 3;
+    if (eq(c1.r - c2.r, d)) return 4;
+    return 0;
+}
+
+double cos(double a, double b, double c) {
+    return (a * a + b * b - c * c) / (2 * a * b);
+}
+
+std::pair<Point, Point> crosspoint(const Circle &c1, const Circle &c2) {
+    double d = distance(c1.p, c2.p);
+    double rc = cos(d, c1.r, c2.r) * c1.r;
+    double rs = std::sqrt(c1.r * c1.r - rc * rc);
+    auto unit_v = (c2.p - c1.p) / d;
+    return std::make_pair(c1.p + unit_v * Point(rc, rs),
+                          c1.p + unit_v * Point(rc, -rs));
+}
+
 }
