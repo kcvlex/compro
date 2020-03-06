@@ -1,20 +1,16 @@
-#include<bits/stdc++.h>
-using namespace std;
-using ll = int64_t;
-template <typename T> using V = vector<T>;
-template <typename T> using VV = vector<V<T>>;
+#include "../util/template.cpp"
 
-// 0-indexed
-// [l, r)
+namespace tree {
+
 template <typename T>
 struct BIT {
-    V<T> data;
+    vec<T> data;
     T id_ele;
 
     BIT(ll size, T id_ele) : id_ele(id_ele) {
         ll bsize = 1;
         while (bsize < size) bsize *= 2;
-        data = V<T>(bsize + 1, id_ele);
+        data = vec<T>(bsize + 1, id_ele);
     }
 
     T sum(ll pos) {
@@ -29,3 +25,5 @@ struct BIT {
         for (++pos; pos < data.size(); pos += pos & -pos) data[pos] += delta;
     }
 };
+
+}

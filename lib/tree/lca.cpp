@@ -1,50 +1,64 @@
-#include <bits/stdc++.h>
-#include "../util.cpp"
-using namespace std;
-using ll = int64_t;
+#include "../util/template.cpp"
 
-struct Lca {
-    size_t nodes;
+namespace tree {
+
+class LCA {
+    std::size_t sz;
     ll root;
-    V<ll> depth;
-    VV<ll> parents;
+    vec<ll> depth;
+    vvec<ll> pars;
+    static constexpr std::size_t dsz = 30;
 
-    void dfs(ll now, ll pre, ll d, const VV<ll> &edges) {
-        parents[now][0] = pre;
-        depth[now] = d;
-        for (ll next : edge[now]) if (next != pre) dfs(next, now, d + 1, edges);
-    }
-
-    Lca(size_t nodes, const VV<ll> &edges, ll root = 0) 
-        : nodes(nodes),
-          root(root),
-          parents(make_v<ll>(-1, N, 30))
-    {
-        dfs(root, -1, 0, edges);
-        for (ll dig = 1; dig < 30; dig++) for (ll i = 0; i < nodes; i++) {
-            ll par = parents[i][dig - 1];
-            parents[i][dig] = (par == -1 ? -1 : parents[par][dig - 1]);
+    template <typename Graph>
+    void dfs(ll cur, ll pre, ll dep, const Graph &graph) {
+        pars[cur][0] = pre;
+        dep[cur] = d;
+        for (auto &&e : graph[cur]) {
+            ll nxt;
+            std::tie(nxt, std::ignore) = e;
+            if (nxt == pre) continue;
+            dfs(nxt, cur, d + 1, graph);
         }
     }
 
-    ll get_depth(ll node) { return depth[node]; }
+public:
+    template <typename Graph>
+    LCA(const Graph &graph, ll root) 
+        : sz(graph.size()), root(root), depth(sz), pars(make_v<ll>(0, sz, dsz)) 
+    {
+        dfs(root, -1, 0, graph);
+        for (ll dig = 1; dig < dsz; dig++) for (ll i = 0; i < sz; i++) {
+            ll p = pars[i][dig - 1];
+            pars[i][dig] = (p == -1 ? -1 : pars[p][dig - 1]);
+        }
+    }
 
-    ll get_parent(ll node, ll relative_depth) {
-        ll ret = node;
-        for (ll i = 0; relative_depth && ret != -1; i++, relativ_depth /= 2) if (relative_depth & 1) ret = parents[ret][i];
+    ll get_depth(ll n) const {
+        return depth[n];
+    }
+
+    ll get_parent(ll n, ll dist) const {
+        ll ret = n;
+        for (ll i = 0; dist; i++, dist /= 2) if (dist & 1) ret = pars[ret][i];
         return ret;
     }
 
-    ll get_lca(ll n1, ll n2) {
-        if (depth[n1] < depth[n2]) swap(n1, n2);
-        ll diff = depth[n1] - depth[n2];
-        n1 = get_parents(n1, diff);
-        if (n1 == n2) return n1;
-        for (ll dig = 29; 0 <= dig; dig--) {
-            ll pn1 = get_parent(n1, 1ll << dig);
-            ll pn2 = get_parent(n2, 1ll << dig);
-            if (pn1 != pn2) tie(n1, n2) = PLL(pn1, pn2);
+    ll get_lca(ll n1, ll n2) const {
+        {
+            if (depth[n1] < depth[n2]) std::swap(n1, n2);
+            ll diff = depth[n1] - depth[n2];
+            n1 = get_parent(n1, diff);
         }
-        return parents[pn1][0];
+
+        n1 = get_parent(n1, diff);
+        for (ll dig = dsz - 1; 0 <= dig; dig--) {
+            ll pn1 = pars[n1][dig];
+            ll pn2 = pars[n2][dig];
+            if (pn1 != pn2) std::tie(n1, n2) = std::make_pair(pn1, pn2);
+        }
+
+        return pars[n1][0];
     }
 };
+
+}

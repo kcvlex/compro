@@ -77,7 +77,7 @@ class NTT__ {
 public:
     using poly = std::array<ll, max_conv_size>;
 
-    NTT__() {
+    constexpr NTT__() {
         auto root_max_pow = this->pow(PrimitiveRoot, (Mod - 1) / (1ll << MaxSizeLog));
         root_pow_lis[0] = root_max_pow;
         root_inv_lis[0] = this->inv(root_max_pow);
@@ -99,6 +99,10 @@ public:
         ntt(arr_b, false, rev_bit, buf);
         for (std::size_t i = 0; i < conv_size; i++) (ntt_a[i] *= buf[i]) %= Mod;
         return ntt(ntt_a, true, rev_bit);
+    }
+
+    const poly& get_result() {
+        return buf;
     }
 
 private:
