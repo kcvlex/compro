@@ -102,8 +102,8 @@ struct SplayTreeNode {
     }
 };
 
-template <typename STree> STree merge(STree t1, STree t2);
-template <typename STree, typename Key> std::pair<STree, STree> split(STree tree, Key k);
+template <typename Tree> Tree merge(Tree t1, Tree t2);
+template <typename Tree, typename Key> std::pair<Tree, Tree> split(Tree tree, Key k);
 
 template <typename Key, typename Comp = std::less<Key>> 
 struct SplayTree {
@@ -232,7 +232,7 @@ std::pair<Tree, Tree> split(Tree tree, Key k) {
     auto nr = root->cut_r();
     if (tree.comp(k, root->key)) nr = root->set_r(nr);
     else nl = root->set_l(nl);
-    return std::make_pair(STree(nl), STree(nr));
+    return std::make_pair(Tree(nl), Tree(nr));
 }
 
 }
