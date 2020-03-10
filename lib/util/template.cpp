@@ -4,9 +4,10 @@
 #define ALLR(v) std::rbegin(v), std::rend(v)
 using ll = std::int64_t;
 using ull = std::uint64_t;
+using pii = std::pair<int, int>;
+using tii = std::tuple<int, int, int>;
 using pll = std::pair<ll, ll>;
 using tll = std::tuple<ll, ll, ll>;
-namespace init__ { struct InitIO { InitIO() { std::cin.tie(nullptr); std::ios_base::sync_with_stdio(false); std::cout << std::fixed << std::setprecision(30); } } init_io; }
 template <typename T> using vec = std::vector<T>;
 template <typename T> using vvec = vec<vec<T>>;
 template <typename T> const T& var_min(const T &t) { return t; }
@@ -22,6 +23,10 @@ template <typename T, typename... Tail> auto make_v(T init, std::size_t s, Tail.
 template <typename T, std::size_t Head, std::size_t ...Tail> struct multi_dem_array { using type = std::array<typename multi_dem_array<T, Tail...>::type, Head>; };
 template <typename T, std::size_t Head> struct multi_dem_array<T, Head> { using type = std::array<T, Head>; };
 template <typename T, std::size_t ...Args> using mdarray = typename multi_dem_array<T, Args...>::type;
-
+namespace init__ { struct InitIO { InitIO() { std::cin.tie(nullptr); std::ios_base::sync_with_stdio(false); std::cout << std::fixed << std::setprecision(30); } } init_io; }
 #define DEBUGGING
+#ifdef DEBUGGING
 #include "/home/taroy/kyopuro/lib/util/debug.cpp"
+#else
+#define DEBUG(...) 0
+#endif
