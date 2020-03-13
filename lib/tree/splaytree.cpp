@@ -14,11 +14,11 @@ struct SplayTreeNode {
     SplayTreeNode(Key key) : SplayTreeNode(key, nullptr) { }
     SplayTreeNode() : SplayTreeNode(Key()) { }
 
-    bool is_l() const { 
+    bool is_l() { 
         return par != nullptr && par->l == this; 
     }
 
-    bool is_root() const {
+    bool is_root() {
         return par == nullptr; 
     }
 
@@ -120,7 +120,7 @@ struct SplayTree {
         return Comp()(x, y); 
     }
 
-    node_ptr find_max() const {
+    node_ptr find_max() {
         node_ptr cur = root;
         while (cur && cur->r) cur = cur->r;
         splay(cur);
@@ -128,7 +128,7 @@ struct SplayTree {
     }
 
     // FIXME : if k isn't found
-    const node_ptr find(Key k) const {
+    node_ptr find(Key k) {
         auto cur = root;
         while (cur) {
             if (cur->key == k) break;
@@ -187,10 +187,10 @@ struct SplayTree {
         }
     }
 
-    ll query(std::size_t ord) {
+    std::string query(std::size_t ord) {
         std::size_t cnt = ord;
         node_ptr cur = root;
-        ll ret = 0;
+        std::string ret;
         while (cnt) {
             auto l_size = (cur->l == nullptr ? 0 : cur->l->size);
             if (l_size + 1 == cnt) {
@@ -236,22 +236,3 @@ std::pair<Tree, Tree> split(Tree tree, Key k) {
 }
 
 }
-
-using namespace std;
-const ll inf = 5e15;
-
-// solution for https://atcoder.jp/contests/arc033/tasks/arc033_3
-int main() {
-    ll Q;
-    cin >> Q;
-    tree::SplayTree<ll> st;
-    while (Q--) {
-        ll t, x;
-        cin >> t >> x;
-        //st.dump();
-        if (t == 1) st.insert(x);
-        else cout << st.query(x) << endl;
-    }
-    return 0;
-}
-

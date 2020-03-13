@@ -1,5 +1,5 @@
 #include "../template.cpp"
-#include "lazysegmenttree.cpp"
+#include "lazysegtree.cpp"
 
 namespace tree {
 
@@ -79,18 +79,18 @@ struct HLD {
 
     // calc's arg is [l, r)
     template <typename T>
-    T query(ll n1, ll n2, std::function<T(ll, ll)> calc, T id_ele, std::function<T(T, T)> merge) const {
+    T query(ll n1, ll n2, T id_ele,
+            std::function<T(ll, ll)> calc, std::function<T(T, T)> merge) const 
+    {
         T lval = id_ele, rval = id_ele, res = id_ele;
         while (true) {
             hld_id_t id1 = hld_id[n1], id2 = hld_id[id2];
             if (heads[n1] != heads[n2]) {
                 if (id1 < id2) {
-                    auto tmp = calc(head_id(n2), id2 + 1);
-                    rval = merge(tmp, rval);
+                    rval = merge(calc(head_id(n2), id2 + 1), rval);
                     n2 = pars[heads[n2]];
                 } else {
-                    auto tmp = calc(head_id(n1), id1 + 1);
-                    lval = merge(lval, tmp);
+                    lval = merge(lval, calc(head_id(n1), id1 + 1));
                     n1 = pars[heads[n1]];
                 }
             } else {
