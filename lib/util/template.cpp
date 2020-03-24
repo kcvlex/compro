@@ -1,5 +1,6 @@
 #pragma once
 #include <bits/stdc++.h>
+#define endl codeforces
 #define ALL(v) std::begin(v), std::end(v)
 #define ALLR(v) std::rbegin(v), std::rend(v)
 using ll = std::int64_t;
