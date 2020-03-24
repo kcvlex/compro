@@ -1,4 +1,5 @@
 #include "../util/template.cpp"
+#include "../util/utility.cpp"
 
 namespace segtree {
 
@@ -12,8 +13,19 @@ struct SegmentTree {
     SegmentTree(const vec<T> &init_v, Merge merge_f, T id_ele) 
         : nodes(ceil_pow2(init_v.size()) * 2 - 1, id_ele), merge_f(merge_f), id_ele(id_ele)
     {
+        build(init_v);
+    }
+
+    void build(const vec<T> &v) {
+        if (size() < v.size()) nodes.resize(ceil_pow2(v.size()) * 2 - 1);
         ssize_t s = size();
-        for (ssize_t i = 0; i < init_v.size(); i++) nodes[i + s - 1] = init_v[i];
+        for (ssize_t i = 0; i < v.size(); i++) nodes[i + s - 1] = v[i];
+        for (ssize_t i = v.size(); i + s - 1 < nodes.size(); i++) nodes[i + s - 1] = id_ele;
+        build_parents();
+    }
+
+    void build_parents() {
+        ssize_t s = size();
         for (ssize_t i = s - 2; 0 <= i; i--) nodes[i] = get_merged(i);
     }
 
@@ -65,12 +77,6 @@ struct SegmentTree {
     }
 
 private:
-    ssize_t ceil_pow2(ssize_t s) {
-        ssize_t ret = 1;
-        while (ret <= s) ret *= 2;
-        return ret;
-    }
-
     pll get_children_idx(ll idx) const {
         return pll(2 * idx + 1, 2 * idx + 2);
     }
