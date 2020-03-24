@@ -1,5 +1,4 @@
 #pragma once
-
 #include "../util/template.cpp"
 #include "../graph/flow-graph.cpp"
 
@@ -30,7 +29,7 @@ class Dinic {
             for (const auto &e : flow_graph[cur]) {
                 Node nxt;
                 Capacity cap;
-                tie(nxt, cap, ignore) = e;
+                tie(nxt, cap, std::ignore, std::ignore) = e;
                 if (cap <= Capacity()) continue;
                 if (dists[nxt] <= d + 1) continue;
                 dists[nxt] = d + 1;
@@ -57,7 +56,7 @@ class Dinic {
     }
 
 public:
-    Dinic(FlowGraph flow_graph, const Capacity &cinf) :
+    Dinic(const FlowGraph &flow_graph, const Capacity &cinf) :
         flow_graph(flow_graph), cinf(cinf), watched_idx(flow_graph.size()) { }
 
     Capacity max_flow(Node src, Node sink) {
