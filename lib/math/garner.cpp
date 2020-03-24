@@ -3,84 +3,51 @@
 
 namespace math {
 
-template <ll AimMod, ll... OtherMods>
-struct Garner {
-    template <ll Mod> using Values = std::tuple<Modint<Mod>, Modint<Mod>, Modint<Mod>>;
-
-    Garner() { }
-
-    template <typename ...Args>
-    typename std::enable_if<std::is_same<
-                    std::tuple_size<decltype(std::make_tuple(OtherMods...))>,
-                    std::tuple_size<decltype(std::make_tuple(std::declval<Args>()...))>
-                >::value, ll>::type
-    garner(Args... args) {
-        return apply<mods_size + 1>(make_values<0>(std::make_tuple(args...)));
+ll mod_pow(ll n, ll k, ll mod) {
+    ll ret = 1, cur = n;
+    while (k) {
+        if (k & 1) ret = ret * cur % mod;
+        cur = cur * cur % mod;
+        k /= 2;
     }
+    return ret;
+}
 
-private:
-    static constexpr std::size_t mods_size = sizeof...(OtherMods);
-    static constexpr auto oth_mod_tuple = std::make_tuple(OtherMods...);
+ll mod_inv(ll n, ll mod) {
+    return mod_pow(n, mod - 2, mod);
+}
 
-    template <ll Mod>
-    struct Apply__ {
-        const Modint<Mod> &v;
+template <typename ModInt>
+pll get_pair(const ModInt &m) {
+    return std::make_pair(m.mod(), m.value());
+}
 
-        Apply__(const Modint<Mod> &v) : v(v) { }
+template <typename ...ModInts>
+std::vector<pll> make_vecs(const ModInts&... mod_ints) {
+    std::vector<pll> res = { get_pair(mod_ints)... };
+    return res;
+}
 
-        void apply() { }
+template <typename ...ModInts>
+ll garner(ll mod, const ModInts&... mod_ints) {
+    return garner(mod, std::move(make_vecs(mod_ints...)));
+}
 
-        template <typename Head, typename ...Tail>
-        void apply(Head &head, Tail&... tail) {
-            apply__(head);
-            apply(tail...);
-        }
-       
-        template <typename T>
-        void apply__(T &val) {
-            auto vv = v.value();
-            auto vm = decltype(std::get<0>(val))(vv);
-            std::get<2>(val) += vm * std::get<1>(val);
-            std::get<1>(val) *= v.mod();
-        }
-    };
+ll garner(ll mod, vec<pll> mr) {
+    mr.emplace(mod, 0);
+    vec<ll> coffs(mr.size(), 1);
+    vec<ll> cons(mr.size(), 0);
 
-    template <std::size_t Index, typename Tuple>
-    constexpr auto make_values(Tuple &&t) const {
-        if constexpr (Index == mods_size) {
-            return std::make_tuple(make_value<AimMod>(0));
-        } else {
-            return std::tuple_cat(std::make_tuple(make_value<std::get<Index>(oth_mod_tuple)>(std::get<Index>(t))),
-                                  make_values<Index + 1, Tuple>(std::forward<Tuple>(t)));
-        }
-    }
-    
-    template <ll Mod>
-    constexpr Values<Mod> make_value(ll t) const {
-        return Values<Mod>(Modint<Mod>(t), Modint<Mod>(1), Modint<Mod>(0));
-    }
-
-    template <std::size_t Index, typename Tuple, typename ...Args>
-    constexpr ll apply(Tuple &&t, Args&&... args) const {
-        if constexpr (Index == 0) {
-            return garner_priv(std::forward<Args>(args)...);
-        } else {
-            return apply<Index - 1>(t, std::get<Index - 1>(t), std::forward<Args>(args)...);
+    for (ll i = 0; i + 1 < mr.size(); i++) {
+        ll v = (mr[i].second - cons[i]) * mod_inv(coffs[i], mr[i].first) % mr[i].first;
+        if (v < 0) v += mr[i].first;
+        for (ll j = i + 1; j < mr.size(); j++) {
+            (cons[j] += coffs[j] * v) %= mr[j].first;
+            (coffs[j] *= mr[i].first) %= mr[j].first;
         }
     }
 
-    template <typename Head, typename ...Tail> 
-    constexpr ll garner_priv(Head &&head, Tail&&... tail) const {
-        if constexpr (sizeof...(tail) == 0) {
-            return std::get<2>(head).value();
-        } else {
-            auto v = (std::get<0>(head) - std::get<2>(head)) * std::get<1>(head).inv();
-            Apply__ applyer(v);
-            applyer.apply(tail...);
-            return garner_priv(std::forward<Tail>(tail)...);
-        }
-    }
-
-};
+    return cons.back();
+}
 
 }

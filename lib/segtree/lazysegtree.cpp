@@ -58,12 +58,6 @@ class LazySegmentTree {
         return segment(id_val, std::make_pair(id_lazy, false), -1, -1, -1);
     }
 
-    ssize_t ceil_pow2(ssize_t s) const {
-        ssize_t ret = 1;
-        while (ret < s) ret *= 2;
-        return ret;
-    }
-
     void update_segment(segment &s) {
         s.val = merge_val(segs[s.cl].val, segs[s.cr].val);
     }

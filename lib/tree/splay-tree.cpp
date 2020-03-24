@@ -1,19 +1,26 @@
-#include "../template.cpp"
+#include "../util/template.cpp"
 
-template <typename Key> struct SplayTreeNode {
-    using node_ptr = SplayTreeNode<Key> *;
+namespace tree {
+
+template <typename Key> 
+struct SplayTreeNode {
+    using node_ptr = SplayTreeNode<Key>*;
+
     Key key;
     node_ptr par, l, r;
-    size_t size;
+    std::size_t size;
 
-    SplayTreeNode(Key key, node_ptr par)
-        : key(key), par(par), l(nullptr), r(nullptr), size(1) {}
-    SplayTreeNode(Key key) : SplayTreeNode(key, nullptr) {}
-    SplayTreeNode() : SplayTreeNode(Key()) {}
+    SplayTreeNode(Key key, node_ptr par) : key(key), par(par), l(nullptr), r(nullptr), size(1) { }
+    SplayTreeNode(Key key) : SplayTreeNode(key, nullptr) { }
+    SplayTreeNode() : SplayTreeNode(Key()) { }
 
-    bool is_l() const { return par != nullptr && par->l == this; }
+    bool is_l() { 
+        return par != nullptr && par->l == this; 
+    }
 
-    bool is_root() const { return par == nullptr; }
+    bool is_root() {
+        return par == nullptr; 
+    }
 
     void rotate(bool l_ch) {
         if (is_root()) return;
@@ -66,21 +73,21 @@ template <typename Key> struct SplayTreeNode {
 
     node_ptr set_l(node_ptr nl) {
         l = nl;
-        if(nl) nl->par = this;
+        if (nl) nl->par = this;
         update_size();
         return this;
     }
 
     node_ptr set_r(node_ptr nr) {
         r = nr;
-        if(nr) nr->par = this;
+        if (nr) nr->par = this;
         update_size();
         return this;
     }
 
     node_ptr cut_l() {
         auto ret = l;
-        if(l) l->par = nullptr;
+        if (l) l->par = nullptr;
         l = nullptr;
         update_size();
         return ret;
@@ -88,53 +95,57 @@ template <typename Key> struct SplayTreeNode {
 
     node_ptr cut_r() {
         auto ret = r;
-        if(r) r->par = nullptr;
+        if (r) r->par = nullptr;
         r = nullptr;
         update_size();
         return ret;
     }
 };
 
-template <typename STree> STree merge(STree t1, STree t2);
-template <typename STree, typename Key> pair<STree, STree> split(STree tree, Key k);
+template <typename Tree> Tree merge(Tree t1, Tree t2);
+template <typename Tree, typename Key> std::pair<Tree, Tree> split(Tree tree, Key k);
 
-template <typename Key, typename Comp = less<Key>> struct SplayTree {
+template <typename Key, typename Comp = std::less<Key>> 
+struct SplayTree {
     using Node = SplayTreeNode<Key>;
     using Tree = SplayTree<Key, Comp>;
     using node_ptr = typename SplayTreeNode<Key>::node_ptr;
+
     node_ptr root;
 
-    SplayTree(node_ptr root) : root(root) {};
-    SplayTree() : SplayTree(nullptr) {}
+    SplayTree(node_ptr root) : root(root) { };
+    SplayTree() : SplayTree(nullptr) { }
 
-    bool comp(Key x, Key y) { return Comp()(x, y); }
+    bool comp(Key x, Key y) const { 
+        return Comp()(x, y); 
+    }
 
     node_ptr find_max() {
         node_ptr cur = root;
-        while(cur && cur->r) cur = cur->r;
+        while (cur && cur->r) cur = cur->r;
         splay(cur);
         return cur;
     }
 
-    // TODO: if k isn't found
+    // FIXME : if k isn't found
     node_ptr find(Key k) {
         auto cur = root;
-        while(cur) {
-            if(cur->key == k) break;
-            if(comp(k, cur->key)) {
-                if(cur->l) cur = cur->l;
+        while (cur) {
+            if (cur->key == k) break;
+            if (comp(k, cur->key)) {
+                if (cur->l) cur = cur->l;
                 else break;
-            } else if(comp(cur->key, k)) {
-                if(cur->r) cur = cur->r;
+            } else if (comp(cur->key, k)) {
+                if (cur->r) cur = cur->r;
                 else break;
             }
         }
-        if(cur) splay(cur);
+        if (cur) splay(cur);
         return cur;
     }
 
     void insert(Key key) {
-        if(root == nullptr) {
+        if (root == nullptr) {
             root = new Node(key);
             return;
         }
@@ -147,39 +158,39 @@ template <typename Key, typename Comp = less<Key>> struct SplayTree {
 
     void erase(Key x) { 
         auto nx = this->find(x);
-        if(nx == nullptr || nx->key != x) return;
+        if (nx == nullptr || nx->key != x) return;
         Tree lt, rt;
         tie(lt, rt) = split(*this, nx->key);
 
         {
             node_ptr tmp = nullptr;
-            if(lt.root && lt.root->key == x) {
+            if (lt.root && lt.root->key == x) {
                 tmp = lt.root;
                 lt.root = lt.root->cut_l();
-            } else if(rt.root && rt.root->key == x) {
+            } else if (rt.root && rt.root->key == x) {
                 tmp = rt.root;
                 rt.root = rt.root->cut_r();
             }
-            if(tmp) delete tmp;
+            if (tmp) delete tmp;
         }
 
-        if(lt.root && rt.root) {
+        if (lt.root && rt.root) {
             lt.find_max();
             lt.root->set_r(rt.root);
             root = lt.root;
-        } else if(lt.root) {
+        } else if (lt.root) {
             root = lt.root;
-        } else if(rt.root) {
+        } else if (rt.root) {
             root = rt.root;
         } else {
             root = nullptr;
         }
     }
 
-    ll query(size_t ord) {
-        size_t cnt = ord;
+    std::string query(std::size_t ord) {
+        std::size_t cnt = ord;
         node_ptr cur = root;
-        ll ret = 0;
+        std::string ret;
         while (cnt) {
             auto l_size = (cur->l == nullptr ? 0 : cur->l->size);
             if (l_size + 1 == cnt) {
@@ -203,41 +214,25 @@ template <typename Key, typename Comp = less<Key>> struct SplayTree {
     }
 };
 
-template <typename STree>
-STree merge(STree t1, STree t2) {
-    if(!t1.root) return t2;
-    if(!t2.root) return t1;
+template <typename Tree>
+Tree merge(Tree t1, Tree t2) {
+    if (!t1.root) return t2;
+    if (!t2.root) return t1;
     auto t1_max = t1.find_max();
     t1.splay(t1_max);
     t1.root->set_r(t2.root);
     return t1;
 }
 
-template <typename STree, typename Key>
-pair<STree, STree> split(STree tree, Key k) {
+template <typename Tree, typename Key>
+std::pair<Tree, Tree> split(Tree tree, Key k) {
     tree.find(k);
     auto root = tree.root;
     auto nl = root->cut_l();
     auto nr = root->cut_r();
-    if(tree.comp(k, root->key)) nr = root->set_r(nr);
+    if (tree.comp(k, root->key)) nr = root->set_r(nr);
     else nl = root->set_l(nl);
-    return make_pair(STree(nl), STree(nr));
+    return std::make_pair(Tree(nl), Tree(nr));
 }
 
-const ll inf = 5e15;
-
-// solution for https://atcoder.jp/contests/arc033/tasks/arc033_3
-int main() {
-    ll Q;
-    cin >> Q;
-    SplayTree<ll> st;
-    while(Q--) {
-        ll t, x;
-        cin >> t >> x;
-        //st.dump();
-        if(t == 1) st.insert(x);
-        else cout << st.query(x) << endl;
-    }
-    return 0;
 }
-

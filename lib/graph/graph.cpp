@@ -32,4 +32,69 @@ struct Graph : public vvec<Edge> {
     }
 };
 
+template <typename Iterator>
+class dst_iterator {
+    Iterator ite;
+
+public:
+    dst_iterator(Iterator ite) : ite(ite) { }
+
+    bool operator ==(const dst_iterator<Iterator> &oth) const {
+        return ite == oth.ite;
+    }
+
+    bool operator !=(const dst_iterator<Iterator> &oth) const {
+        return !(*this == oth);
+    }
+
+    bool operator <(const dst_iterator<Iterator> &oth) const {
+        return ite < oth.ite;
+    }
+
+    bool operator >(const dst_iterator<Iterator> &oth) const {
+        return ite > oth.ite;
+    }
+
+    bool operator <=(const dst_iterator<Iterator> &oth) const {
+        return ite <= oth.ite;
+    }
+
+    bool operator >=(const dst_iterator<Iterator> &oth) const {
+        return ite >= oth.ite;
+    }
+
+    const Node& operator *() {
+        return ite->first;
+    }
+
+    const Node& operator *() const {
+        return ite->first;
+    }
+
+    dst_iterator operator ++() {
+        ++ite;
+        return ite;
+    }
+};
+
+class dst_iteration {
+    using ite_type = vec<Edge>::const_iterator;
+    const vec<Edge> &edges;
+
+public:
+    dst_iteration(const vec<Edge> &edges) : edges(edges) { }
+
+    auto begin() const {
+        return dst_iterator<ite_type>(edges.cbegin());
+    }
+
+    auto end() const {
+        return dst_iterator<ite_type>(edges.cend());
+    }
+};
+
+dst_iteration dst(const vec<Edge> &edges) {
+    return dst_iteration(edges);
+}
+
 }

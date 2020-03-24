@@ -7,7 +7,7 @@ namespace math {
 template <ll Mod>
 struct Modint {
 
-    constexpr Modint(ll x) : x(x % Mod) { }
+    constexpr Modint(ll x) : x((Mod + x % Mod) % Mod) { }
     
     constexpr Modint() : Modint(0) { }
     

@@ -1,27 +1,24 @@
 #include "../util/template.cpp"
+#include "graph.cpp"
 
-struct LowLink {
-    ll N;
-    const VV<ll> &edges;
-    V<ll> low, ord;
-    V<bool> visited;
-    V<bool> is_articulation;
-    ll dfs_counter;
+namespace graph {
 
-    LowLink(const VV<ll> &edges)
-        : N(edges.size()), edges(edges), low(edges.size()), ord(edges.size()), 
-          visited(edges.size()), is_articulation(edges.size()), dfs_counter(0)
-    {
-        for (ll i = 0; i < N; i++) if (!visited[i]) dfs(i, -1);
-    }
+template <bool Dir>
+class LowLink {
+    const Graph<Dir> &graph;
+    const std::size_t gsz;
+    vec<ll> low, ord;
+    vec<bool> visited, is_articulation;
+    ll dfs_cnt;
 
-    void dfs(ll cur, ll pre) {
+    void dfs(Node cur, Node pre) {
         visited[cur] = true;
-        ord[cur] = dfs_counter++;
+        ord[cur] = dfs_cnt++;
         low[cur] = ord[cur];
         ll children = 0;
         bool art = false;
-        for (ll nxt : edges[cur]) {
+        for (auto &&e : graph[cur]) {
+            ll nxt = e.first;
             if (!visited[nxt]) {
                 children++;
                 dfs(nxt, cur);
@@ -34,22 +31,35 @@ struct LowLink {
         is_articulation[cur] = art;
     }
 
-    bool is_art(ll cur) { return is_articulation[cur]; }
+public:
+    LowLink(const Graph<Dir> &graph) 
+        : graph(graph), gsz(graph.size()), low(gsz), ord(gsz),
+          visited(gsz), is_articulation(gsz), dfs_cnt(0)
+    {
+        for (Node i = 0; i < gsz; i++) if (!visited[i]) dfs(i, -1);
+    }
+    
+    bool is_art(Node cur) const {
+        return is_articulation[cur]; 
+    }
 
     // u -> v
-    bool is_bridge(ll from, ll to) { return ord[from] < low[to]; }
+    bool is_bridge(Node from, Node to) const {
+        return ord[from] < low[to];
+    }
 
-    V<PLL> enum_bridges() {
-        V<PLL> ret;
-        for (ll from = 0; from < N; from++) {
-            for (ll to : edges[from]) {
-                if (!(from < to)) continue;
-                if (is_bridge(from, to)) ret.emplace_back(from, to);
-            }
+    vec<pll> all_bridges() const {
+        vec<pll> ret;
+        for (Node from = 0; from < gsz; from++) for (auto &&e : edges[from]) {
+            Node to = e.first;
+            if (!Dir && !(from < to)) continue;
+            if (is_bridge(from, to)) ret.emplace_back(from, to);
         }
         return ret;
     }
 };
+
+}
 
 int main() {
     ll N, M;

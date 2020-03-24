@@ -2,14 +2,14 @@
 #include "../../string/suffixarray.cpp"
 
 int main() {
-    string t;
-    cin >> t;
+    std::string t;
+    std::cin >> t;
     strings::SuffixArray sa(t);
 
-    ll Q;
-    cin >> Q;
+    ll q;
+    std::cin >> q;
 
-    auto query = [&](const string &p) {
+    auto query = [&](const std::string &p) {
         ll l = sa.lower_bound(p);
         if (l == sa.size()) return false;
         ll si = sa[l], pi = 0;
@@ -17,10 +17,10 @@ int main() {
         return pi == p.size();
     };
 
-    while (Q--) {
-        string p;
-        cin >> p;
-        cout << (query(p) ? 1 : 0) << endl;
+    while (q--) {
+        std::string p;
+        std::cin >> p;
+        std::cout << (query(p) ? 1 : 0) << '\n';
     }
     return 0;
 }

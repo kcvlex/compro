@@ -1,5 +1,7 @@
 #include "../util/template.cpp"
 
+namespace math {
+
 template <typename T>
 struct Matrix : public vvec<T> {
     using vvec<T>::vvec;
@@ -92,3 +94,10 @@ private:
         return true;
     }
 };
+
+// FIXME
+template <typename T, std::size_t R, std::size_t C>
+struct Matrix : std::array<std::array<T, C>, R> {
+};
+
+}

@@ -1,75 +1,100 @@
 #include "../template.cpp"
-#include "lazysegmenttree.cpp"
+#include "lazysegtree.cpp"
+
+namespace tree {
+
+using hld_id_t = ll;
+
+namespace {
+
+template <typename Graph>
+struct Builder {
+    const Graph &graph;
+    vec<ll> pars, heads, tree_sz, heavy;
+    vec<hld_id_t> hld_id;
+
+    Builder(const Graph &graph) : graph(graph), pars(graph.size()), heads(graph.size()), tree_sz(graph.size()), 
+                                  heavy(graph.size(), -1), hld_id(graph.size()) { }
+
+    void build() {
+        calc_size(0, -1);
+        hld_id_t id = 0;
+        assign_id(0, -1, id);
+    }
+
+private:
+    ll calc_sz(ll cur, ll pre) {
+        ll ret = 1;
+        pars[cur] = pre;
+        for (auto &&e : graph[cur]) {
+            ll nxt;
+            std::tie(nxt, std::ignore) = e;
+            if (nxt == pre) continue;
+            ret += calc_sz(nxt, cur);
+            bool is_heavy = (heavy[cur] == -1 || tree_sz[heavy[cur]] < tree_sz[nxt]);
+            if (is_heavy) heavy[cur] = nxt;
+        }
+        return tree_sz[cur] = ret;
+    }
+
+    void assign_id(ll cur, ll pre, hld_id_t &id) {
+        hld_id[cur] = id++;
+        if (pre == -1) heads[cur] = cur;
+        else heads[cur] = (heavy[pre] == cur ? heads[pre] : cur);
+        if (heavy[cur] != -1) assign_id(heavy[cur], cur, id);  // FIXME : heavy[cur] != cur is necessary ??
+        for (auto &&e : graph[cur]) {
+            ll nxt;
+            std::tie(nxt, std::ignore) = e;
+            if (nxt == pre) continue;
+            if (nxt == heavy[cur]) continue;
+            assign_id(nxt, cur, id);
+        }
+    }
+};
+
+}  // anonymous
 
 struct HLD {
-    V<ll> p_node, head_node, hld_id, heavy , tree_size;
-    HLD(const VV<ll> &edges) : p_node(edges.size()), head_node(edges.size()),
-                               hld_id(edges.size()), heavy(edges.size(), -1), 
-                               tree_size(edges.size())
-    {
-        calc_size(0, -1, edges);
-        ll id = 0;
-        calc_id(0, -1, edges, id);
+    template <typename Graph>
+    HLD(const Graph &graph) {
+        Builder builder(graph);
+        builder.build();
+        pars = std::move(builder.pars);
+        heads = std::move(builder.heads);
+        hld_id = std::move(buildre.hld_id);
     }
 
-    ll calc_size(ll cur, ll pre, const VV<ll> &edges) {
-        ll ret = 1;
-        p_node[cur] = pre;
-        for(ll nxt : edges[cur]) if(nxt != pre) {
-            ret += calc_size(nxt, cur, edges);
-            if(heavy[cur] == -1 || 
-               tree_size[heavy[cur]] < tree_size[nxt]) {
-                heavy[cur] = nxt;
-            }
-        }
-        return tree_size[cur] = ret;
+    hld_id_t head_id(ll n) const {
+        return hld_id[heads[n]];
     }
 
-    void calc_id(ll cur, ll pre, const VV<ll> &edges, ll &id) {
-        if(cur == -1) return;
-        hld_id[cur] = id++;
-        if(pre == -1) head_node[cur] = cur;
-        else head_node[cur] = (heavy[pre] == cur ? head_node[pre] : cur);
-        if(cur != heavy[cur]) calc_id(heavy[cur], cur, edges, id);
-        for(ll nxt : edges[cur]) {
-            if(nxt == pre || nxt == heavy[cur]) continue;
-            calc_id(nxt, cur, edges, id);
-        }
-    }
-
-    ll head_id(ll node) { return hld_id[head_node[node]]; }
-
-    ll lca(ll n1, ll n2) {
-        while(true) {
-            if(hld_id[n2] < hld_id[n1]) swap(n1, n2);
-            if(head_node[n1] == head_node[n2]) break;
-            n2 = p_node[head_node[n2]];
+    ll lca(ll n1, ll n2) const {
+        while (true) {
+            if (hld_id[n2] < hld_id[n1]) std::swap(n1, n2);
+            if (heads[n1] == heads[n2]) break;
+            n2 = pars[heads[n2]];
         }
         return n1;
     }
 
     // calc's arg is [l, r)
     template <typename T>
-    T query(ll n1, ll n2, function<T(ll, ll)> calc, 
-            T id_ele, function<T(T, T)> merge) 
+    T query(ll n1, ll n2, T id_ele,
+            std::function<T(ll, ll)> calc, std::function<T(T, T)> merge) const 
     {
-        T lval = id_ele, rval = id_ele;
-        T res = id_ele;
-        while(true) {
-            ll id1 = hld_id[n1];
-            ll id2 = hld_id[n2];
-            if(head_node[n1] != head_node[n2]) {
-                if(id1 < id2) {
-                    auto tmp = calc(head_id(n2), id2 + 1);
-                    rval = merge(tmp, rval);
-                    n2 = p_node[head_node[n2]];
+        T lval = id_ele, rval = id_ele, res = id_ele;
+        while (true) {
+            hld_id_t id1 = hld_id[n1], id2 = hld_id[id2];
+            if (heads[n1] != heads[n2]) {
+                if (id1 < id2) {
+                    rval = merge(calc(head_id(n2), id2 + 1), rval);
+                    n2 = pars[heads[n2]];
                 } else {
-                    auto tmp = calc(head_id(n1), id1 + 1);
-                    lval = merge(lval, tmp);
-                    n1 = p_node[head_node[n1]];
+                    lval = merge(lval, calc(head_id(n1), id1 + 1));
+                    n1 = pars[heads[n1]];
                 }
             } else {
-                if(id2 < id1) swap(id1, id2);
+                if (id2 < id1) std::swap(id1, id2);
                 res = calc(id1, id2 + 1);
                 res = merge(lval, merge(res, rval));
                 break;
@@ -78,13 +103,12 @@ struct HLD {
         return res;
     }
 
-    void query(ll n1, ll n2, function<void(ll, ll)> update) {
-        ll identity = 0;
-        auto merge = [&](ll a, ll b) { return 0; };
-        auto wrapper_calc = [&](ll a, ll b) { update(a, b); return 0; };
-        query<ll>(n1, n2, wrapper_calc, identity, merge);
-    }
+private:
+    vec<ll> pars, heads;
+    vec<hld_id_t> hld_id;
 };
+
+}
 
 int main() {
     ll N;

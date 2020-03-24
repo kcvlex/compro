@@ -9,7 +9,7 @@ class SuffixArray {
 
     vec<ll> build_init() {
         vec<ll> cls(sa.size());
-        beg_idx = vec<ll>(max<ll>(sa.size(), alp) + 2, 0);
+        beg_idx = vec<ll>(std::max<ll>(sa.size(), alp) + 2, 0);
         for (char c : s__) beg_idx[c + 1]++;
         for (ll i = 0; i + 1 < beg_idx.size(); i++) beg_idx[i + 1] += beg_idx[i];
         for (ll i = 0; i < size(); i++) {
@@ -102,7 +102,7 @@ public:
     SuffixArray(std::string str) : s__(str) {
         auto tmp = s__;
         s__ += static_cast<char>(0);
-        ll pow2 = ceil_pow2(s__.sizze());
+        ll pow2 = ceil_pow2(s__.size());
         ll diff = pow2 - s__.size();
         s__ += std::string(diff, 0); 
         sa.resize(pow2);

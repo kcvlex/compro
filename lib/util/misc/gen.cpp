@@ -10,8 +10,8 @@ struct GenNum {
 
     GenNum(ll l, ll r)
         : rd(),
-          gen(rd()),
-          dis(l, r - 1) {}
+        gen(rd()),
+        dis(l, r - 1) {}
 
     ll gen_num() {
         return dis(gen);

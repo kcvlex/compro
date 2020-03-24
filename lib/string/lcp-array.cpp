@@ -1,12 +1,10 @@
 #include "suffixarray.cpp"
 
-// FIXME : test
-
 namespace strings {
 
 class LongestCommonPrefixArray {
     const SuffixArray &sa;
-    V<ll> lcp, rank;
+    vec<ll> lcp, rank;
 
     void build() {
         for (ll i = 0; i < sa.size(); i++) rank[sa[i]] = i;
@@ -22,7 +20,7 @@ class LongestCommonPrefixArray {
                 h++;
             }
             lcp[rank[i] + 1] = h;
-            h = max<ll>(0, h - 1);
+            h = std::max<ll>(0, h - 1);
         }
     }
 
@@ -31,6 +29,10 @@ public:
         : sa(sa), lcp(sa.size()), rank(sa.size())
     {
         build();
+    }
+
+    ll operator [](std::size_t i) const {
+        return lcp[i];
     }
 };
 
