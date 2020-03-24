@@ -1,7 +1,7 @@
 #pragma once
 #include "../util/template.cpp"
 
-namespace str {
+namespace strings {
 
 template <ll Base, ll ...Mods>
 struct RollingHash {
