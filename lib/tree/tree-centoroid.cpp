@@ -1,82 +1,71 @@
+#pragma once
 #include "../template.cpp"
+#include "../graph/graph.cpp"
 
-struct TreeCentroid {
-    const VV<ll> &edges;
-    const ll N;
-    V<bool> used;
-    V<ll> sub_sz;
-    VV<ll> cen_ch;
-    ll root;
+namespace tree {
 
-    TreeCentroid(const VV<ll> &edges) 
-        : edges(edges), N(edges.size()), used(edges.size()),
-          sub_sz(edges.size()), cen_ch(edges.size()), root(-1)
-    { }
+template <typename Graph>
+class TreeCentroid {
+    const Graph &g;
+    const ssize_t n;
+    vec<bool> used;
+    vec<ssize_t> sub_sz;
+    vvec<ll> cen_ch;
+    Node root;
 
-    ll dfs(ll cur, ll pre) {
+    ssize_t dfs(Node cur, Node pre) {
         sub_sz[cur] = 1;
-        for(ll nxt : edges[cur]) {
-            if(used[nxt]) continue;
-            if(nxt == pre) continue;
+        for (auto &&nxt : graph::dst(g[cur])) {
+            if (used[nxt]) continue;
+            if (nxt == pre) continue;
             sub_sz[cur] += dfs(nxt, cur);
         }
         return sub_sz[cur];
     }
 
-    ll search(ll cur, ll pre, ll tree_size) {
-        if(pre == -1) {
-            dfs(cur, -1);
-            tree_size = sub_sz[cur];
-        }
-        ll large_ch = -1;
-        for(ll ch : edges[cur]) {
-            if(used[ch]) continue;
-            if(ch == pre) continue;
-            if(tree_size / 2 < sub_sz[ch]) {
-                large_ch = ch;
-                break;
-            }
+    Node search_cen(Node cur, Node pre, ssize_t tree_sz) {
+        if (pre == -1) tree_sz = dfs(cur, pre);
+        
+        std::pair<ssize_t, Node> large_ch(-1, -1);
+        for (ll ch : graph::dst(g[cur])) {
+            if (used[ch]) continue;
+            if (ch == pre) continue;
+            chmax(large_ch, pll(sub_sz[ch], ch));
         }
 
-        if(large_ch == -1) {
+        ssize_t lsz;
+        Node lch;
+        std::tie(lsz, lch) = large_ch;
+
+        if (lsz < tree_sz / 2) {
             used[cur] = true;
-            if(root == -1) root = cur;
-            for(ll nxt : edges[cur]) {
-                if(used[nxt]) continue;
-                cen_ch[cur].push_back(search(nxt, -1, -1));
+            if (root == -1) root = cur;
+            for (Node ch : graph::dst(g[cur])) {
+                if (used[ch]) continue;
+                Node croot = search(ch, -1, -1);
+                cen_ch[cur].push_back(croot);
             }
-            return cur;
         } else {
-            return search(large_ch, cur, tree_size);
+            return search(lch, cur, tree_sz);
         }
     }
 
-    void build() { search(0, -1, N); }
+public:
+    TreeCentroid(const Graph &g) 
+        : g(g), n(g.size()), used(n), sub_sz(n), cen_ch(n), root(-1)
+    {
+    }
+
+    void solve() {
+        search_cen(0, -1, n);
+    }
 };
 
-// solution for https://codeforces.com/contest/321/problem/C
-
-void dfs(ll cur, V<char> &ans, const VV<ll> &nxts, ll depth = 0) {
-    ans[cur] = 'A' + depth;
-    for(ll nxt : nxts[cur]) dfs(nxt, ans, nxts, depth + 1);
+template <typename Graph>
+std::pair<Node, vvec<Node>> tree_centroid(const Graph &tree) {
+    TreeCentroid tc(tree);
+    tc.solve();
+    return std::make_pair(tc.root, std::move(tc.cen_ch));
 }
 
-int main() {
-    ll N;
-    cin >> N;
-    VV<ll> edges(N);
-    for (ll i = 1; i < N; i++) {
-        ll a, b;
-        cin >> a >> b;
-        a--; b--;
-        edges[a].push_back(b);
-        edges[b].push_back(a);
-    }
-
-    TreeCentroid tc(edges);
-    tc.build();
-    V<char> ans(N);
-    dfs(tc.root, ans, tc.cen_ch);
-    for (ll i = 0; i < N; i++) cout << ans[i] << " \n"[i + 1 == N];
-    return 0;
 }

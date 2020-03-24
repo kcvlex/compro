@@ -1,32 +1,48 @@
-#include<bits/stdc++.h>
-using namespace std;
-using ll = int64_t;
+#include "../util/template.cpp"
+#include "graph.cpp"
 
-vector<ll> top_sort(const vector<vector<ll>> &edges) {
-    ll N = edges.size();
-    vector<ll> ret;
-    vector<bool> road(N);
-    vector<bool> used(N);
-    function<bool(ll)> dfs = [&](ll now) {
-        used[now] = true;
-        road[now] = true;
-        for (ll nxt : edges[now]) {
-            if (road[nxt]) return false;
+namespace graph {
+
+template <typename Graph>
+struct topological_sort {
+    const Graph &g;
+    ssize_t n;
+    vec<Node> ret;
+    vec<bool> pass, used;
+
+    topological_sort(const Graph &g) : g(g), n(g.size()), pass(n), used(n)
+    {
+    }
+
+    bool dfs(ll cur) {
+        used[cur] = true;
+        pass[cur] = true;
+        for (auto &&nxt : dst(g[cur])) {
+            if (pass[nxt]) return false;
             if (used[nxt]) continue;
             if (!dfs(nxt)) return false;
         }
-        ret.push_back(now);
-        road[now] = false;
+        ret.push_back(cur);
+        pass[cur] = false;
         return true;
-    };
-    for (ll i = 0; i < edges.size(); i++) {
-        if (used[i]) continue;
-        if (!dfs(i)) return vector<ll>(0);
     }
-    reverse(ret.begin(), ret.end());
-    return ret;
+
+    vec<Node> solve() {
+        for (Node i = 0; i < n; i++) {
+            if (used[i]) continue;
+            if (!dfs(i)) {
+                ret.clear();
+                break;
+            }
+        }
+        std::reverse(ALL(ret));
+        return ret;
+    }
+};
+
+template <typename Graph>
+vec<Node> topsort(const Graph &g) {
+    return topological_sort(g).solve();
 }
 
-int main() {
-    //TOOD: write test
 }

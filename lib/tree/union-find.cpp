@@ -7,8 +7,14 @@ struct UnionFind {
     vec<ll> rank, par;
     vec<ssize_t> sz;
 
-    UnionFind(ll n) : rank(n, 1), par(n), sz(n, 1) {
-        iota(ALL(par), 0);
+    UnionFind(ll n) : rank(n), par(n), sz(n) {
+        init();
+    }
+
+    void init() {
+        std::fill(ALL(rank), 1);
+        std::iota(ALL(par), 0);
+        std::fill(ALL(sz), 1);
     }
 
     ll find(ll n) {
