@@ -1,5 +1,6 @@
 #pragma once
 #include "../util/template.cpp"
+#include "../util/generics.cpp"
 
 namespace strings {
 
@@ -136,5 +137,10 @@ struct RollingHashBuilder {
         return hash_t(ans, d1.sz + d2.sz);
     }
 };
+
+template <const ll *Mods>
+constexpr auto gen_builder() {
+    return typename utility::pass_array<ll, RollingHashBuilder, Mods>::type();
+}
 
 }

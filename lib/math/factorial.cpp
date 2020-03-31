@@ -6,14 +6,14 @@
 namespace math {
 
 template <ll Mod>
-class Combination {
+class Factorial {
     using mint = Modint<Mod>;
 
     ssize_t maxv;
     vec<mint> factv, ifactv;
 
 public:
-    Combination(ssize_t maxv) : maxv(maxv), factv(maxv + 1), ifactv(maxv + 1) {
+    Factorial(ssize_t maxv) : maxv(maxv), factv(maxv + 1), ifactv(maxv + 1) {
         factv[0] = mint(1);
         for (ll i = 1; i <= maxv; i++) factv[i] = factv[i - 1] * i;
         ifactv.back() = factv.back().inv();

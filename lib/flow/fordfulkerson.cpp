@@ -1,18 +1,12 @@
 #pragma once
-
 #include "../util/template.cpp"
-#include "../graph/graph.cpp"
-#include "../graph/flow-graph.cpp"
+#include "base.cpp"
 
 namespace flow {
-    
-using graph::Node;
-using graph::Capacity;
 
 template <typename FlowGraph>
 class FordFulkerson {
     FlowGraph flow_graph;
-    const graph::Capacity inf;
     vec<bool> used;
     Node src, sink;
 
@@ -33,8 +27,8 @@ class FordFulkerson {
     }
 
 public:
-    FordFulkerson(FlowGraph flow_graph, const Capacity &inf) :
-        flow_graph(flow_graph), inf(inf), used(flow_graph.size()) { }
+    FordFulkerson(FlowGraph flow_graph) :
+        flow_graph(flow_graph), used(flow_graph.size()) { }
 
     Capacity max_flow(Node src, Node sink) {
         this->src = src;
@@ -42,7 +36,7 @@ public:
         auto ret = Capacity();
         while (true) {
             std::fill(ALL(used), false);
-            auto tmp = dfs(src, inf);
+            auto tmp = dfs(src, cinf);
             if (tmp == Capacity()) break;
             ret += tmp;
         }

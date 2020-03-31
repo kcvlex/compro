@@ -1,19 +1,15 @@
 #pragma once
 #include "../util/template.cpp"
 #include "../graph/flow-graph.cpp"
+#include "base.cpp"
 
 namespace flow {
-    
-using graph::Node;
-using graph::Capacity;
 
-template <typename FlowGraph>
+template <typename FlowGraph = graph::FlowGraph<true>>
 class Dinic {
     FlowGraph flow_graph;
-    const Capacity cinf;
     vec<ll> dists;
-    const ll dinf = 5e15;
-    vec<ssize_t> watched_idx;
+    vec<ssize_t> used;
     Node src, sink;
 
     void bfs(Node start) {
@@ -41,13 +37,13 @@ class Dinic {
 
     Capacity dfs(Node cur, Node pre, Capacity flow) {
         if (cur == sink) return flow;
-        for (auto idx = watched_idx[cur] + 1; idx < flow_graph[cur].size(); idx++) {
-            watched_idx[cur]++;
+        for (auto idx = used[cur] + 1; idx < flow_graph[cur].size(); idx++) {
+            used[cur]++;
             auto &e = flow_graph[cur][idx];
             if (dists[e.to()] <= dists[cur]) continue;
             if (e.cap() <= Capacity()) continue;
             if (e.to() == pre) continue;
-            auto f = dfs(e.to(), cur, min(flow, e.cap()));
+            auto f = dfs(e.to(), cur, std::min(flow, e.cap()));
             e.cap() -= f;
             flow_graph[e.to()][e.rev_idx()].cap() += f;
             if (Capacity() < f) return f;
@@ -56,8 +52,8 @@ class Dinic {
     }
 
 public:
-    Dinic(const FlowGraph &flow_graph, const Capacity &cinf) :
-        flow_graph(flow_graph), cinf(cinf), watched_idx(flow_graph.size()) { }
+    Dinic(const FlowGraph &flow_graph) :
+        flow_graph(flow_graph), used(flow_graph.size()) { }
 
     Capacity max_flow(Node src, Node sink) {
         this->src = src;
@@ -66,7 +62,7 @@ public:
         while (true) {
             bfs(src);
             if (dists[sink] == dinf) break;
-            std::fill(ALL(watched_idx), -1);
+            std::fill(ALL(used), -1);
             while (true) {
                 auto tmp = dfs(src, -1, cinf);
                 if (tmp == Capacity()) break;

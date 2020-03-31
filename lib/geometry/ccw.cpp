@@ -16,7 +16,7 @@ namespace geo {
 int ccw(Point a, Point b, Point c) {
     b -= a;
     c -= a;
-    double p, q;
+    value_type p, q;
     {
         auto tmp = std::conj(b) * c;
         p = tmp.real();

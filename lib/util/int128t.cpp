@@ -1,13 +1,19 @@
-istream& operator >>(istream &is, __int128_t &a) {
-    int64_t i;
+#include "template.cpp"
+
+using i128 = __int128_t;
+
+std::istream& operator >>(std::istream &is, i128 &n) {
+    ll i;
     is >> i;
-    a = i;
+    n = i;
     return is;
 }
 
-ostream& operator <<(ostream &os, __int128_t a) {
-    auto i = (int64_t)a;
-    os << i;
+std::ostream& operator <<(std::ostream &os, i128 n) {
+    i128 maxv = std::numeric_limits<ll>::max();
+    ll a = dynamic_cast<ll>(n / maxv);
+    ll b = dynamic_cast<ll>(n % maxv);
+    if (a) os << a;
+    os << b;
     return os;
 }
-
