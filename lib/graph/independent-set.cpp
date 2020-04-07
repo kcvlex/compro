@@ -1,92 +1,71 @@
 #pragma once
 #include "../util/template.cpp"
-#include "graph.cpp"
 
 namespace graph {
 
 template <std::size_t Size>
 class IndependentSet {
-    constexpr static std::size_t half = (Size + 1) / 2;
-    constexpr static std::size_t hsz = (1ll << half);
-    vvec<ll> dp;
-    const std::size_t gsz;
-    std::array<ll, Size> bs_graph;
-
-    void build_neigh(std::array<ll, hsz> &gr, std::size_t sz) {
-        for (ll i = 0; i < sz; i++) {
-            ll mask = 1ll << i;
-            for (ll s = 0; s < (1ll << sz); s++) if (s & mask) gr[s] |= gr[s ^ mask];
-        }
+    using bs_t = std::bitset<Size>;
+    const std::size_t sz;
+    std::array<bs_t, Size> mat;
+    std::array<int, Size> deg;
+    
+    template <std::size_t S>
+    void chmax(std::bitset<S> &b1, std::bitset<S> b2) {
+        if (b1.count() < b2.count()) b1 = b2;
     }
 
-    void calc_sz(vec<ll> &sz_v, std::array<ll, hsz> &gr, std::size_t sz) {
-        std::fill(ALL(sz_v), 0);
-        build_neigh(gr, sz);
-        for (ll s = 0; s < sz_v.size(); s++) {
-            ll e = gr[s];
-            if (s & e) continue;
-            sz_v[s] = std::bitset<64>(s).count();
-        }
-        for (ll i = 0; i < sz; i++) {
-            ll mask = 1ll << i;
-            for (ll s = 0; s < (1ll << sz); s++) if (s & mask) chmax(sz_v[s], sz_v[s ^ mask]);
-        }
+    void set_watched(bs_t &watched, int i) {
+        watched.set(i, 1);
+        watched |= mat[i];
     }
 
-    void extract_graph(std::array<ll, hsz> &arr, ll l, ll r, ll tl, ll tr) {
-        std::fill(ALL(arr), 0);
-        std::size_t s = tr - tl;
-        ll mask = (1ll << s) - 1;
-        for (ll i = 0; i < r - l; i++) arr[1ll << i] = (bs_graph[i + l] >> tl) & mask;
-    }
-
-public:
-    template <bool Dir>
-    IndependentSet(const graph::Graph<Dir> &g) : gsz(g.size()), dp(2) {
-        std::fill(ALL(bs_graph), 0);
-        for (ll i = 0; i < gsz; i++) for (auto &&e : g[i]) {
-            ll nxt = e.first;
-            bs_graph[i] |= (1ll << nxt);
+    bs_t dfs(bs_t sel, bs_t watched) {
+        auto fliped = ~watched;
+        int v = fliped._Find_first();
+        if (sz <= v) return sel;
+        for (int i = fliped._Find_next(v); i < sz; i = fliped._Find_next(i)) if (deg[v] < deg[i]) v = i;
+        
+        if (deg[v] == 2) {
+            sel.set(v, 1);
+            set_watched(watched, v);
+            return dfs(sel, watched);
         }
-    }
+        
+        bs_t ret = sel;
+        
+        watched.set(v, 1);
+        chmax(ret, dfs(sel, watched));
 
-    ll solve() {
-        ll left = 0, mid = gsz / 2, right = gsz;
-        pii ranges[] = { { left, mid, }, { mid, right, } };
-        std::array<ll, hsz> halfg;
-
-        for (ll i = 0; i < 2; i++) {
-            ll l, r;
-            std::tie(l, r) = ranges[i];
-
-            std::size_t sz = r - l;
-            dp[i].resize(1ll << sz);
-            extract_graph(halfg, l, r, l, r);
-            calc_sz(dp[i], halfg, sz);
-        }
-
-        extract_graph(halfg, left, mid, mid, right);
-        build_neigh(halfg, mid - left);
-        ll mask = 1ll << (right - mid);
-        for (ll i = 0; i < (1ll << (mid - left)); i++) {
-            ll &e = halfg[i];
-            e = (~e) & (mask - 1);
-        }
-
-        ll ret = 0;
-        for (ll i = 0; i < (1ll << (mid - left)); i++) {
-            ll j = halfg[i];
-            chmax(ret, dp[0][i] + dp[1][j]);
-        }
+        sel.set(v, 1);
+        chmax(ret, sel);
+        set_watched(watched, v);
+        chmax(ret, dfs(sel, watched));
 
         return ret;
     }
-};
 
-template <bool Dir>
-ll indep_set(const Graph<Dir> &gr) {
-    IndependentSet<40> iset(gr);
-    return iset.solve();
-}
+public:
+    IndependentSet(std::size_t sz) : sz(sz) {
+        std::fill(ALL(mat), bs_t(0));
+        std::fill(ALL(deg), 0);
+    }
+
+    void add_edge(int a, int b) {
+        mat[a].set(b, 1);
+        mat[b].set(a, 1);
+        deg[a]++;
+        deg[b]++;
+    }
+
+    bs_t solve() {
+        bs_t sel, watched;
+        for (int i = 0; i < sz; i++) if (deg[i] <= 1 && !watched.test(i)) {
+            sel.set(i, 1);
+            set_watched(watched, i);
+        }
+        return dfs(sel, watched);
+    }
+};
 
 }

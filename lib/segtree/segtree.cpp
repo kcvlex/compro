@@ -1,5 +1,5 @@
 #include "../util/template.cpp"
-#include "../util/utility.cpp"
+#include "../util/ceil-pow2.cpp"
 
 namespace segtree {
 

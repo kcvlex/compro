@@ -18,8 +18,8 @@ class Stack:
 class PathFixer:
     def __init__(self, cwd):
         self.__stk = Stack()
-        lis = cwd.split('/')
-        for e in lis:
+        ite = filter(lambda s: s != '', cwd.split('/'))
+        for e in ite:
             self.__stk.push(e)
 
     def move(self, path):
@@ -34,8 +34,10 @@ class PathFixer:
         return self
 
     def get(self):
-        return '/'.join(self.__stk.get())
-
+        ret = '/'.join(self.__stk.get())
+        if self.__stk.get()[0] == 'home':
+            ret = '/' + ret
+        return ret
 
 class ListUpFiles:
     def __init__(self, src):
@@ -44,6 +46,7 @@ class ListUpFiles:
         self.__appended = set()
         self.__include = "#include"
         self.__debug_file = "debug.cpp"
+        self.__default_dir = "/home/taroy/kyopuro/lib/"
 
     def __should_listup(self, path):
         if path.find(self.__include) == -1:
@@ -64,17 +67,21 @@ class ListUpFiles:
         return result[:finish]
 
     def __listup_rec(self, cur_file):
+        import os.path
         cwd = self.__get_cwd(cur_file)
         with open(cur_file) as f:
             for line in f.readlines():
                 if not self.__should_listup(line):
                     continue
                 included_file = self.__extract_included_file(line)
-                path = PathFixer(cwd).move(included_file).get()
-                if path in self.__appended:
-                    continue
-                self.__appended.add(path)
-                self.__listup_rec(path)
+                path1 = PathFixer(cwd).move(included_file).get()
+                path2 = PathFixer(self.__default_dir + included_file).get()
+                paths = [ path1, path2 ]
+                for path in paths:
+                    if path in self.__appended: continue;
+                    if not os.path.isfile(path): continue;
+                    self.__appended.add(path)
+                    self.__listup_rec(path)
         self.__file_list.append(cur_file)
 
     def listup(self):
