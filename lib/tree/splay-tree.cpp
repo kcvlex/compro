@@ -2,237 +2,218 @@
 
 namespace tree {
 
-template <typename Key> 
-struct SplayTreeNode {
-    using node_ptr = SplayTreeNode<Key>*;
-
+template <typename Key>
+struct splay_node {
+    using node_ptr = splay_node<Key>*;
     Key key;
-    node_ptr par, l, r;
-    std::size_t size;
+    node_ptr l, r, p;
+    ssize_t sz;
+    splay_node(Key key, node_ptr l, node_ptr r, node_ptr p) : key(key), l(l), r(r), p(p), sz(1) { }
+    splay_node(Key key) : splay_node(key, nullptr, nullptr, nullptr) { }
+    splay_node() : splay_node(Key()) { }
 
-    SplayTreeNode(Key key, node_ptr par) : key(key), par(par), l(nullptr), r(nullptr), size(1) { }
-    SplayTreeNode(Key key) : SplayTreeNode(key, nullptr) { }
-    SplayTreeNode() : SplayTreeNode(Key()) { }
-
-    bool is_l() { 
-        return par != nullptr && par->l == this; 
-    }
-
-    bool is_root() {
-        return par == nullptr; 
-    }
-
-    void rotate(bool l_ch) {
-        if (is_root()) return;
-        auto p = par;
-        auto pp = p->par;
-        par = pp;
-        if (pp != nullptr) (p->is_l() ? pp->l : pp->r) = this;
-        if (l_ch) {
-            p->l = r;
-            if (r != nullptr) r->par = p;
-            r = p;
-            p->par = this;
-        } else {
-            p->r = l;
-            if (l != nullptr) l->par = p;
-            l = p;
-            p->par = this;
+    void update() {
+        sz = 1;
+        if (l) {
+            sz += l->sz;
+            l->p = this;
         }
-        p->update_size();
-        update_size();
+        if (r) {
+            sz += r->sz;
+            r->p = this;
+        }
     }
 
-    void update_size() {
-        size = 1;
-        if (l != nullptr) size += l->size;
-        if (r != nullptr) size += r->size;
+    /*
+     * - counter clock wise
+     *    p             x
+     *   / \           / \
+     *  a   x    ->   p   c
+     *     / \       / \
+     *    b   c     a   b
+     *
+     * - clock wise
+     *      p           x         
+     *     / \         / \
+     *    x   c  ->   a   p 
+     *   / \             / \
+     *  a   b           b   c     
+     *
+     */
+
+    void rotate(bool cc) {
+        node_ptr x = this, p = this->p;
+        node_ptr pp = p->p, a, b, c;
+        bool ppl = p->is_l();
+        if (cc) {
+            a = p->l, b = x->l, c = x->r;
+            x->l = p, x->r = c, x->p = pp;
+            p->l = a, p->r = b, p->p = x;
+            if (pp) {
+                if (ppl) pp->l = x;
+                else pp->r = x;
+            }
+        } else {
+            a = x->l, b = x->r, c = p->r;
+            x->l = a, x->r = p, x->p = pp;
+            p->l = b, p->r = c, p->p = x;
+            if (pp) {
+                if (ppl) pp->l = x;
+                else pp->r = x;
+            }
+        }
+        p->update();
+        x->update();
+        if (pp) pp->update();
     }
 
-    void rotate() { rotate(is_l()); }
+    bool is_root() const {
+        return p == nullptr;
+    }
 
-    void zig() { rotate(); }
+    bool is_l() const {
+        return !is_root() && p->l == this;
+    }
+
+    void zig() {
+        rotate(!is_l());
+    }
 
     void zig_zig() {
-        par->rotate();
-        rotate();
+        bool wise = !is_l();
+        p->rotate(wise);
+        rotate(wise);
     }
 
     void zig_zag() {
-        rotate();
-        rotate();
+        bool wise = !is_l();
+        rotate(wise);
+        rotate(!wise);
     }
 
     void splay() {
         while (!is_root()) {
-            if (par->is_root()) rotate();
-            else if (is_l() ^ par->is_l()) zig_zag();
-            else zig_zig();
+            node_ptr p = this->p;
+            if (!p) break;
+            node_ptr pp = p->p;
+            if (!pp) {
+                zig();
+                break;
+            }
+            bool a = this->is_l();
+            bool b = p->is_l();
+            if (a == b) zig_zig();
+            else zig_zag();
         }
-    }
-
-    node_ptr set_l(node_ptr nl) {
-        l = nl;
-        if (nl) nl->par = this;
-        update_size();
-        return this;
-    }
-
-    node_ptr set_r(node_ptr nr) {
-        r = nr;
-        if (nr) nr->par = this;
-        update_size();
-        return this;
-    }
-
-    node_ptr cut_l() {
-        auto ret = l;
-        if (l) l->par = nullptr;
-        l = nullptr;
-        update_size();
-        return ret;
-    }
-
-    node_ptr cut_r() {
-        auto ret = r;
-        if (r) r->par = nullptr;
-        r = nullptr;
-        update_size();
-        return ret;
     }
 };
 
-template <typename Tree> Tree merge(Tree t1, Tree t2);
-template <typename Tree, typename Key> std::pair<Tree, Tree> split(Tree tree, Key k);
-
-template <typename Key, typename Comp = std::less<Key>> 
+template <typename Key>
 struct SplayTree {
-    using Node = SplayTreeNode<Key>;
-    using Tree = SplayTree<Key, Comp>;
-    using node_ptr = typename SplayTreeNode<Key>::node_ptr;
+    using node = splay_node<Key>;
+    using node_ptr = typename node::node_ptr;
 
     node_ptr root;
 
-    SplayTree(node_ptr root) : root(root) { };
-    SplayTree() : SplayTree(nullptr) { }
+    SplayTree(node_ptr root = nullptr) : root(root) { }
 
-    bool comp(Key x, Key y) const { 
-        return Comp()(x, y); 
+    void splay(node_ptr n) {
+        n->splay();
+        root = n;
     }
 
-    node_ptr find_max() {
+    node_ptr find(Key key) {
         node_ptr cur = root;
-        while (cur && cur->r) cur = cur->r;
-        splay(cur);
-        return cur;
-    }
-
-    // FIXME : if k isn't found
-    node_ptr find(Key k) {
-        auto cur = root;
         while (cur) {
-            if (cur->key == k) break;
-            if (comp(k, cur->key)) {
-                if (cur->l) cur = cur->l;
-                else break;
-            } else if (comp(cur->key, k)) {
-                if (cur->r) cur = cur->r;
-                else break;
-            }
-        }
-        if (cur) splay(cur);
-        return cur;
-    }
-
-    void insert(Key key) {
-        if (root == nullptr) {
-            root = new Node(key);
-            return;
-        }
-        Tree lt, rt;
-        tie(lt, rt) = split(*this, key);
-        root = new Node(key);
-        root->set_l(lt.root);
-        root->set_r(rt.root);
-    }
-
-    void erase(Key x) { 
-        auto nx = this->find(x);
-        if (nx == nullptr || nx->key != x) return;
-        Tree lt, rt;
-        tie(lt, rt) = split(*this, nx->key);
-
-        {
-            node_ptr tmp = nullptr;
-            if (lt.root && lt.root->key == x) {
-                tmp = lt.root;
-                lt.root = lt.root->cut_l();
-            } else if (rt.root && rt.root->key == x) {
-                tmp = rt.root;
-                rt.root = rt.root->cut_r();
-            }
-            if (tmp) delete tmp;
-        }
-
-        if (lt.root && rt.root) {
-            lt.find_max();
-            lt.root->set_r(rt.root);
-            root = lt.root;
-        } else if (lt.root) {
-            root = lt.root;
-        } else if (rt.root) {
-            root = rt.root;
-        } else {
-            root = nullptr;
-        }
-    }
-
-    std::string query(std::size_t ord) {
-        std::size_t cnt = ord;
-        node_ptr cur = root;
-        std::string ret;
-        while (cnt) {
-            auto l_size = (cur->l == nullptr ? 0 : cur->l->size);
-            if (l_size + 1 == cnt) {
-                ret = cur->key;
-                break;
-            }
-            if (l_size + 1 < cnt) {
-                cnt -= l_size + 1;
-                cur = cur->r;
-            } else {
+            if (cur->key == key) break;
+            if (key < cur->key) {
+                if (!cur->l) break;
                 cur = cur->l;
+            } else {
+                if (!cur->r) break;
+                cur = cur->r;
             }
         }
-        erase(cur->key);
-        return ret;
+        splay(cur);
+        if (cur->key != key) return nullptr;
+        else return cur;
     }
 
-    void splay(node_ptr node) {
-        node->splay();
-        root = node;
+    node_ptr insert(Key key) {
+        if (root == nullptr) return root = new node(key);
+        find(key);
+        if (root->key == key) return root;
+        node_ptr n = new node(key);
+        if (root->key < key) {
+            root->p = n;
+            n->l = root;
+            n->r = root->r;
+            root->r = nullptr;
+        } else {
+            root->p = n;
+            n->l = root->l;
+            n->r = root;
+            root->l = nullptr;
+        }
+        if (n->l) n->l->update();
+        if (n->r) n->r->update();
+        n->update();
+        root = n;
+        return root;
+    }
+
+    void erase(node_ptr n) {
+        if (!n) return;
+        splay(n);
+        node_ptr l = root->l, r = root->r;
+        n->l = n->r = nullptr;
+        if (l) l->p = nullptr;
+        if (r) r->p = nullptr;
+        if (!l && !r) {
+            root = nullptr;
+        } else if (!l) {
+            root = r;
+            root->update();
+        } else if (!r) {
+            root = l;
+            root->update();
+        } else {
+            SplayTree tmp(r);
+            tmp.find(l->key);
+            node_ptr rmin = tmp.root;
+            DEBUG(rmin->key);
+            rmin->l = l;
+            rmin->update();
+            root = rmin;
+            root->update();
+        }
+        // delete n;
+    }
+
+    void erase(Key key) {
+        node_ptr n = find(key);
+        erase(n);
+    }
+
+    node_ptr operator [](ssize_t idx) {
+        ssize_t sz = idx + 1;
+        node_ptr cur = root;
+        while (true) {
+            DEBUG(cur->key, cur->sz);
+            ssize_t lsz = (cur->l ? cur->l->sz : 0);
+            ssize_t ord = lsz + 1;
+            if (sz == ord) {
+                break;
+            } else if (sz < ord) {
+                cur = cur->l;
+            } else {
+                sz -= ord;
+                cur = cur->r;
+            }
+        }
+        splay(cur);
+        return root;
     }
 };
-
-template <typename Tree>
-Tree merge(Tree t1, Tree t2) {
-    if (!t1.root) return t2;
-    if (!t2.root) return t1;
-    auto t1_max = t1.find_max();
-    t1.splay(t1_max);
-    t1.root->set_r(t2.root);
-    return t1;
-}
-
-template <typename Tree, typename Key>
-std::pair<Tree, Tree> split(Tree tree, Key k) {
-    tree.find(k);
-    auto root = tree.root;
-    auto nl = root->cut_l();
-    auto nr = root->cut_r();
-    if (tree.comp(k, root->key)) nr = root->set_r(nr);
-    else nl = root->set_l(nl);
-    return std::make_pair(Tree(nl), Tree(nr));
-}
 
 }
