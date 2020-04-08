@@ -1,5 +1,6 @@
 #pragma once
 #include "template.cpp"
+#include <chrono>
 
 struct Timer {
     const std::chrono::system_clock::time_point start;

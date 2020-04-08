@@ -71,6 +71,10 @@ public:
         }
         return ret;
     }
+
+    FlowGraph graph() {
+        return flow_graph;
+    }
 };
 
 }

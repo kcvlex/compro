@@ -1,5 +1,33 @@
 #pragma once
-#include <bits/stdc++.h>
+#include <limits>
+#include <initializer_list>
+#include <utility>
+#include <bitset>
+#include <tuple>
+#include <type_traits>
+#include <functional>
+#include <string>
+#include <array>
+#include <deque>
+#include <list>
+#include <queue>
+#include <stack>
+#include <vector>
+#include <map>
+#include <set>
+#include <unordered_map>
+#include <unordered_set>
+#include <iterator>
+#include <algorithm>
+#include <complex>
+#include <random>
+#include <numeric>
+#include <iostream>
+#include <iomanip>
+#include <sstream>
+#include <regex>
+#include <cassert>
+#include <cstddef>
 #define endl codeforces
 #define ALL(v) std::begin(v), std::end(v)
 #define ALLR(v) std::rbegin(v), std::rend(v)

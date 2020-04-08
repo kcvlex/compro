@@ -5,11 +5,26 @@
 namespace flow {
 
 template <template <typename> typename Solver, 
-          typename FlowGraph = graph::FlowGraph<true>>
+          typename FlowGraph = graph::FlowGraph<true>,
+          bool Restore = false>
 class BipartiteMatching {
+    using matching = std::pair<Node, Node>;
     ssize_t asz, bsz;
-    FlowGraph fg;
+    FlowGraph fg, res;
     Node src, sink;
+    std::set<std::tuple<Node, Node, ll>> edges;
+
+    vec<matching> extract_() {
+        vec<matching> ret;
+        for (auto &&e : edges) {
+            Node f, t;
+            ll idx;
+            std::tie(f, t, idx) = e;
+            auto c = res[f][idx].cap();
+            if (c == 0) ret.emplace_back(f, t - asz);
+        }
+        return ret;
+    }
 
 public:
     BipartiteMatching(ssize_t asz, ssize_t bsz)
@@ -21,12 +36,24 @@ public:
 
     void add_edge(Node f, Node t) {
         fg.add_edge(f, t + asz, 1);
+        if (Restore) edges.emplace(f, t + asz, fg[f].size() - 1);
     }
 
     ll solve() {
         Solver<FlowGraph> solver(fg);
-        return solver.max_flow(src, sink);
+        auto ret = solver.max_flow(src, sink);
+        if (Restore) res = std::move(solver.graph());
+        return ret;
     }
-};
+
+    vec<matching> extract() {
+        if (Restore) {
+            return extract_();
+        } else {
+            assert(false);
+        }
+    }
 
 };
+
+}

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <bits/stdc++.h>
-
 #define DEBUG_MODE
 #ifdef DEBUG_MODE
 #define DEBUG(...) debug_f(std::string(#__VA_ARGS__), __VA_ARGS__)
@@ -14,6 +12,7 @@
 #endif
 #define DEBUG_ENDL_S(S) ((S).size()?"\n":"")<<std::flush;
 
+#include "template.cpp"
 #include "../math/modint.cpp"
 
 namespace debug {
