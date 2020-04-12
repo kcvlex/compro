@@ -6,7 +6,7 @@ namespace math {
 namespace {
 
 template <typename T>
-struct pointer_ref_to_const {
+struct pointer_to_const {
     using type = typename std::add_pointer<
         typename std::add_const<T>::type>::type;
 };
@@ -16,7 +16,7 @@ template <std::size_t MaxSizeLog, ll... Mods> class multi_ntt_type;
 template <std::size_t MaxSizeLog, ll Mod, ll... Mods>
 class multi_ntt_type<MaxSizeLog, Mod, Mods...> {
     using ntt_head = NTT<Mod, MaxSizeLog>;
-    using result_head = typename pointer_ref_to_const<typename ntt_head::poly>::type;
+    using result_head = typename pointer_to_const<typename ntt_head::poly>::type;
     using tails = multi_ntt_type<MaxSizeLog, Mods...>;
     using ntt_tail = typename tails::ntt_type;
     using result_tail = typename tails::result_type;
@@ -29,7 +29,7 @@ public:
 template <std::size_t MaxSizeLog, ll Mod>
 class multi_ntt_type<MaxSizeLog, Mod> {
     using type = NTT<Mod, MaxSizeLog>;
-    using poly = typename pointer_ref_to_const<typename type::poly>::type;
+    using poly = typename pointer_to_const<typename type::poly>::type;
 
 public:
     using ntt_type = std::tuple<type>;
