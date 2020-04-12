@@ -42,7 +42,7 @@ struct topological_sort {
 
 template <typename Graph>
 vec<Node> topsort(const Graph &g) {
-    return topological_sort(g).solve();
+    return topological_sort<Graph>(g).solve();
 }
 
 }

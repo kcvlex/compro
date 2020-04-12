@@ -187,7 +187,7 @@ struct SplayTree {
             root = rmin;
             root->update();
         }
-        // delete n;
+        delete n;
     }
 
     void erase(Key key) {

@@ -72,6 +72,6 @@ public:
     }
 };
 
-template <typename Graph> using scc = StronglyConnectedComponents<Graph>;
+template <typename Graph> using SCC = StronglyConnectedComponents<Graph>;
 
 }

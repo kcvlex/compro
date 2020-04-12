@@ -13,7 +13,6 @@
 #define DEBUG_ENDL_S(S) ((S).size()?"\n":"")<<std::flush;
 
 #include "template.cpp"
-#include "../math/modint.cpp"
 
 namespace debug {
 
@@ -31,6 +30,12 @@ struct to_string_func__ {
     std::false_type operator ()(...) { return std::false_type{}; }
 };
 
+struct enable_output__ {
+    template <typename T>
+    auto operator ()(T t) -> decltype((std::cout << std::declval<T>()), std::true_type()) { return std::true_type(); }
+    std::false_type operator ()(...) { return std::false_type(); }
+};
+
 template <typename> struct is_tuple : std::false_type { };
 template <typename ...Args> struct is_tuple<std::tuple<Args...>> : std::true_type { };
 
@@ -40,6 +45,7 @@ using valid_func = std::is_same<typename std::invoke_result<F, T>::type, std::tr
 // template <typename T> using apply_to_string = std::disjunction<std::is_integral<T>, std::is_floating_point<T>>;
 template <typename T> using apply_to_string = valid_func<to_string_func__, T>;
 template <typename T> using apply_iterator = valid_func<begin_func__, T>;
+template <typename T> using enable_output = valid_func<enable_output__, T>;
 
 using const_char = const char *;
 
@@ -110,6 +116,8 @@ struct Debugging {
             return tuple_to_string(std::forward<T>(t));
         } else if constexpr (apply_iterator<Orig>::value) {
             return iterator_to_string(std::begin(t), std::end(t));
+        } else if constexpr (enable_output<Orig>::value) {
+            // xxxx
         } else {
             return debug_string__(std::forward<T>(t));
         }
@@ -120,10 +128,12 @@ struct Debugging {
         return debug_string_orig<T, typename std::remove_reference<T>::type>(std::forward<T>(t));
     }
 
+    /*
     template <ll Mod>
     std::string debug_string__(math::Modint<Mod> m) {
         return "( " + std::to_string(m.mod()) + ", " + std::to_string(m.value()) + " )";
     }
+    */
     
     template <typename T>
     void debug_f(std::string name, T &&t) {

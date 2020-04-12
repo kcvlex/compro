@@ -1,4 +1,4 @@
-#include "../../lib/tree/splay-tree.cpp"
+#include "../../tree/splay-tree.cpp"
 
 // solution for https://atcoder.jp/contests/arc033/tasks/arc033_3
 int main() {

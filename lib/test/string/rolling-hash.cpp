@@ -2,8 +2,8 @@
 
 // http://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ALDS1_14_B&lang=jp
 
-constexpr ll mods[] = { static_cast<ll>(1e9 + 7), static_cast<ll>(1e9 + 9), };
-auto builder = strings::gen_builder<mods>();
+using mods_seq = std::integer_sequence<ll, static_cast<ll>(1e9 + 7), static_cast<ll>(1e9 + 9), 9997451>;
+auto builder = strings::gen_rhbuilder(mods_seq());
 
 int main() {
     std::string s, t;
