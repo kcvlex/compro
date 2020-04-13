@@ -7,23 +7,21 @@ namespace math {
 
 namespace {
 
-template <std::size_t MaxSizeLog>
 class reverse_bit {
-    std::array<vec<ll>, MaxSizeLog> bits;
-    std::array<bool, MaxSizeLog> built;
+    vvec<ll> bits;
 
-    // len is pow(2, n)
-    vec<ll> build_rev_bit(std::size_t len) {
+    // len = 2^n
+    void build_rev_bit(std::size_t len, vec<ll> &v) {
+        if (!v.empty()) return;
         uint64_t r = 0, s = 0, max_v = len;
-        vec<ll> ret(len);
-        for (auto &&ele : ret) {
+        v.resize(len);
+        for (auto &&ele : v) {
             // assert(r < max_v * 2);
             ele = s;
             r += 2;
             s ^= max_v - (max_v / (r & -r));
         }
         // assert(max_v * 2 <= r);
-        return ret;
     }
 
     ll get_idx(std::size_t pow2) {
@@ -32,19 +30,21 @@ class reverse_bit {
         return i;
     }
 
-public:
-    reverse_bit() {
-        std::fill(ALL(built), false);
+    void resize(ll idx) {
+        if (bits.size() <= idx) bits.resize(idx + 1);
     }
+
+public:
 
     const vec<ll>& get(std::size_t len) {
         const auto idx = get_idx(len);
-        if (built[idx]) return bits[idx];
-        bits[idx] = std::move(build_rev_bit(len));
-        built[idx] = true;
+        resize(idx);
+        build_rev_bit(len, bits[idx]);
         return bits[idx];
     }
 };
+
+reverse_bit rb__;
 
 template <ll Mod>
 constexpr bool is_primitive_root(ll r) {
@@ -95,7 +95,7 @@ public:
     const poly& convolution(const Container1 &arr_a, const Container2 &arr_b) {
         auto lower_size = arr_a.size() + arr_b.size() - 1;
         auto conv_size = ceil_pow2(lower_size);
-        decltype(auto) rev_bit = rev_bits.get(conv_size);
+        decltype(auto) rev_bit = rb__.get(conv_size);
         ntt(arr_a, false, rev_bit, ntt_a);
         ntt(arr_b, false, rev_bit);
         for (ll i = 0; i < conv_size; i++) ntt_a[i] *= buf[i];
@@ -105,7 +105,6 @@ public:
 private:
     std::array<mint, MaxSizeLog> root_pow_lis, root_inv_lis;
     poly buf, ntt_a;
-    reverse_bit<MaxSizeLog> rev_bits;
 
     template <typename Container>
     const poly& ntt(const Container &arr, bool inverse, const vec<ll> &rev_bit) {
