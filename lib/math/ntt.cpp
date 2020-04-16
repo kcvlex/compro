@@ -35,7 +35,6 @@ class reverse_bit {
     }
 
 public:
-
     const vec<ll>& get(std::size_t len) {
         const auto idx = get_idx(len);
         resize(idx);
@@ -68,6 +67,66 @@ constexpr ll find_primitive_root() {
     return find_primitive_root<Mod>(2);
 }
 
+template <ll... N1, ll... N2>
+constexpr auto concat_integer_sequence(std::integer_sequence<ll, N1...>, std::integer_sequence<ll, N2...>) {
+    return std::integer_sequence<ll, N1..., N2...>();
+}
+
+template <ll Head, ll... Tail>
+struct reverse_sequence {
+    using head_type = std::integer_sequence<ll, Head>;
+    using tail_type = typename reverse_sequence<Tail...>::type;
+    using type = decltype(concat_integer_sequence(std::declval<tail_type>(), std::declval<head_type>()));
+};
+
+template <ll Head>
+struct reverse_sequence<Head> {
+    using type = std::integer_sequence<ll, Head>;
+};
+
+template <ll... N>
+constexpr auto reverse_ns(std::integer_sequence<ll, N...>) {
+    return typename reverse_sequence<N...>::type();
+}
+
+template <ll Mod, ll Root, std::size_t Size>
+struct root_pows_calculator {
+    using mint = Modint<Mod>;
+    using seq = std::make_integer_sequence<ll, Size>;
+    using rseq = decltype(reverse_ns(std::declval<seq>()));
+
+    struct helper {
+        mint m;
+        ll k;
+
+        constexpr helper(mint m, ll k) : m(m), k(k) { }
+
+        constexpr mint solve() {
+            return pow(m, 1ll << k); 
+        }
+    };
+
+    constexpr static mint root = mint(Root);
+
+    constexpr mint apply(ll k) {
+        return helper(root, k).solve(); 
+    }
+
+    template <ll... K>
+    constexpr auto calc(std::integer_sequence<ll, K...>) -> std::array<mint, Size> {
+        return {{ apply(K)... }};
+    }
+
+    constexpr auto calc() {
+        return calc(rseq());
+    }
+};
+
+template <ll Mod, ll Root, std::size_t Size>
+constexpr auto calc_root_pows() {
+    return root_pows_calculator<Mod, Root, Size>().calc();
+}
+
 }  // anonymous
 
 template <ll Mod, ll PrimitiveRoot, std::size_t MaxSizeLog>
@@ -79,17 +138,7 @@ public:
     using mint = Modint<Mod>;
     using poly = std::array<mint, max_conv_size>;
 
-    constexpr ntt__() {
-        auto root_max_pow = math::pow(mint(PrimitiveRoot), (Mod - 1) / (1ll << MaxSizeLog));
-        root_pow_lis[0] = root_max_pow;
-        root_inv_lis[0] = root_max_pow.inv();
-        for (ll i = 1; i < root_pow_lis.size(); i++) {
-            root_pow_lis[i] = root_pow_lis[i - 1] * root_pow_lis[i - 1];
-            root_inv_lis[i] = root_inv_lis[i - 1] * root_inv_lis[i - 1];
-        }
-        std::reverse(ALL(root_pow_lis));
-        std::reverse(ALL(root_inv_lis));
-    }
+    constexpr ntt__() { }
 
     template <typename Container1, typename Container2>
     const poly& convolution(const Container1 &arr_a, const Container2 &arr_b) {
@@ -103,7 +152,11 @@ public:
     }
 
 private:
-    std::array<mint, MaxSizeLog> root_pow_lis, root_inv_lis;
+    using pows_type = std::array<mint, MaxSizeLog>;
+    constexpr static ll root_max_pow = pow(mint(PrimitiveRoot), (Mod - 1) / (1ll << MaxSizeLog)).value();
+    constexpr static ll root_max_inv = mint(root_max_pow).inv().value();
+    constexpr static pows_type root_pow_lis = calc_root_pows<Mod, root_max_pow, MaxSizeLog>();
+    constexpr static pows_type root_inv_lis = calc_root_pows<Mod, root_max_inv, MaxSizeLog>();
     poly buf, ntt_a;
 
     template <typename Container>
