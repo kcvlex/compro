@@ -20,7 +20,7 @@ struct base_generator {
     }
 
     constexpr ll generate_seed() {
-        ll ret = 0;
+        ll ret = 1;
         for (int i = 0; i < 8; i++) {
             char c = __TIME__[i];
             if ('0' <= c && c <= '9') ret = ret * 10 + (c - '0');
