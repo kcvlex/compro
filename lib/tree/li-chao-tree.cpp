@@ -1,98 +1,124 @@
-#include <bits/stdc++.h>
-/*
-using namespace std;
-using ll = int64_t;
-using PLL = pair<ll, ll>;
-template <typename T> using V = vector<T>;
-*/
+#include "../util/template.cpp"
+#include "../util/ceil-pow2.cpp"
 
-class LiChaoTree {
-    using Line = PLL;
-    V<ll> x_coors;
-    V<Line> nodes;
-    ll node_begin_idx;
-    function<ll(ll, ll)> comp;    // maybe min or max
-    function<bool(ll, ll)> comp_bool;
-    Line invalid;
-    ll inf, identity_ele;
+namespace tree {
 
-    ll get_x_coor(ll xidx) { return xidx < x_coors.size() ? x_coors[xidx] : inf; }
+template <typename T, typename Comp>
+struct LiChaoTree {
+    using line_type = std::pair<T, T>;
 
-    void add_line_(Line line, ll node_idx, ll lidx, ll ridx) {
-        if (nodes.size() <= node_idx) return;
-        if (nodes[node_idx] == invalid) {
-            nodes[node_idx] = line;
-            return;
-        }
+    Comp comp_b;
+    T min_x, max_x, id_ele;
+    line_type init;
+    vec<line_type> nodes;
+    vec<T> coor;
+    ssize_t sz;
 
-        ll midx = (lidx + ridx) / 2;
-        ll lx = get_x_coor(lidx);
-        ll mx = get_x_coor(midx);
-        ll rx = get_x_coor(ridx);
-        
-        if (lx == inf) return;
-        
-        bool left_comp  = comp_bool(calc_y(line, lx), calc_y(nodes[node_idx], lx));
-        bool mid_comp   = comp_bool(calc_y(line, mx), calc_y(nodes[node_idx], mx));
-        bool right_comp = comp_bool(calc_y(line, rx), calc_y(nodes[node_idx], rx));
-
-        if (left_comp && right_comp) {
-            nodes[node_idx] = line;
-            return;
-        }
-        if (!left_comp && !right_comp) return;
-        if (mid_comp) {
-            swap(line, nodes[node_idx]);
-            left_comp = !left_comp;
-            right_comp = !right_comp;
-        }
-        if (left_comp) add_line_(line, 2 * node_idx + 1, lidx, midx);
-        else          add_line_(line, 2 * node_idx + 2, midx, ridx);
-    }
-
-public:
-
-    LiChaoTree(const V<ll> &x_coors, function<ll(ll, ll)> comp, 
-               ll identity_ele, ll inf, Line invalid = Line(1e9, 1e9))
-        : comp(comp),
-          comp_bool([this](ll a, ll b) { return this->comp(a, b) == a; }),
-          identity_ele(identity_ele),
-          inf(inf),
-          invalid(invalid)
+    LiChaoTree(const vec<T> &coor_arg, T min_x, T max_x, T id_ele, line_type init)
+        : coor(coor_arg), min_x(min_x), max_x(max_x), init(init), id_ele(id_ele)
     {
-        ll tmp = 1;
-        while (tmp < x_coors.size()) tmp *= 2;
-        node_begin_idx = tmp - 1;
-        this->x_coors.resize(tmp);
-        nodes.resize(2 * tmp - 1, invalid);
-        for (ll i = 0; i < x_coors.size(); i++) this->x_coors[i] = x_coors[i];
-        for (ll i = x_coors.size(); i < tmp; i++) this->x_coors[i] = inf;
+        coor.push_back(min_x);
+        coor.push_back(max_x);
+        std::sort(ALL(coor));
+        coor.erase(std::unique(ALL(coor)), coor.end());
+        sz = ceil_pow2(coor.size());
+        coor.resize(sz + 1, max_x + 1);
+        nodes.resize(2 * sz - 1, init);
     }
 
-    ll calc_y(Line line, ll x) {
-        if (line == invalid) return identity_ele;
+    T comp(T a, T b) const noexcept {
+        return comp_b(a, b) ? a : b;
+    }
+
+    T calc_y(line_type line, T x) const noexcept {
+        if (line == init) return id_ele;
         ll a, b;
-        tie(a, b) = line;
+        std::tie(a, b) = line;
         return a * x + b;
     }
 
-    ll calc_y(ll idx, ll x) { return calc_y(nodes[idx], x); }
-    
-    void add_line(Line line) { add_line_(line, 0, 0, x_coors.size()); }
-    void add_line(ll x, ll y) { add_line(Line(x, y)); }
+    T calc_y(ssize_t node, T x) const {
+        return calc_y(nodes[node], x);
+    }
 
-    ll query(ll xidx) {
-        ll node_idx = xidx + node_begin_idx;
-        ll x = x_coors[xidx];
-        ll ret = identity_ele;
-        while (true) {
-            if (nodes[node_idx] != invalid) {
-                ll y = calc_y(node_idx, x);
-                ret = comp(ret, y);
+    bool is_inited(ssize_t node) const {
+        return nodes[node] != init;
+    }
+
+    void add_line(line_type line, ssize_t node, ssize_t lx_idx, ssize_t rx_idx) {
+        if (nodes.size() <= node) return;
+        if (!is_inited(node)) {
+            nodes[node] = line;
+            return;
+        }
+
+        ssize_t mx_idx = (lx_idx + rx_idx) / 2;
+        T lx = coor[lx_idx], mx = coor[mx_idx], rx = coor[rx_idx];
+        bool lcmp = comp_b(calc_y(line, lx), calc_y(node, lx));
+        bool mcmp = comp_b(calc_y(line, mx), calc_y(node, mx));
+        bool rcmp = comp_b(calc_y(line, rx), calc_y(node, rx));
+        ssize_t lch = 2 * node + 1, rch = 2 * node + 2;
+
+        if (!lcmp && !rcmp) return;
+        if (lcmp && rcmp) {
+            nodes[node] = line;
+            return;
+        }
+
+        if (mcmp) {
+            std::swap(line, nodes[node]);
+            lcmp = !lcmp;
+            rcmp = !rcmp;
+        }
+
+        if (lcmp) add_line(line, lch, lx_idx, mx_idx);
+        if (rcmp) add_line(line, rch, mx_idx, rx_idx);
+    }
+
+    void add_line(line_type line) { 
+        add_line(line, 0, 0, sz); 
+    }
+
+    void add_seg(line_type line, T qlx, T qrx) {
+        ssize_t lx_idx = std::distance(coor.begin(), std::lower_bound(ALL(coor), qlx));
+        ssize_t rx_idx = std::distance(coor.begin(), std::lower_bound(ALL(coor), qrx));
+        ssize_t lnode = lx_idx + sz, rnode = rx_idx + sz;
+        ssize_t cur_sz = 1;
+        while (lnode < rnode) {
+            if (lnode & 1) {
+                add_line(line, lnode - 1, lx_idx, lx_idx + cur_sz);
+                lnode++;
+                lx_idx += cur_sz;
             }
-            if (!node_idx) break;
-            node_idx = (node_idx - 1) / 2;
+            if (rnode & 1) {
+                rnode--;
+                rx_idx -= cur_sz;
+                add_line(line, rnode - 1, rx_idx, rx_idx + cur_sz);
+            }
+            cur_sz *= 2;
+            lnode /= 2;
+            rnode /= 2;
+        }
+    }
+
+    T query(T qx) const {
+        T ret = id_ele;
+        ssize_t lx_idx = 0, rx_idx = sz, node = 0;
+        while (node < nodes.size()) {
+            auto mx_idx = (lx_idx + rx_idx) / 2;
+            T lx = coor[lx_idx], mx = coor[mx_idx], rx = coor[rx_idx];
+            if (!(lx <= qx && qx < rx)) break;
+            ret = comp(ret, calc_y(node, qx));
+            if (lx <= qx && qx < mx) {
+                rx_idx = mx_idx;
+                node = 2 * node + 1;
+            } else {
+                lx_idx = mx_idx;
+                node = 2 * node + 2;
+            }
         }
         return ret;
     }
 };
+
+}
