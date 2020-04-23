@@ -1,5 +1,5 @@
-#include "../../util/template.cpp"
-#include "../../segtree/lazysegtree.cpp"
+#include "../../util/template.hpp"
+#include "../../segtree/lazysegtree.hpp"
 
 // solution for http://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=DSL_2_F
 int main() {

@@ -1,5 +1,5 @@
-#include "../modint.cpp"
-#include "../../util/ceil-pow2.cpp"
+#include "../modint.hpp"
+#include "../../util/ceil-pow2.hpp"
 
 namespace math {
 

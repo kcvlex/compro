@@ -1,5 +1,5 @@
 #pragma once
-#include "../util/template.cpp"
+#include "../util/template.hpp"
 
 namespace math {
 

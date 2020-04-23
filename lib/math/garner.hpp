@@ -1,6 +1,6 @@
 #pragma once
-#include "modint.cpp"
-#include "../util/generics.cpp"
+#include "modint.hpp"
+#include "../util/generics.hpp"
 
 namespace math {
 

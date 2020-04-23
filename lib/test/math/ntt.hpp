@@ -1,5 +1,5 @@
-#include "../../util/template.cpp"
-#include "../../math/ntt.cpp"
+#include "../../util/template.hpp"
+#include "../../math/ntt.hpp"
 
 // https://atcoder.jp/contests/atc001/tasks/fft_c
 int main() {

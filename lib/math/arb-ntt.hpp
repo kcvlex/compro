@@ -1,5 +1,5 @@
-#include "ntt.cpp"
-#include "garner.cpp"
+#include "ntt.hpp"
+#include "garner.hpp"
 
 namespace math {
 

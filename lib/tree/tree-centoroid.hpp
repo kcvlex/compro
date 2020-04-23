@@ -1,6 +1,6 @@
 #pragma once
-#include "../template.cpp"
-#include "../graph/graph.cpp"
+#include "../template.hpp"
+#include "../graph/graph.hpp"
 
 namespace tree {
 

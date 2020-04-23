@@ -1,4 +1,4 @@
-#include "../tree/tree-centroid.cpp"
+#include "../tree/tree-centroid.hpp"
 
 // solution for https://codeforces.com/contest/321/problem/C
 

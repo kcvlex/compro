@@ -1,6 +1,6 @@
 #pragma once
-#include "base.cpp"
-#include "ccw.cpp"
+#include "base.hpp"
+#include "ccw.hpp"
 
 namespace geo {
 

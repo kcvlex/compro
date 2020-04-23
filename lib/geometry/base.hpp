@@ -1,5 +1,5 @@
 #pragma once
-#include "../../lib/util/template.cpp"
+#include "../../lib/util/template.hpp"
 
 namespace geo {
 

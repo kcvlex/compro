@@ -34,7 +34,7 @@ struct InitIO {
 }
 
 #ifdef DEBUGGING
-#include "../debug.cpp"
+#include "../debug.hpp"
 #else
 #define DEBUG(...) 0
 #define DEBUG_SEPARATOR_LINE 0

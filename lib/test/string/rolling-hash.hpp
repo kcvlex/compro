@@ -1,4 +1,4 @@
-#include "../../strings/rolling-hash.cpp"
+#include "../../strings/rolling-hash.hpp"
 
 // http://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ALDS1_14_B&lang=jp
 

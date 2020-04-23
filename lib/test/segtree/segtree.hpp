@@ -1,5 +1,5 @@
-#include "../../util/template.cpp"
-#include "../../segtree/segtree.cpp"
+#include "../../util/template.hpp"
+#include "../../segtree/segtree.hpp"
 using namespace std;
 int main() {
     ll n, q;

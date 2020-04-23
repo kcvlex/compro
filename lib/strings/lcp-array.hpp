@@ -1,4 +1,4 @@
-#include "suffixarray.cpp"
+#include "suffixarray.hpp"
 
 namespace strings {
 

@@ -1,5 +1,5 @@
-#include "../template.cpp"
-#include "lazysegtree.cpp"
+#include "../template.hpp"
+#include "lazysegtree.hpp"
 
 namespace tree {
 

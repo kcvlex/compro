@@ -1,6 +1,6 @@
 #pragma once
-#include "../util/template.cpp"
-#include "base.cpp"
+#include "../util/template.hpp"
+#include "base.hpp"
 
 namespace flow {
 

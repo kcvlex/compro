@@ -1,6 +1,6 @@
 #pragma once
-#include "base.cpp"
-#include "../graph/flow-graph.cpp"
+#include "base.hpp"
+#include "../graph/flow-graph.hpp"
 
 namespace flow {
 

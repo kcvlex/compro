@@ -1,5 +1,5 @@
-#include "../../util/template.cpp"
-#include "../../string/suffixarray.cpp"
+#include "../../util/template.hpp"
+#include "../../string/suffixarray.hpp"
 
 int main() {
     std::string t;

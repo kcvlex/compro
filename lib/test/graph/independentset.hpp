@@ -1,6 +1,6 @@
-#include "../../util/template.cpp"
-#include "../../graph/graph.cpp"
-#include "../../graph/independentset.cpp"
+#include "../../util/template.hpp"
+#include "../../graph/graph.hpp"
+#include "../../graph/independentset.hpp"
 
 // slution for https://code-thanks-festival-2017.contest.atcoder.jp/tasks/code_thanks_festival_2017_g
 int main() {

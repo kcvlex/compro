@@ -1,7 +1,7 @@
 #pragma once
-#include "../util/template.cpp"
-#include "../graph/flow-graph.cpp"
-#include "base.cpp"
+#include "../util/template.hpp"
+#include "../graph/flow-graph.hpp"
+#include "base.hpp"
 
 namespace flow {
 

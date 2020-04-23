@@ -1,4 +1,4 @@
-#include "../../lib/tree/rbtree.cpp"
+#include "../../lib/tree/rbtree.hpp"
 
 int main() {
     ll n;

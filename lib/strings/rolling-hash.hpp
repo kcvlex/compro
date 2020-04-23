@@ -1,6 +1,6 @@
 #pragma once
-#include "../util/template.cpp"
-#include "../util/generics.cpp"
+#include "../util/template.hpp"
+#include "../util/generics.hpp"
 
 namespace strings {
 

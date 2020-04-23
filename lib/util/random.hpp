@@ -1,5 +1,5 @@
 #pragma once
-#include "template.cpp"
+#include "template.hpp"
 
 struct RandomGen {
     std::random_device rd;

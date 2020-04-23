@@ -1,6 +1,6 @@
-#include "../../util/template.cpp"
-#include "../../graph/flow-graph.cpp"
-#include "../../flow/fordfulkerson.cpp"
+#include "../../util/template.hpp"
+#include "../../graph/flow-graph.hpp"
+#include "../../flow/fordfulkerson.hpp"
 
 int main() {
     const ll inf = 5e15;

@@ -1,6 +1,6 @@
-#include "../../util/template.cpp"
-#include "../../graph/flow-graph.cpp"
-#include "../../flow/dinic.cpp"
+#include "../../util/template.hpp"
+#include "../../graph/flow-graph.hpp"
+#include "../../flow/dinic.hpp"
 
 int main() {
     const ll inf = 5e15;

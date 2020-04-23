@@ -1,5 +1,5 @@
-#include "../util/template.cpp"
-#include "graph.cpp"
+#include "../util/template.hpp"
+#include "graph.hpp"
 
 namespace graph {
 

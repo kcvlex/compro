@@ -1,7 +1,7 @@
-#include "../util/template.cpp"
-#include "../util/ceil-pow2.cpp"
-#include "modint.cpp"
-#include "base.cpp"
+#include "../util/template.hpp"
+#include "../util/ceil-pow2.hpp"
+#include "modint.hpp"
+#include "base.hpp"
 
 namespace math {
 

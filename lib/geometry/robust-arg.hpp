@@ -1,7 +1,7 @@
 #pragma once
-#include "../util/template.cpp"
-#include "../math/fraction.cpp"
-#include "base.cpp"
+#include "../util/template.hpp"
+#include "../math/fraction.hpp"
+#include "base.hpp"
 
 namespace geo {
 

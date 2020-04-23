@@ -1,4 +1,4 @@
-#include "../../graph/scc.cpp"
+#include "../../graph/scc.hpp"
 
 // https://atcoder.jp/contests/arc030/tasks/arc030_3
 using namespace std;

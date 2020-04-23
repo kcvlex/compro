@@ -1,5 +1,5 @@
-#include "../util/template.cpp"
-#include "../util/ceil-pow2.cpp"
+#include "../util/template.hpp"
+#include "../util/ceil-pow2.hpp"
 
 namespace tree {
 

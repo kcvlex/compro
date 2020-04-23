@@ -1,4 +1,4 @@
-#include "modint.cpp"
+#include "modint.hpp"
 
 namespace math {
 

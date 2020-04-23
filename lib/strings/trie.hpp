@@ -1,5 +1,5 @@
-#include "../util/template.cpp"
-#include "../util/pool.cpp"
+#include "../util/template.hpp"
+#include "../util/pool.hpp"
 
 namespace strings {
 

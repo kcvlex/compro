@@ -1,7 +1,7 @@
 #pragma once
-#include "../util/template.cpp"
-#include "base.cpp"
-#include "modint.cpp"
+#include "../util/template.hpp"
+#include "base.hpp"
+#include "modint.hpp"
 
 namespace math {
 

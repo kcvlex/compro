@@ -1,6 +1,6 @@
-#include "../../util/template.cpp"
-#include "../../graph/flow-graph.cpp"
-#include "../../flow/min-cost-flow.cpp"
+#include "../../util/template.hpp"
+#include "../../graph/flow-graph.hpp"
+#include "../../flow/min-cost-flow.hpp"
 
 // solution for http://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=GRL_6_B&lang=jp
 int main() {

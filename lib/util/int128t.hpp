@@ -1,4 +1,4 @@
-#include "template.cpp"
+#include "template.hpp"
 
 using i128 = __int128_t;
 
