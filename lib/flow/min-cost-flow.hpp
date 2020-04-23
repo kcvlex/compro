@@ -66,7 +66,6 @@ public:
             }
 
             if (max_flow == 0) return -1;
-            DEBUG(potential);
             flow -= max_flow;
             ret += max_flow * potential[goal];
             for (Node cur = goal; cur != start; cur = pnode[cur].first) {

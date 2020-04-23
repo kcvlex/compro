@@ -12,8 +12,6 @@
 #endif
 #define DEBUG_ENDL_S(S) ((S).size()?"\n":"")<<std::flush;
 
-#include "template.cpp"
-
 namespace debug {
 
 namespace {

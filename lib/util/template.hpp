@@ -28,6 +28,7 @@
 #include <regex>
 #include <cassert>
 #include <cstddef>
+#include <variant>
 #define endl codeforces
 #define ALL(v) std::begin(v), std::end(v)
 #define ALLR(v) std::rbegin(v), std::rend(v)
@@ -55,7 +56,7 @@ template <typename T, std::size_t ...Args> using mdarray = typename multi_dem_ar
 namespace init__ { struct InitIO { InitIO() { std::cin.tie(nullptr); std::ios_base::sync_with_stdio(false); std::cout << std::fixed << std::setprecision(30); } } init_io; }
 #define DEBUGGING
 #ifdef DEBUGGING
-#include "/home/taroy/kyopuro/lib/util/debug.cpp"
+#include "/home/taroy/kyopuro/lib/util/debug.hpp"
 #else
 #define DEBUG(...) 0
 #endif
