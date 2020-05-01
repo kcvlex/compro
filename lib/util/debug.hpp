@@ -35,7 +35,7 @@ struct enable_output__ {
 };
 
 template <typename> struct is_tuple : std::false_type { };
-template <typename ...Args> struct is_tuple<std::tuple<Args...>> : std::true_type { };
+template <typename... Args> struct is_tuple<std::tuple<Args...>> : std::true_type { };
 
 template <typename F, typename T> 
 using valid_func = std::is_same<typename std::invoke_result<F, T>::type, std::true_type>;
@@ -115,7 +115,7 @@ struct Debugging {
         } else if constexpr (apply_iterator<Orig>::value) {
             return iterator_to_string(std::begin(t), std::end(t));
         } else if constexpr (enable_output<Orig>::value) {
-            // xxxx
+            // FIXME : xxxx
         } else {
             return debug_string__(std::forward<T>(t));
         }
@@ -152,21 +152,3 @@ void debug_f(std::string name, Args... args) {
     static debug::Debugging debugging;
     debugging.debug_f(name, std::forward<Args>(args)...);
 }
-
-#if 0
-
-int main() {
-    std::vector<int> vi = { 1, 2, 3, };
-    std::vector<std::string> vs = { "ricky", "theta", };
-    std::vector<std::vector<std::string>> vvs = { vs, vs, };
-    auto tup = std::make_tuple("ricky", "theta's", std::string("rate : "), 50000000);
-    std::map<std::string, std::string> mp = {
-        { "aiu", "eo", },
-        { "kakiku", "keko", },
-    };
-    DEBUG(1333, "tapu", vi, vs, tup, vvs, mp);
-    DEBUG(1333, "tapu", vi, vs, tup, vvs, mp);
-    return 0;
-}
-
-#endif
