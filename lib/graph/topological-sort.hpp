@@ -10,7 +10,8 @@ struct topological_sort {
     vec<Node> ret;
     vec<bool> pass, used;
 
-    topological_sort(const Graph &g) : g(g), n(g.size()), pass(n), used(n)
+    topological_sort(const Graph &g) 
+        : g(g), n(g.size()), pass(n), used(n)
     {
     }
 

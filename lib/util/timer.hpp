@@ -2,6 +2,8 @@
 #include "template.hpp"
 #include <chrono>
 
+namespace utility {
+
 struct Timer {
     const std::chrono::system_clock::time_point start;
 
@@ -17,3 +19,5 @@ struct Timer {
         return std::chrono::duration_cast<std::chrono::milliseconds>(elapsed()).count();
     }
 };
+
+}

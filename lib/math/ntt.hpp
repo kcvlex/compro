@@ -1,5 +1,6 @@
 #include "../util/template.hpp"
 #include "../util/ceil-pow2.hpp"
+#include "../util/generics.hpp"
 #include "modint.hpp"
 #include "base.hpp"
 
@@ -67,33 +68,11 @@ constexpr ll find_primitive_root() {
     return find_primitive_root<Mod>(2);
 }
 
-template <ll... N1, ll... N2>
-constexpr auto concat_integer_sequence(std::integer_sequence<ll, N1...>, std::integer_sequence<ll, N2...>) {
-    return std::integer_sequence<ll, N1..., N2...>();
-}
-
-template <ll Head, ll... Tail>
-struct reverse_sequence {
-    using head_type = std::integer_sequence<ll, Head>;
-    using tail_type = typename reverse_sequence<Tail...>::type;
-    using type = decltype(concat_integer_sequence(std::declval<tail_type>(), std::declval<head_type>()));
-};
-
-template <ll Head>
-struct reverse_sequence<Head> {
-    using type = std::integer_sequence<ll, Head>;
-};
-
-template <ll... N>
-constexpr auto reverse_ns(std::integer_sequence<ll, N...>) {
-    return typename reverse_sequence<N...>::type();
-}
-
 template <ll Mod, ll Root, std::size_t Size>
 struct root_pows_calculator {
     using mint = Modint<Mod>;
     using seq = std::make_integer_sequence<ll, Size>;
-    using rseq = decltype(reverse_ns(std::declval<seq>()));
+    using rseq = decltype(utility::reverse_ns(std::declval<seq>()));
 
     struct helper {
         mint m;

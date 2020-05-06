@@ -46,17 +46,14 @@ template <typename T, typename... Tail> const T& var_min(const T &t, const Tail&
 template <typename T, typename... Tail> const T& var_max(const T &t, const Tail&... tail) { return std::max(t, var_max(tail...)); }
 template <typename T, typename... Tail> void chmin(T &t, const Tail&... tail) { t = var_min(t, tail...); }
 template <typename T, typename... Tail> void chmax(T &t, const Tail&... tail) { t = var_max(t, tail...); }
-template <typename T> const T& clamp(const T &t, const T &low, const T &high) { return std::max(low, std::min(high, t)); }
-template <typename T> void chclamp(T &t, const T &low, const T &high) { return t = clamp(t, low, high); }
 template <typename T> T make_v(T init) { return init; }
 template <typename T, typename... Tail> auto make_v(T init, std::size_t s, Tail... tail) { auto v = std::move(make_v(init, tail...)); return vec<decltype(v)>(s, v); }
-template <typename T, std::size_t Head, std::size_t ...Tail> struct multi_dem_array { using type = std::array<typename multi_dem_array<T, Tail...>::type, Head>; };
+template <typename T, std::size_t Head, std::size_t... Tail> struct multi_dem_array { using type = std::array<typename multi_dem_array<T, Tail...>::type, Head>; };
 template <typename T, std::size_t Head> struct multi_dem_array<T, Head> { using type = std::array<T, Head>; };
-template <typename T, std::size_t ...Args> using mdarray = typename multi_dem_array<T, Args...>::type;
+template <typename T, std::size_t... Args> using mdarray = typename multi_dem_array<T, Args...>::type;
 namespace init__ { struct InitIO { InitIO() { std::cin.tie(nullptr); std::ios_base::sync_with_stdio(false); std::cout << std::fixed << std::setprecision(30); } } init_io; }
 #define DEBUGGING
 #ifdef DEBUGGING
-#include "/home/taroy/kyopuro/lib/util/debug.hpp"
 #else
-#define DEBUG(...) 0
+#define DEBUG(...)
 #endif

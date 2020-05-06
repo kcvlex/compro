@@ -6,10 +6,10 @@ namespace math {
 
 namespace {
 
-template <ll ...Mods>
+template <ll... Mods>
 struct modint_tuple;
 
-template <ll Mod, ll Dummy, ll ...Mods>
+template <ll Mod, ll Dummy, ll... Mods>
 struct modint_tuple<Mod, Dummy, Mods...> {
     using type = typename utility::tuple_concat<std::tuple<Modint<Mod>>,
                             typename modint_tuple<Dummy, Mods...>::type>::type;
@@ -27,7 +27,7 @@ struct dummy_type {
 };
                     
 
-template <ll ...Mods>
+template <ll... Mods>
 struct tuple2array {
     constexpr static std::size_t len = sizeof...(Mods);
     template <std::size_t I> using dummy = typename dummy_type<len, I>::type;
@@ -60,7 +60,7 @@ struct tuple2array {
     }
 };
 
-template <ll ...Mods> 
+template <ll... Mods> 
 struct array2tuple {
     constexpr static std::size_t len = sizeof...(Mods);
     template <std::size_t I> using dummy = typename dummy_type<len, I>::type;
@@ -93,7 +93,7 @@ struct array2tuple {
     }
 };
 
-template <ll ...Mods>
+template <ll... Mods>
 class Garner {
     constexpr static std::size_t len = sizeof...(Mods);
     constexpr static std::array<ll, len> mods = {{ Mods... }};

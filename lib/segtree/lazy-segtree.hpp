@@ -1,133 +1,176 @@
 #include "../util/template.hpp"
+#include "../util/ceil-pow2.hpp"
+#include "/home/taroy/kyopuro/lib/util/debug.hpp"
 
 namespace segtree {
 
-template <typename T, typename L>
+namespace {
+
+struct has_id_ele {
+    template <typename T>
+    auto operator ()(T &&t) -> decltype(T::id_ele(), std::true_type()) { return std::true_type(); }
+    std::false_type operator ()(...) { return std::false_type(); }
+};
+
+struct has_merge {
+    template <typename T>
+    auto operator ()(T &&t) -> decltype(T::merge(std::declval<T>(), std::declval<T>()), std::true_type()) { return std::true_type(); }
+    std::false_type operator ()(...) { return std::false_type(); }
+};
+
+struct has_apply {
+    template <typename M, typename Op>
+    auto operator ()(M &&m, Op &&op) -> decltype(m.apply(op), std::true_type()) { return std::true_type(); }
+    std::false_type operator ()(...) { return std::false_type(); }
+};
+
+template <typename F, typename... Args>
+using callable = std::is_same<typename std::invoke_result<F, Args...>::type, std::true_type>;
+
+template <typename M>
+using is_monoid = std::conjunction<
+    callable<has_id_ele, M>, callable<has_merge, M>>;
+
+template <typename M, typename Op>
+using enable_apply = callable<has_apply, M, Op>;
+
+}
+
+template <typename M, typename Op>
 class LazySegmentTree {
-    using merge_t = std::function<T(T, T)>;
-    using apply_t = std::function<T(T, L)>;
-    using update_t = std::function<L(L, L)>;
-    using calc_lazy_t = std::function<L(ssize_t, ssize_t, L)>;
-    using prop_t = std::function<L(L)>;
+    static_assert(is_monoid<M>::value, "M must be monoid.");
+    static_assert(is_monoid<Op>::value, "Op must be monoid.");
+    static_assert(enable_apply<M, Op>::value, "Op is not operator of M.");
     
-    T id_val;
-    L id_lazy;
+    using size_type = ssize_t;
 
     struct segment {
-        T val;
-        std::pair<L, bool> lazy;
-        ll l, r, idx, cl, cr;
+        M m;
+        Op op;
+        bool has_lazy;
 
-        segment(const T &val, const std::pair<L, bool> &lazy, ll l, ll r, ll idx)
-            : val(val), lazy(lazy), l(l), r(r)
-        {
-            set_idx(idx);
+        segment(M m = M::id_ele()) : m(m), op(Op::id_ele()), has_lazy(false) { }
+
+        void update_op(Op o) {
+            op = Op::merge(op, o);
+            has_lazy = true;
         }
 
-        void set_idx(ll idx) {
-            this->idx = idx;
-            cl = 2 * idx + 1;
-            cr = 2 * idx + 2;
+        void apply() {
+            if (!has_lazy) return;
+            m.apply(op);
+            init_op();
         }
 
-        bool is_lazy() const {
-            return lazy.second;
-        }
-
-        bool is_leaf() const {
-            return r - l == 1;
-        }
-
-        bool is_inclusion(ll ql, ll qr) const {
-            return ql <= l && r <= qr;
-        }
-        
-        bool is_exclusion(ll ql, ll qr) const {
-            return r <= ql || qr <= l;
+        void init_op() {
+            op = Op::id_ele();
+            has_lazy = false;
         }
     };
-    
+
     vec<segment> segs;
-    merge_t merge_val;
-    apply_t apply_lazy;
-    update_t update_lazy;
-    calc_lazy_t calc_lazy;
-    prop_t prop_lazy;
+    size_type height;
 
-    segment init_segment() {
-        return segment(id_val, std::make_pair(id_lazy, false), -1, -1, -1);
-    }
-
-    void update_segment(segment &s) {
-        s.val = merge_val(segs[s.cl].val, segs[s.cr].val);
-    }
-
-    void push(segment &s) {
-        if (!s.is_lazy()) return;
-        s.val = apply_lazy(s.val, s.lazy.first);
-        auto prop = prop_lazy(s.lazy.first);
-        s.lazy = std::make_pair(id_lazy, false);
-        if (!s.is_leaf()) {
-            for (ll i = s.cl; i <= s.cr; i++) {
-                segment &ch = segs[i];
-                ch.lazy = std::make_pair(update_lazy(ch.lazy.first, prop), true);
-            }
+    void push(size_type idx) {
+        auto &seg = segs[idx];
+        if (!seg.has_lazy) return;
+        auto tmp = seg.op;
+        seg.apply();
+        for (int i = 0; i < 2; i++) {
+            auto cidx = 2 * idx + i;
+            if (2 * size() <= cidx) break;
+            auto &cseg = segs[cidx];
+            cseg.update_op(tmp);
         }
+    }
+
+    auto msb(size_type i) {
+        return 32 - __builtin_clz(i) - 1;
+    }
+
+    void propagate_from_top(size_type idx) {
+        for (int i = height; 1 <= i; i--) push(idx >> i);
+    }
+
+    void update_from_bottom(size_type idx) {
+        while (true) {
+            auto pidx = idx / 2;
+            if (pidx == 0) break;
+            push(2 * pidx);
+            push(2 * pidx + 1);
+            segs[pidx].m = M::merge(segs[2 * pidx].m, segs[2 * pidx + 1].m);
+            idx = pidx;
+        }
+    }
+
+    size_type get_endpoint_seg(size_type i) {
+        i += size();
+        return i / (i & -i);
     }
 
 public:
-    LazySegmentTree(const vec<T> &v, T id_val, L id_lazy, 
-                    merge_t mn, apply_t al, update_t ul, calc_lazy_t cl, prop_t pl = [](ll l) { return l; })
-        : id_val(id_val), id_lazy(id_lazy), 
-          segs(2 * ceil_pow2(v.size()) - 1, init_segment()),
-          merge_val(mn), apply_lazy(al), update_lazy(ul), calc_lazy(cl), prop_lazy(pl)
-    {
-        for (ll i = 0; i < size(); i++) {
-            ll idx = i + size() - 1;
-            segs[idx].val = (i < v.size() ? v[i] : id_val);
-            segs[idx].set_idx(idx);
-            segs[idx].l = i;
-            segs[idx].r = i + 1;
+    template <typename T>
+    LazySegmentTree(const vec<T> &v) {
+
+        size_type sz = ceil_pow2(v.size());
+        segs.resize(sz * 2);
+        height = msb(sz);
+        for (auto i = sz; i < v.size(); i++) segs[i] = v[i];
+        for (auto i = sz - 1; 1 <= i; i--) segs[i] = M::merge(segs[2 * i].m, segs[2 * i + 1].m);
+    }
+
+    size_type size() const {
+        return segs.size() / 2;
+    }
+
+    template <typename T>
+    void update_query(size_type ql, size_type qr, const T &t) {
+        Op op(t);
+        auto l0 = get_endpoint_seg(ql);
+        auto r0 = get_endpoint_seg(qr);
+        propagate_from_top(l0);
+        propagate_from_top(r0);
+        size_type lnode = ql + size(), rnode = qr + size();
+        while (lnode < rnode) {
+            if (lnode & 1) {
+                segs[lnode].update_op(op);
+                push(lnode);
+                lnode++;
+            }
+            if (rnode & 1) {
+                rnode--;
+                segs[rnode].update_op(op);
+                push(rnode);
+            }
+            lnode /= 2;
+            rnode /= 2;
         }
-        for (ll i = size() - 2; 0 <= i; i--) {
-            segs[i].set_idx(i);
-            segs[i].l = segs[segs[i].cl].l;
-            segs[i].r = segs[segs[i].cr].r;
-            update_segment(segs[i]);
+        update_from_bottom(l0);
+        update_from_bottom(r0);
+    }
+
+    M get_query(ll ql, ll qr) {
+        auto ret = M::id_ele();
+        auto l0 = get_endpoint_seg(ql);
+        auto r0 = get_endpoint_seg(qr);
+        propagate_from_top(l0);
+        propagate_from_top(r0);
+        size_type lnode = ql + size(), rnode = qr + size();
+        while (lnode < rnode) {
+            if (lnode & 1) {
+                push(lnode);
+                ret = M::merge(segs[lnode].m, ret);
+                lnode++;
+            }
+            if (rnode & 1) {
+                rnode--;
+                push(rnode);
+                ret = M::merge(ret, segs[rnode].m);
+            }
+            lnode /= 2;
+            rnode /= 2;
         }
-    }
-
-    ssize_t size() const {
-        return (segs.size() + 1) / 2;
-    }
-
-    void update_query(ll ql, ll qr, const L &val, segment &s) {
-        push(s);
-        if (s.is_exclusion(ql, qr)) return;
-        if (s.is_inclusion(ql, qr)) {
-            s.lazy = std::make_pair(calc_lazy(s.l, s.r, val), true);
-            push(s);
-        } else {
-            update_query(ql, qr, val, segs[s.cl]);
-            update_query(ql, qr, val, segs[s.cr]);
-            update_segment(s);
-        }
-    }
-
-    void update_query(ll ql, ll qr, const L &val) {
-        update_query(ql, qr, val, segs[0]);
-    }
-
-    T get_query(ll ql, ll qr, segment &s) {
-        push(s);
-        if (s.is_exclusion(ql, qr)) return id_val;
-        if (s.is_inclusion(ql, qr)) return s.val;
-        return merge_val(get_query(ql, qr, segs[s.cl]),
-                         get_query(ql, qr, segs[s.cr]));
-    }
-
-    T get_query(ll ql, ll qr) {
-        return get_query(ql, qr, segs[0]);
+        return ret;
     }
 };
 
