@@ -27,7 +27,7 @@ struct nodes_pool {
     }
 
     size_type set(size_type cur, size_type i, T v) {
-        reroot(cur);
+        if (get(cur, i) == v) return cur;
         auto &arr = **std::get_if<array_type>(&(pool[cur]));  // pool[cur] must be array_type
         auto nxt = pool.size();
         auto old = std::move(arr[i]);
