@@ -111,7 +111,6 @@ class LazySegmentTree {
 public:
     template <typename T>
     LazySegmentTree(const vec<T> &v) {
-
         size_type sz = ceil_pow2(v.size());
         segs.resize(sz * 2);
         height = msb(sz);
