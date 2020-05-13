@@ -1,3 +1,4 @@
+#include "../util/bit-op.hpp"
 #include "modint.hpp"
 
 namespace math {
@@ -29,7 +30,7 @@ struct subset_conv_solver {
         auto tr = sr, cr = sr;
 
         for (ll i = 0; i < std::max(s.size(), t.size()); i++) {
-            ll cnt = __builtin_popcount(i);
+            ll cnt = utility::popcount(i);
             if (i < s.size()) sr[cnt][i] = s[i];
             if (i < t.size()) tr[cnt][i] = t[i];
         }
@@ -47,7 +48,7 @@ struct subset_conv_solver {
         for (auto &&p : cr) ifrmt(p);
         vec<mint> ret(sz);
         for (ll i = 0; i < sz; i++) {
-            ll cnt = __builtin_popcount(i);
+            ll cnt = utility::popcount(i);
             ret[i] = cr[cnt][i];
         }
         return ret;

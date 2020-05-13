@@ -1,6 +1,5 @@
 #include "../util/template.hpp"
-#include "../util/ceil-pow2.hpp"
-#include "/home/taroy/kyopuro/lib/util/debug.hpp"
+#include "../util/bit-op.hpp"
 
 namespace segtree {
 
@@ -84,10 +83,6 @@ class LazySegmentTree {
         }
     }
 
-    auto msb(size_type i) {
-        return 32 - __builtin_clz(i) - 1;
-    }
-
     void propagate_from_top(size_type idx) {
         for (int i = height; 1 <= i; i--) push(idx >> i);
     }
@@ -111,9 +106,9 @@ class LazySegmentTree {
 public:
     template <typename T>
     LazySegmentTree(const vec<T> &v) {
-        size_type sz = ceil_pow2(v.size());
+        size_type sz = utility::ceil_pow2(v.size());
         segs.resize(sz * 2);
-        height = msb(sz);
+        height = utility::msb(sz);
         for (auto i = sz; i < v.size(); i++) segs[i] = v[i];
         for (auto i = sz - 1; 1 <= i; i--) segs[i] = M::merge(segs[2 * i].m, segs[2 * i + 1].m);
     }
