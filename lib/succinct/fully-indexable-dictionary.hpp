@@ -5,44 +5,55 @@
 
 namespace succinct { 
 
+template <typename T>
+constexpr T ceil_log2(T n) {
+    for (int i = 0; i < 63; i++) {
+        T mask = 1ll << i;
+        if (n <= mask) return i;
+    }
+    return -1;
+}
+
+template <typename T>
+constexpr T ceil_even(T n) {
+    return n + (n & 1);
+}
+
 template <std::size_t MaxSize>
-struct FullyIndexableDictionaly {
+struct FullyIndexableDictionary {
     using size_type = ssize_t;
 
 private:
-    constexpr static size_type sz_log2 = utility::ceil_log2(max_size);
+    constexpr static size_type sz_log2 = ceil_even(ceil_log2<size_type>(MaxSize));
     constexpr static size_type chunk_sz = sz_log2 * sz_log2;
     constexpr static size_type block_sz = sz_log2 / 2;
     constexpr static size_type block_per_chunk = chunk_sz / block_sz;
 
     size_type sz, cnt1;
-    vec<size_type> dat;
-    vec<size_type> chunk;
-    vvec<size_type> block;
+    vec<size_type> chunk, block, dat;
 
 public:
-    FullyIndexableDictionaly() { } 
+    FullyIndexableDictionary() { } 
 
     template <typename F>
-    FullyIndexableDictionaly(F f, size_type sz) 
+    FullyIndexableDictionary(F f, size_type sz) 
         : sz(sz), cnt1(0),
-          dat(ceil_div(sz, block_sz), 0), 
-          chunk(ceil_div(sz, chunk_sz)), 
-          block(make_v<block_type>(chunk.size(), block_per_chunk))
+          chunk(utility::ceil_div(sz, chunk_sz)), 
+          block(chunk.size() * block_per_chunk),
+          dat(block.size())
     {
+        size_type idx = 0;
         for (size_type i = 0; i < chunk.size(); i++) {
             chunk[i] = cnt1;
             size_type tmp = 0;
-            for (size_type j = 0; j < block[i].size(); j++) {
-                block[i][j] = tmp;
+            for (size_type j = 0; j < block_per_chunk; j++, idx++) {
+                block[idx] = tmp;
                 for (size_type k = 0; k < block_sz; k++) {
-                    size_type idx = i * chunk_sz + j * block_sz;
-                    auto v = f(idx + k);
+                    auto v = f(idx * block_sz + k);
                     size_type mask = (1ll << k) * v;
-                    dat[i * block_per_chunk + j] |= mask;
+                    dat[idx] |= mask;
                     tmp += v;
                 }
-                block[i][j] = tmp;
             }
             cnt1 += tmp;
         }
@@ -50,23 +61,17 @@ public:
 
     size_type rank(bool b, size_type pos) const {
         if (!b) return pos - rank(!b, pos);
-        size_type ret = 0, idx = 0;
+        if (pos == sz) return sum(b);
+        size_type ret = 0;
         
-        size_type i = pos / chunk_sz;
-        pos %= chunk_sz;
-        idx += i * chunk_sz * block_per_chunk;
-        ret += chunk[i];
-        
-        size_type j = pos / block_sz;
-        pos %= block_sz;
-        idx += j * block_sz;
-        ret += block[i][j];
-        
-        auto mask = (1ll << rest) - 1;
-        return ret + utility::popcount(dat[idx] & mask);
+        ret += chunk[pos / chunk_sz];
+        ret += block[pos / block_sz];
+
+        auto mask = (1ll << (pos % block_sz)) - 1;
+        return ret + utility::popcount(dat[pos / block_sz] & mask);
     }
 
-    size_type rank(bool b, size_type l, size_typr r) const {
+    size_type rank(bool b, size_type l, size_type r) const {
         return rank(b, r) - rank(b, l);
     }
 
