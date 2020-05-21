@@ -1,45 +1,14 @@
 #include "../util/template.hpp"
 #include "../util/bit-op.hpp"
+#include "../util/monoid-validator.hpp"
 
 namespace segtree {
 
-namespace {
-
-struct has_id_ele {
-    template <typename T>
-    auto operator ()(T &&t) -> decltype(T::id_ele(), std::true_type()) { return std::true_type(); }
-    std::false_type operator ()(...) { return std::false_type(); }
-};
-
-struct has_merge {
-    template <typename T>
-    auto operator ()(T &&t) -> decltype(T::merge(std::declval<T>(), std::declval<T>()), std::true_type()) { return std::true_type(); }
-    std::false_type operator ()(...) { return std::false_type(); }
-};
-
-struct has_apply {
-    template <typename M, typename Op>
-    auto operator ()(M &&m, Op &&op) -> decltype(m.apply(op), std::true_type()) { return std::true_type(); }
-    std::false_type operator ()(...) { return std::false_type(); }
-};
-
-template <typename F, typename... Args>
-using callable = std::is_same<typename std::invoke_result<F, Args...>::type, std::true_type>;
-
-template <typename M>
-using is_monoid = std::conjunction<
-    callable<has_id_ele, M>, callable<has_merge, M>>;
-
-template <typename M, typename Op>
-using enable_apply = callable<has_apply, M, Op>;
-
-}
-
 template <typename M, typename Op>
 class LazySegmentTree {
-    static_assert(is_monoid<M>::value, "M must be monoid.");
-    static_assert(is_monoid<Op>::value, "Op must be monoid.");
-    static_assert(enable_apply<M, Op>::value, "Op is not operator of M.");
+    static_assert(utility::is_monoid<M>::value, "M must be monoid.");
+    static_assert(utility::is_monoid<Op>::value, "Op must be monoid.");
+    static_assert(utility::enable_apply<M, Op>::value, "Op is not operator of M.");
     
     using size_type = ssize_t;
 
