@@ -81,6 +81,10 @@ public:
 
         return ret;
     }
+
+    const FlowGraph& get_graph() const {
+        return fgraph;
+    }
 };
 
 }
