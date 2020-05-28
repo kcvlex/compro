@@ -1,29 +1,29 @@
 #pragma once
 #include "../util/template.hpp"
-#include "../util/compress.hpp"
 #include "../util/ceil-div.hpp"
+#include "/home/taroy/kyopuro/lib/util/debug.hpp"
 
 namespace seq {
 
 struct RangeModeQuery {
-    using size_type = ssize_t;
+    using size_type = int;
 
     // v must be compressed.
     RangeModeQuery(const vec<size_type> &v, const size_type kinds)
         : v(v),
-          blk_sz(ceil_sqrt(kinds)), 
-          blk_cnt(utility::ceil_div(kinds, blk_sz)),
+          blk_sz(ceil_sqrt(v.size())), 
+          blk_cnt(utility::ceil_div(v.size(), blk_sz)),
           idx_v(kinds), 
           blk_mode(make_v<size_type>(blk_cnt, blk_cnt + 1)),
           blk_freq(make_v<size_type>(blk_cnt, blk_cnt + 1)),
-          rank(kinds, 0), buf(kinds, 0)
+          rank(v.size(), 0), buf(kinds, 0)
     {
-        for (size_type i = 0; i < blk_sz; i++) {
+        for (size_type i = 0; i < blk_cnt; i++) {
             size_type max_idx = 0;
 
-            for (size_type j = i + 1; j <= blk_sz; j++) {
+            for (size_type j = i + 1; j <= blk_cnt; j++) {
                 size_type begin = (j - 1) * blk_sz, end = j * blk_sz;
-                for (size_type k = begin; k < end; k++) {
+                for (size_type k = begin; k < std::min<size_type>(v.size(), end); k++) {
                     auto e = v[k];
                     buf[e]++;
                     if (buf[max_idx] < buf[e]) max_idx = e;
@@ -31,15 +31,17 @@ struct RangeModeQuery {
 
                 blk_mode[i][j] = max_idx;
                 blk_freq[i][j] = buf[max_idx];
-                std::fill(ALL(buf), 0);
             }
+            
+            std::fill(ALL(buf), 0);
         }
-        
+
         for (size_type i = 0; i < v.size(); i++) {
             auto e = v[i];
             idx_v[e].push_back(i);
             rank[i] = buf[e]++;
         }
+
         std::fill(ALL(buf), 0);
     }
 
@@ -48,13 +50,19 @@ struct RangeModeQuery {
     auto query(size_type l, size_type r) -> std::pair<size_type, size_type> {
         size_type lblk = l / blk_sz + !!(l % blk_sz);
         size_type rblk = r / blk_sz - !!(r % blk_sz);
-
-        size_type mode = blk_mode[lblk][rblk];
-        size_type freq = blk_freq[lblk][rblk];
-        buf[mode] = freq;
+        size_type mode = 0, freq = 0;
+        size_type rng1l = l, rng1r = r;
+        size_type rng2l = r, rng2r = r;
+        
+        if (lblk < blk_cnt && lblk <= rblk) {
+            mode = blk_mode[lblk][rblk];
+            freq = blk_freq[lblk][rblk];
+            rng1l = l, rng1r = lblk * blk_sz;
+            rng2l = rblk * blk_sz, rng2r = r;
+        }
 
         // prefix
-        for (size_type i = l; i < lblk * blk_sz; i++) {
+        for (size_type i = rng1l; i < rng1r; i++) {
             auto e = v[i];
             if (buf[e]) continue;
             
@@ -64,9 +72,10 @@ struct RangeModeQuery {
                 buf[e] = -1;
                 continue;
             }
-            
-            while (idx < idx_v[e].size() && idx_v[e][idx] <= r) idx++;
+
+            while (idx < idx_v[e].size() && idx_v[e][idx] < r) idx++;
             auto sz = idx - rk;
+            
             buf[e] = sz;
             if (freq < sz) {
                 mode = e;
@@ -75,7 +84,7 @@ struct RangeModeQuery {
         }
 
         // suffix
-        for (size_type i = rblk * blk_sz; i < r; i++) {
+        for (size_type i = rng2r - 1; rng2l <= i; i--) {
             auto e = v[i];
             if (buf[e]) continue;
 
@@ -85,9 +94,9 @@ struct RangeModeQuery {
                 buf[e] = -1;
                 continue;
             }
-
             while (0 <= idx && l <= idx_v[e][idx]) idx--;
             auto sz = rk - idx;
+            
             buf[e] = sz;
             if (freq < sz) {
                 mode = e;
@@ -95,9 +104,8 @@ struct RangeModeQuery {
             }
         }
 
-        for (size_type i = l; i < lblk * blk_sz; i++) buf[i] = 0;
-        for (size_type i = rblk * blk_sz; i < r; i++) buf[i] = 0;
-        buf[blk_mode[lblk][rblk]] = 0;
+        for (size_type i = rng1l; i < rng1r; i++) buf[v[i]] = 0;
+        for (size_type i = rng2l; i < rng2r; i++) buf[v[i]] = 0;
 
         return std::make_pair(mode, freq);
     }
