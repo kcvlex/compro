@@ -1,6 +1,7 @@
 #include "../util/template.hpp"
 #include "../util/bit-op.hpp"
 #include "../util/monoid-validator.hpp"
+#include "/home/taroy/kyopuro/lib/util/debug.hpp"
 
 namespace segtree {
 
@@ -78,7 +79,7 @@ public:
         size_type sz = utility::ceil_pow2(v.size());
         segs.resize(sz * 2);
         height = utility::msb(sz);
-        for (auto i = sz; i < v.size(); i++) segs[i] = v[i];
+        for (auto i = 0; i < v.size(); i++) segs[i + sz] = v[i];
         for (auto i = sz - 1; 1 <= i; i--) segs[i] = M::merge(segs[2 * i].m, segs[2 * i + 1].m);
     }
 
