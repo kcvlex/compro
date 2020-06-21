@@ -1,9 +1,9 @@
 #pragma once
-#include "includes.hpp"
-#include "alias.hpp"
-#include "var-func.hpp"
-#include "multi-dim-container.hpp"
-#include "init.hpp"
+#include "templates/includes.hpp"
+#include "templates/alias.hpp"
+#include "templates/var-func.hpp"
+#include "templates/multi-dim-container.hpp"
+#include "templates/init.hpp"
 
 #define DEBUGGING
 #ifdef DEBUGGING
