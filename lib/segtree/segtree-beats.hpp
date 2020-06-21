@@ -99,17 +99,6 @@ struct segment {
         return ret;
     }
 
-    std::string to_string() const {
-        std::stringstream ss;
-        ss << "(" << l << ", " << r << "), "
-           << "(" << min1 << ", " << min2 << ", " << min_cnt << "), "
-           << "(" << max1 << ", " << max2 << ", " << max_cnt << "), "
-           << sum << ", " << add << "\n";
-        std::string ret;
-        std::getline(ss, ret);
-        return ret;
-    }
-
 private:
     bool enable_;
 };
