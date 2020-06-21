@@ -3,17 +3,20 @@
 using i128 = __int128_t;
 
 std::istream& operator >>(std::istream &is, i128 &n) {
-    ll i;
-    is >> i;
-    n = i;
+    std::string s;
+    std::cin >> s;
+    n = 0;
+    for (char c : s) {
+        n = n * 10 + (c - '0');
+    }
     return is;
 }
 
 std::ostream& operator <<(std::ostream &os, i128 n) {
-    i128 maxv = std::numeric_limits<ll>::max();
-    ll a = dynamic_cast<ll>(n / maxv);
-    ll b = dynamic_cast<ll>(n % maxv);
-    if (a) os << a;
-    os << b;
+    char buf[40];
+    int idx = 0;
+    for (; n; n /= 10, idx++) buf[idx] = static_cast<char>('0' + (n % 10));
+    std::reverse(buf, buf + idx);
+    for (int i = 0; i < idx; i++) std::cout << buf[i];
     return os;
 }
