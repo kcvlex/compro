@@ -16,10 +16,9 @@ struct link_cut_node {
     M m, sum = M::id_ele(), rsum = M::id_ele();
     Op op = Op::id_ele();
     bool rev, lazy;
-    ll i__;
 
-    link_cut_node(node_ptr p, node_ptr l, node_ptr r, M m, ll i) 
-        : p(p), l(l), r(r), sz(1), m(m), rev(false), lazy(false), i__(i) { }
+    link_cut_node(node_ptr p, node_ptr l, node_ptr r, M m) 
+        : p(p), l(l), r(r), sz(1), m(m), rev(false), lazy(false) { }
     link_cut_node() 
         : link_cut_node(nullptr, nullptr, nullptr, M::id_ele()) { }
 

@@ -6,7 +6,7 @@
 namespace seq {
 
 struct RangeModeQuery {
-    using size_type = int;
+    using size_type = ssize_t;
 
     // v must be compressed.
     RangeModeQuery(const vec<size_type> &v, const size_type kinds)

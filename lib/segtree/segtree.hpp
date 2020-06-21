@@ -47,7 +47,11 @@ public:
     }
 
     T get_query(ll ql, ll qr) const {
-        T ret = id_ele;
+        return get_query(ql, qr, id_ele);
+    }
+
+    T get_query(ll ql, ll qr, T init) const {
+        T ret = init;
         ssize_t lnode = ql + size(), rnode = qr + size();
         while (lnode < rnode) {
             if (lnode & 1) {

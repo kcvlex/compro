@@ -93,8 +93,28 @@ public:
     }
 };
 
+class dst_reverse_iteration {
+    using ite_type = vec<Edge>::const_reverse_iterator;
+    const vec<Edge> &edges;
+
+public:
+    dst_reverse_iteration(const vec<Edge> &edges) : edges(edges) { }
+
+    auto begin() const {
+        return dst_iterator<ite_type>(edges.crbegin());
+    }
+
+    auto end() const {
+        return dst_iterator<ite_type>(edges.crend());
+    }
+};
+
 dst_iteration dst(const vec<Edge> &edges) {
     return dst_iteration(edges);
+}
+
+dst_reverse_iteration rdst(const vec<Edge> &edges) {
+    return dst_reverse_iteration(edges);
 }
 
 }

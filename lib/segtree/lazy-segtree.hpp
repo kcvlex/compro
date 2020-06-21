@@ -79,8 +79,8 @@ public:
         size_type sz = utility::ceil_pow2(v.size());
         segs.resize(sz * 2);
         height = utility::msb(sz);
-        for (auto i = 0; i < v.size(); i++) segs[i + sz] = v[i];
-        for (auto i = sz - 1; 1 <= i; i--) segs[i] = M::merge(segs[2 * i].m, segs[2 * i + 1].m);
+        for (size_type i = 0; i < v.size(); i++) segs[i + sz] = v[i];
+        for (size_type i = sz - 1; 1 <= i; i--) segs[i] = M::merge(segs[2 * i].m, segs[2 * i + 1].m);
     }
 
     size_type size() const {

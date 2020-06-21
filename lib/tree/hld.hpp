@@ -3,9 +3,9 @@
 
 namespace tree {
 
-using hld_id_t = ll;
+using hld_id_type = ssize_t;
 
-namespace {
+namespace builder {
 
 template <typename Graph>
 struct Builder {
@@ -18,7 +18,7 @@ struct Builder {
 
     void build() {
         calc_size(0, -1);
-        hld_id_t id = 0;
+        hld_id_type id = 0;
         assign_id(0, -1, id);
     }
 
@@ -37,7 +37,7 @@ private:
         return tree_sz[cur] = ret;
     }
 
-    void assign_id(ll cur, ll pre, hld_id_t &id) {
+    void assign_id(ll cur, ll pre, hld_id_type &id) {
         hld_id[cur] = id++;
         if (pre == -1) heads[cur] = cur;
         else heads[cur] = (heavy[pre] == cur ? heads[pre] : cur);
@@ -52,19 +52,19 @@ private:
     }
 };
 
-}  // anonymous
+}
 
 struct HLD {
     template <typename Graph>
     HLD(const Graph &graph) {
-        Builder builder(graph);
+        builder::Builder builder(graph);
         builder.build();
         pars = std::move(builder.pars);
         heads = std::move(builder.heads);
         hld_id = std::move(buildre.hld_id);
     }
 
-    hld_id_t head_id(ll n) const {
+    hld_id_type head_id(ll n) const {
         return hld_id[heads[n]];
     }
 
@@ -78,25 +78,27 @@ struct HLD {
     }
 
     // calc's arg is [l, r)
-    template <typename T>
-    T query(ll n1, ll n2, T id_ele,
-            std::function<T(ll, ll)> calc, std::function<T(T, T)> merge) const 
-    {
-        T lval = id_ele, rval = id_ele, res = id_ele;
+    template <typename T, typename F>
+    Monoid<F> query(ll n1, ll n2, F f) const {
+        Monoid<F> res = Monoid::id_ele();
+        Monoid<F> lval = res, rval = res;
         while (true) {
-            hld_id_t id1 = hld_id[n1], id2 = hld_id[id2];
+            hld_id_type id1 = hld_id[n1], id2 = hld_id[id2];
             if (heads[n1] != heads[n2]) {
                 if (id1 < id2) {
-                    rval = merge(calc(head_id(n2), id2 + 1), rval);
+                    Monoid<F> add = f(head_id(n2), id2 + 1);
+                    rval = Monoid<F>::merge(add, rval);
                     n2 = pars[heads[n2]];
                 } else {
-                    lval = merge(lval, calc(head_id(n1), id1 + 1));
+                    Monoid<F> add = f(head_id(n1), id1 + 1);
+                    lval = Monoid<F>::merge(lval, add);
                     n1 = pars[heads[n1]];
                 }
             } else {
                 if (id2 < id1) std::swap(id1, id2);
                 res = calc(id1, id2 + 1);
-                res = merge(lval, merge(res, rval));
+                res = Monoid<F>::merge(lval, res);
+                res = Monoid<F>::merge(res, rval);
                 break;
             }
         }
@@ -104,47 +106,11 @@ struct HLD {
     }
 
 private:
+    template <typename F>
+    using Monoid = typename std::invoke_result<F, hld_id_type, hld_id_type>::type;
+    
     vec<ll> pars, heads;
     vec<hld_id_t> hld_id;
 };
 
-}
-
-int main() {
-    ll N;
-    cin >> N;
-    VV<ll> edges(N);
-    for(ll i = 1; i < N; i++) {
-        ll a, b;
-        cin >> a >> b;
-        a--; b--;
-        edges[a].push_back(b);
-        edges[b].push_back(a);
-    }
- 
-    HLD hld(edges);
-    LazySegmentTree<ll, ll> lst(V<ll>(N, 1), 0, 0,
-                                [](ll a, ll b) { return a + b; },
-                                [](ll a, ll b) { return a + b; },
-                                [](ll a, ll b) { return a + b; },
-                                [](ssize_t l, ssize_t r, ll v) { return (r - l) * v; },
-                                [](ll v) { return v / 2; });
-    
-    auto merge = [&](ll a, ll b) { return a + b; };
-    auto update = [&](ll a, ll b) { lst.update_query(a, b, 1); };
-    auto calc_tax = [&](ll a, ll b) { return lst.get_query(a, b); };
-
-    ll Q;
-    cin >> Q;
-    ll ans = 0;
-    while(Q--) {
-        ll u, v;
-        cin >> u >> v;
-        u--; v--;
-        ans += hld.query<ll>(u, v, calc_tax, 0, merge);
-        hld.query(u, v, update);
-    }
-
-    cout << ans << endl;
-    return 0;
 }

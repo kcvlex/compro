@@ -6,7 +6,7 @@
 
 namespace math {
 
-namespace {
+namespace ntt_helper {
 
 class reverse_bit {
     vvec<ll> bits;
@@ -106,7 +106,13 @@ constexpr auto calc_root_pows() {
     return root_pows_calculator<Mod, Root, Size>().calc();
 }
 
-}  // anonymous
+constexpr auto calc_max_base(ll m) {
+    ll ret = 0;
+    for (; m % 2 == 0; ret++, m /= 2);
+    return ret;
+}
+
+}
 
 template <ll Mod, ll PrimitiveRoot, std::size_t MaxSizeLog>
 class ntt__ {
@@ -119,32 +125,51 @@ public:
 
     constexpr ntt__() { }
 
-    template <typename Container1, typename Container2>
-    const poly& convolution(const Container1 &arr_a, const Container2 &arr_b) {
-        auto lower_size = arr_a.size() + arr_b.size() - 1;
+    template <typename InputIterator1, typename InputIterator2, typename OutputIterator>
+    void convolution(const InputIterator1 a_begin, const InputIterator1 a_end,
+                     const InputIterator2 b_begin, const InputIterator2 b_end,
+                     OutputIterator out) 
+    {
+        auto asz = std::distance(a_begin, a_end);
+        auto bsz = std::distance(b_begin, b_end);
+        auto lower_size = asz + bsz - 1;
         auto conv_size = ceil_pow2(lower_size);
-        decltype(auto) rev_bit = rb__.get(conv_size);
-        ntt(arr_a, false, rev_bit, ntt_a);
-        ntt(arr_b, false, rev_bit);
+        decltype(auto) rev_bit = ntt_helper::rb__.get(conv_size);
+        ntt(a_begin, a_end, false, rev_bit, ntt_a.begin());
+        ntt(b_begin, b_end, false, rev_bit);
         for (ll i = 0; i < conv_size; i++) ntt_a[i] *= buf[i];
-        return ntt(ntt_a, true, rev_bit);
+        ntt(ntt_a.begin(), ntt_a.begin() + conv_size, true, rev_bit, out);
+    }
+
+    template <typename InputIterator1, typename InputIterator2>
+    const poly& convolution(const InputIterator1 a_begin, const InputIterator1 a_end,
+                            const InputIterator2 b_begin, const InputIterator2 b_end)
+    {
+        convolution(a_begin, a_end, b_begin, b_end, buf.begin());
+        return buf;
     }
 
 private:
     using pows_type = std::array<mint, MaxSizeLog>;
     constexpr static ll root_max_pow = pow(mint(PrimitiveRoot), (Mod - 1) / (1ll << MaxSizeLog)).value();
     constexpr static ll root_max_inv = mint(root_max_pow).inv().value();
-    constexpr static pows_type root_pow_lis = calc_root_pows<Mod, root_max_pow, MaxSizeLog>();
-    constexpr static pows_type root_inv_lis = calc_root_pows<Mod, root_max_inv, MaxSizeLog>();
+    constexpr static pows_type root_pow_lis = ntt_helper::calc_root_pows<Mod, root_max_pow, MaxSizeLog>();
+    constexpr static pows_type root_inv_lis = ntt_helper::calc_root_pows<Mod, root_max_inv, MaxSizeLog>();
     poly buf, ntt_a;
 
-    template <typename Container>
-    const poly& ntt(const Container &arr, bool inverse, const vec<ll> &rev_bit) {
+    template <typename Iterator>
+    const poly& ntt(const Iterator begin, const Iterator end, 
+                    bool inverse, const vec<ll> &rev_bit) 
+    {
         const auto len = rev_bit.size();
         
         {
             ssize_t arr_idx = 0;
-            for (auto &&idx : rev_bit) buf[idx] = (arr_idx < arr.size() ? arr[arr_idx++] : 0);
+            auto sz = std::distance(begin, end);
+            for (auto &&idx : rev_bit) {
+                buf[idx] = (arr_idx < sz ? *(begin + arr_idx) : 0);
+                arr_idx++;
+            }
         }
 
         ssize_t unit_size = 2;
@@ -170,21 +195,28 @@ private:
         }
         if (inverse) {
             auto inv_len = mint(len).inv();
-            for (auto &&ele : buf) ele *= inv_len;
+            for (ssize_t i = 0; i < rev_bit.size(); i++) buf[i] *= inv_len;
         }
 
         return buf;
     }
 
-    template <typename Container>
-    const void ntt(const Container &arr, bool inverse, const vec<ll> &rev_bit, poly &out) {
-        ntt(arr, inverse, rev_bit);
+    template <typename InputIterator, typename OutputIterator>
+    const void ntt(const InputIterator begin, const InputIterator end, 
+                   bool inverse, const vec<ll> &rev_bit, OutputIterator out) 
+    {
+        ntt(begin, end, inverse, rev_bit);
         auto len = rev_bit.size();
-        std::copy(buf.cbegin(), buf.cbegin() + len, out.begin());
+        bool copy = true;
+        if constexpr (std::is_same<OutputIterator, typename decltype(buf)::iterator>::value) {
+            if (out == buf.begin()) copy = false;
+        } else {
+        }
+        if (copy) std::copy(buf.cbegin(), buf.cbegin() + len, out);
     }
 };
 
-template <ll Mod, std::size_t MaxSizeLog>
-using NTT = ntt__<Mod, find_primitive_root<Mod>(), MaxSizeLog>;
+template <ll Mod>
+using NTT = ntt__<Mod, ntt_helper::find_primitive_root<Mod>(), ntt_helper::calc_max_base(Mod - 1)>;
 
 }

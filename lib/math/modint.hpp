@@ -46,7 +46,7 @@ struct Modint {
     }
 
     constexpr Modint& operator /=(const Modint &oth) noexcept {
-        x *= oth.inv();
+        x *= oth.inv().value();
         x %= Mod;
         return *this;
     }

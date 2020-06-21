@@ -7,7 +7,7 @@ namespace flow {
 
 template <typename FlowGraph = graph::FlowGraph<true>>
 class Dinic {
-    FlowGraph flow_graph;
+    FlowGraph &flow_graph;
     vec<ll> dists;
     vec<ssize_t> used;
     Node src, sink;
@@ -52,7 +52,7 @@ class Dinic {
     }
 
 public:
-    Dinic(const FlowGraph &flow_graph) :
+    Dinic(FlowGraph &flow_graph) :
         flow_graph(flow_graph), used(flow_graph.size()) { }
 
     Capacity max_flow(Node src, Node sink) {

@@ -61,7 +61,7 @@ public:
 
     std::pair<::graph::Graph<true>, vec<ll>> build_scc_graph() {
         auto scc_label = build();
-        ::graph::Graph<true> scc_graph(*max_element(ALL(scc_label)) + 1);
+        ::graph::Graph<true> scc_graph(*std::max_element(ALL(scc_label)) + 1);
         for (ll from = 0; from < graph.size(); from++) for (auto &&e : graph[from]) {
             ll to;
             std::tie(to, std::ignore) = e;
