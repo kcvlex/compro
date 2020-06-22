@@ -1,7 +1,6 @@
 #include "../util/template.hpp"
 #include "../util/bit-op.hpp"
 #include "../util/monoid-validator.hpp"
-#include "/home/taroy/kyopuro/lib/util/debug.hpp"
 
 namespace segtree {
 
@@ -10,29 +9,22 @@ class LazySegmentTree {
     static_assert(utility::is_monoid<M>::value, "M must be monoid.");
     static_assert(utility::is_monoid<Op>::value, "Op must be monoid.");
     static_assert(utility::enable_apply<M, Op>::value, "Op is not operator of M.");
-    
-    using size_type = ssize_t;
 
     struct segment {
         M m;
         Op op;
         bool has_lazy;
 
-        segment(M m = M::id_ele()) : m(m), op(Op::id_ele()), has_lazy(false) { }
+        segment(M m = M()) : m(m), op(Op()), has_lazy(false) { }
 
         void update_op(Op o) {
+            m.apply(o);
             op = Op::merge(op, o);
             has_lazy = true;
         }
 
-        void apply() {
-            if (!has_lazy) return;
-            m.apply(op);
-            init_op();
-        }
-
         void init_op() {
-            op = Op::id_ele();
+            op = Op();
             has_lazy = false;
         }
     };
@@ -41,16 +33,15 @@ class LazySegmentTree {
     size_type height;
 
     void push(size_type idx) {
-        auto &seg = segs[idx];
-        if (!seg.has_lazy) return;
-        auto tmp = seg.op;
-        seg.apply();
+        auto &s = segs[idx];
+        if (!s.has_lazy) return;
         for (int i = 0; i < 2; i++) {
             auto cidx = 2 * idx + i;
-            if (2 * size() <= cidx) break;
-            auto &cseg = segs[cidx];
-            cseg.update_op(tmp);
+            if (segs.size() <= cidx) break;
+            auto &cs = segs[cidx];
+            cs.update_op(s.op);
         }
+        s.init_op();
     }
 
     void propagate_from_top(size_type idx) {
@@ -61,9 +52,10 @@ class LazySegmentTree {
         while (true) {
             auto pidx = idx / 2;
             if (pidx == 0) break;
-            push(2 * pidx);
-            push(2 * pidx + 1);
-            segs[pidx].m = M::merge(segs[2 * pidx].m, segs[2 * pidx + 1].m);
+            size_type c0 = 2 * pidx + 0,
+                      c1 = 2 * pidx + 1;
+            push(c0); push(c1);
+            segs[pidx].m = M::merge(segs[c0].m, segs[c1].m);
             idx = pidx;
         }
     }
@@ -74,14 +66,18 @@ class LazySegmentTree {
     }
 
 public:
-    template <typename T>
-    LazySegmentTree(const vec<T> &v) {
-        size_type sz = utility::ceil_pow2(v.size());
-        segs.resize(sz * 2);
-        height = utility::msb(sz);
-        for (size_type i = 0; i < v.size(); i++) segs[i + sz] = v[i];
-        for (size_type i = sz - 1; 1 <= i; i--) segs[i] = M::merge(segs[2 * i].m, segs[2 * i + 1].m);
+    template <typename F>
+    LazySegmentTree(F f, size_type sz) {
+        size_type sz2 = utility::ceil_pow2(sz);
+        segs.resize(sz2 * 2);
+        height = utility::msb(sz2);
+        for (size_type i = 0; i < sz; i++) segs[i + sz2] = f(i);
+        for (size_type i = sz2 - 1; 1 <= i; i--) segs[i] = M::merge(segs[2 * i].m, segs[2 * i + 1].m);
     }
+
+    template <typename T>
+    LazySegmentTree(const vec<T> &v) 
+        : LazySegmentTree([&](size_type i) { return v[i]; }, v.size()) { }
 
     size_type size() const {
         return segs.size() / 2;
@@ -114,7 +110,7 @@ public:
     }
 
     M get_query(ll ql, ll qr) {
-        auto ret = M::id_ele();
+        auto ret = M();
         auto l0 = get_endpoint_seg(ql);
         auto r0 = get_endpoint_seg(qr);
         propagate_from_top(l0);
