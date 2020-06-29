@@ -1,97 +1,73 @@
+#pragma once
 #include "ntt.hpp"
 #include "garner.hpp"
 
 namespace math {
 
-namespace {
+namespace helper {
 
-template <typename T>
-struct pointer_to_const {
-    using type = typename std::add_pointer<
-        typename std::add_const<T>::type>::type;
+template <ll Mod, ll... Mods>
+class ntts_type {
+    using head_type = std::tuple<NTT<Mod>>;
+    using tail_type = typename ntts_type<Mods...>::type;
+public:
+    using type = decltype(tuple_cat(std::declval<head_type>(),
+                                    std::declval<tail_type>()));
 };
 
-template <std::size_t MaxSizeLog, ll... Mods> class multi_ntt_type;
-
-template <std::size_t MaxSizeLog, ll Mod, ll... Mods>
-class multi_ntt_type<MaxSizeLog, Mod, Mods...> {
-    using ntt_head = NTT<Mod, MaxSizeLog>;
-    using result_head = typename pointer_to_const<typename ntt_head::poly>::type;
-    using tails = multi_ntt_type<MaxSizeLog, Mods...>;
-    using ntt_tail = typename tails::ntt_type;
-    using result_tail = typename tails::result_type;
-
+template <ll Mod>
+class ntts_type<Mod> {
 public:
-    using ntt_type = typename utility::tuple_concat<std::tuple<ntt_head>, ntt_tail>::type;
-    using result_type = typename utility::tuple_concat<std::tuple<result_head>, result_tail>::type;
-};
-
-template <std::size_t MaxSizeLog, ll Mod>
-class multi_ntt_type<MaxSizeLog, Mod> {
-    using type = NTT<Mod, MaxSizeLog>;
-    using poly = typename pointer_to_const<typename type::poly>::type;
-
-public:
-    using ntt_type = std::tuple<type>;
-    using result_type = std::tuple<poly>;
+    using type = std::tuple<NTT<Mod>>;
 };
 
 }
 
-template <std::size_t MaxSizeLog, ll... Mods>
-class ArbitraryNTT {
-    using multi_ntt = multi_ntt_type<MaxSizeLog, Mods...>;
-    using ntts_type = typename multi_ntt::ntt_type;
-    using results_type = typename multi_ntt::result_type;
-    using data_type = std::array<ll, (1ll << (MaxSizeLog + 1))>;
-    using mods_seq = std::integer_sequence<ll, Mods...>;
+template <ll Mod, ll... Mods>
+struct ArbitraryNTT : convolution<ArbitraryNTT<Mod, Mods...>> {
+    constexpr ArbitraryNTT() : ntts() { }
 
+    template <typename InputIterator1, typename InputIterator2, typename OutputIterator>
+    void multiply(InputIterator1 begin1, InputIterator1 end1,
+                  InputIterator2 begin2, InputIterator2 end2,
+                  OutputIterator out) 
+    {
+        size_type n = std::distance(begin1, end1);
+        size_type m = std::distance(begin2, end2);
+
+        call_multiply<0>(begin1, end1, begin2, end2);
+
+        std::array<ll, sizeof...(Mods)> mr;
+        for (size_type i = 0; i < n + m - 1; i++) {
+            collect_vals<0>(mr, i);
+            ll res = garner<Mod, Mods...>(mr);
+            *(out + i) = res;
+        }
+    }
+
+private:
+    using ntts_type = typename helper::ntts_type<Mods...>::type;
     ntts_type ntts;
-    std::array<ll, sizeof...(Mods)> dat;
-    data_type buf;
 
-    template <std::size_t Index, typename Container1, typename Container2, typename... Results>
-    auto for_each_conv_rec(const Container1 &a, const Container2 &b, Results&&... results) {
-        if constexpr (Index < sizeof...(Mods)) {
-            auto res = &(std::get<Index>(ntts).convolution(a, b));
-            return for_each_conv_rec<Index + 1>(a, b, results..., res);
+    template <size_type Idx, typename InputIterator1, typename InputIterator2>
+    void call_multiply(InputIterator1 begin1, InputIterator1 end1,
+                       InputIterator2 begin2, InputIterator2 end2)
+    {
+        if constexpr (Idx == sizeof...(Mods)) {
         } else {
-            return std::make_tuple(std::forward<Results>(results)...);
+            std::get<Idx>(ntts).multiply(begin1, end1, begin2, end2);
+            call_multiply<Idx + 1>(begin1, end1, begin2, end2);
         }
     }
 
-    template <typename Container1, typename Container2>
-    results_type for_each_conv(const Container1 &a, const Container2 &b) {
-        return for_each_conv_rec<0>(a, b);
-    }
-
-    template <std::size_t Index = 0>
-    void collect(const ll idx, results_type res) {
-        if constexpr (Index < sizeof...(Mods)) {
-            dat[Index] = (*std::get<Index>(res))[idx].value();
-            collect<Index + 1>(idx, res);
+    template <size_type Idx>
+    void collect_vals(std::array<ll, sizeof...(Mods)> &mr, const size_type i) {
+        if constexpr (Idx == sizeof...(Mods)) {
         } else {
+            mr[Idx] = (std::get<Idx>(ntts).get_last() + i)->value();
+            collect_vals<Idx + 1>(mr, i);
         }
-    }
-
-public:
-    ArbitraryNTT() : ntts() { }
-
-    template <typename Container1, typename Container2>
-    const data_type& convolution(const Container1 &a, const Container2 &b, ll mod) {
-        auto conv_size = ceil_pow2(a.size() + b.size() - 1);
-        decltype(auto) res = for_each_conv(a, b);
-        for (ll i = 0; i < conv_size; i++) {
-            collect(i, res);
-            buf[i] = garner(mods_seq(), dat, mod);
-        }
-        return buf;
     }
 };
-
-template <std::size_t MaxSizeLog, ll... Mods>
-auto gen_arb_ntt(std::integer_sequence<ll, Mods...>) {
-    return ArbitraryNTT<MaxSizeLog, Mods...>();
-}
 
 }

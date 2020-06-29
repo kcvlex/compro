@@ -71,6 +71,10 @@ struct Modint {
         return Modint((x != 0) * (Mod - x)); 
     }
 
+    constexpr bool operator ==(const Modint &oth) const noexcept {
+        return value() == oth.value();
+    }
+
     template <typename T>
     constexpr typename std::enable_if<std::is_integral<T>::value, const Modint&>::type
     operator =(T t) noexcept {
@@ -89,5 +93,11 @@ struct Modint {
 private:
     ll x;
 };
+
+template <ll Mod>
+std::ostream& operator <<(std::ostream &os, Modint<Mod> m) {
+    os << m.value();
+    return os;
+}
 
 }
