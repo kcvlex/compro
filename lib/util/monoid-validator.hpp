@@ -5,7 +5,7 @@ namespace utility {
 
 struct has_id_ele {
     template <typename T>
-    auto operator ()(T &&t) -> decltype(T::id_ele(), std::true_type()) { return std::true_type(); }
+    auto operator ()(T &&t) -> decltype(T(), std::true_type()) { return std::true_type(); }
     std::false_type operator ()(...) { return std::false_type(); }
 };
 

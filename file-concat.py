@@ -45,7 +45,7 @@ class ListUpFiles:
         self.__file_list = []
         self.__appended = set()
         self.__include = "#include"
-        self.__debug_file = "debug.cpp"
+        self.__debug_file = "debug.hpp"
         self.__default_dir = "/home/taroy/kyopuro/lib/"
 
     def __should_listup(self, path):
@@ -89,39 +89,50 @@ class ListUpFiles:
         return self.__file_list
 
 
-def write_to_file(fr, fw):
-    lis = filter(lambda l: l.find('#include \"') == -1, fr.readlines())
-    lis = filter(lambda l: l.find('#pragma once') == -1, lis)
-    lis = list(lis)
-    for i, e in enumerate(lis):
-        if e.find('#define DEBUGGING') != -1:
-            lis = lis[0:i]
-            break
-    lis = filter(lambda l: l.find('DEBUG') == -1, lis)
+class Printer:
+    def __init__(self):
+        self._is_defined_cpp17 = False
+        self._define_cpp17 = '#define CPP17'
+        self._contents = []
 
-    fw.writelines(lis)
+    def _read_file(self, fr):
+        lis = filter(lambda l: l.find('#include \"') == -1, fr.readlines())
+        lis = filter(lambda l: l.find('#pragma once') == -1, lis)
+        lis = list(lis)
+        if len(list(filter(lambda l: l.find(self._define_cpp17) != -1, lis))) != 0:
+            self._is_defined_cpp17 = True
+        for i, e in enumerate(lis):
+            if e.find('#define DEBUGGING') != -1:
+                lis = lis[0:i]
+                break
+        lis = list(filter(lambda l: l.find('DEBUG') == -1, lis))
+        self._contents += lis
 
+    def _concat_files(self, flie_list):
+        for f in flie_list:
+            with open(f) as fr:
+                self._read_file(fr)
 
-def concat_files(flie_list, fw):
-    for f in flie_list:
-        with open(f) as fr:
-            write_to_file(fr, fw)
+    def _rewrite_src(self, src, dst):
+        file_list = ListUpFiles(src).listup()
+        # print(file_list)
+        self._concat_files(file_list)
+        if self._is_defined_cpp17:
+            self._contents = [ self._define_cpp17 + '\n' ] + self._contents
+        with open(dst, mode='w') as fw:
+            fw.writelines(self._contents)
 
-
-def rewrite_src(src, dst):
-    file_list = ListUpFiles(src).listup()
-    # print(file_list)
-    with open(dst, mode='w') as fw:
-        concat_files(file_list, fw)
+    def print_submit_file(self, src):
+        src = PathFixer(os.getcwd()).move(src).get()
+        ext = '.cpp'
+        remove_ext = src[:-len(ext)]
+        dst = remove_ext + '_submit' + ext
+        self._rewrite_src(src, dst)
 
 
 def main(src):
-    src = PathFixer(os.getcwd()).move(src).get()
-    ext = '.cpp'
-    remove_ext = src[:-len(ext)]
-    dst = remove_ext + '_submit' + ext
-    rewrite_src(src, dst)
-
+    printer = Printer()
+    printer.print_submit_file(src)
 
 if __name__ == '__main__':
     main(sys.argv[1])

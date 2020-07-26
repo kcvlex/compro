@@ -8,7 +8,7 @@ using validate_integer = typename std::enable_if<std::is_integral<T>::value, ll>
 
 template <typename T>
 auto popcount(T n) -> validate_integer<T> {
-    return __builtin_popcount(n);
+    return __builtin_popcountll(n);
 }
 
 // 0 indexed

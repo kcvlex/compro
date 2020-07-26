@@ -115,7 +115,11 @@ struct Debugging {
         } else if constexpr (apply_iterator<Orig>::value) {
             return iterator_to_string(std::begin(t), std::end(t));
         } else if constexpr (enable_output<Orig>::value) {
-            // FIXME : xxxx
+            std::stringstream ss;
+            ss << t;
+            std::string s;
+            ss >> s;
+            return s;
         } else {
             return debug_string__(std::forward<T>(t));
         }
@@ -126,13 +130,6 @@ struct Debugging {
         return debug_string_orig<T, typename std::remove_reference<T>::type>(std::forward<T>(t));
     }
 
-    /*
-    template <ll Mod>
-    std::string debug_string__(math::Modint<Mod> m) {
-        return "( " + std::to_string(m.mod()) + ", " + std::to_string(m.value()) + " )";
-    }
-    */
-    
     template <typename T>
     void debug_f(std::string name, T &&t) {
         if (name.size()) std::cout << surrounding_brackets(name) << " = ";
