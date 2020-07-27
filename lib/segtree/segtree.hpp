@@ -1,5 +1,5 @@
 #include "../util/template.hpp"
-#include "../util/ceil-pow2.hpp"
+#include "../util/bit-op.hpp"
 
 namespace segtree {
 
@@ -17,7 +17,6 @@ struct SegmentTree {
     }
 
 public:
-
     template <typename F>
     SegmentTree(F f, size_type sz) {
         build(f, sz);

@@ -1,8 +1,9 @@
-#include "suffixarray.hpp"
+#pragma once
+#include "suffix-array.hpp"
 
 namespace strings {
 
-class LongestCommonPrefixArray {
+struct LongestCommonPrefixArray {
     const SuffixArray &sa;
     vec<ll> lcp, rank;
 
@@ -12,11 +13,11 @@ class LongestCommonPrefixArray {
         const auto &str = sa.str();
         for (ll i = 0; i < sa.size(); i++) {
             if (rank[i] + 1 == sa.size()) continue;
-            ll cur = i, nxt = sa[rank[cur] + 1];
+            ll j = sa[rank[i] + 1];
             while (true) {
-                if (cur + h < sa.size()) break;
-                if (nxt + h < sa.size()) break;
-                if (str[cur + h] != str[nxt + h]) break;
+                if (str.size() <= i + h) break;
+                if (str.size() <= j + h) break;
+                if (str[i + h] != str[j + h]) break;
                 h++;
             }
             lcp[rank[i] + 1] = h;
@@ -24,7 +25,6 @@ class LongestCommonPrefixArray {
         }
     }
 
-public:
     LongestCommonPrefixArray(const SuffixArray &sa)
         : sa(sa), lcp(sa.size()), rank(sa.size())
     {

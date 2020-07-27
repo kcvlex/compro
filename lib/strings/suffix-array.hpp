@@ -1,3 +1,4 @@
+#pragma once
 #include "../util/template.hpp"
 
 namespace strings {

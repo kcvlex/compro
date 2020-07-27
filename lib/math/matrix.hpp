@@ -2,102 +2,49 @@
 
 namespace math {
 
-template <typename T>
-struct Matrix : public vvec<T> {
-    using vvec<T>::vvec;
+template <typename T, size_type M, size_type N>
+struct Matrix : mdarray<T, M, N> {
+    using mdarray<T, M, N>::mdarray;
 
-    Matrix(ssize_t r, size_t c) : vvec(make_v<T>(T(), r, c)) { }
-
-    static Matrix make_id(ssize_t r, ssize_t c, const T &id) {
-        Matrix ret(r, c);
-        for (ssize_t i = 0; i < std::min(r, c); i++) ret[i][i] = id;
-        return ret;
+    constexpr Matrix& operator+=(const Matrix<T, M, N> &rhs) {
+        for (size_type i = 0; i < M; i++) for (size_type j = 0; j < N; j++) (*this)[i][j] += rhs[i][j];
     }
 
-    constexpr ssize_t row() const {
-        return size();
+    constexpr Matrix operator+(const Matrix<T, M, N> &rhs) const {
+        return Matrix(*this) += rhs;
     }
-
-    constexpr ssize_t col() const {
-        return (*this)[0].size();
-    }
-
-    constexpr Matrix& operator +=(const Matrix &oth) {
-        // assert(check_add(oth));
-        for (ssize_t i = 0; i < row(); i++) {
-            for (ssize_t j = 0; j < col(); j++) {
-                (*this)[i][j] += oth[i][j];
-            }
-        }
-        return *this;
-    }
-
-    constexpr Matrix& operator -=(const Matrix &oth) {
-        // assert(check_add(oth));
-        for (ssize_t i = 0; i < row(); i++) {
-            for (ssize_t j = 0; j < col(); j++) {
-                (*this)[i][j] -= oth[i][j];
-            }
-        }
-        return *this;
-    }
-
-    constexpr Matrix& operator *=(const T &t) {
-        for (auto &&v : (*this)) for (auto &&e : v) e *= t;
-        return (*this);
-    }
-
-    constexpr Matrix& operator *=(const Matix &oth) {
-        // assert(check_mul(oth));
-        Matrix res(col, oth.row());
-        for (ssize_t i = 0; i < row(); i++) {
-            for (ssize_t k = 0; k < col(); k++) {
-                for (ssize_t j = 0; j < oth.row(); j++) {
-                    res[i][j] += (*this)[i][k] * oth[k][j];
+    
+    template <size_type L>
+    constexpr Matrix<T, M, L> operator*(const Matrix<T, N, L> &rhs) const {
+        Matrix<T, M, L> ret;
+        for (size_type i = 0; i < M; i++) for (size_type j = 0; j < L; j++) ret[i][j] = T();
+        for (size_type i = 0; i < M; i++) {
+            for (size_type j = 0; j < N; j++) {
+                for (size_type k = 0; k < L; k++) {
+                    ret[i][k] += (*this)[i][j] * rhs[j][k];
                 }
             }
         }
-        (*this) = res;
-        return res;
+        return ret;
     }
 
-    constexpr Matrix operator +(const Matrix &oth) const {
-        return Matrix(*this) += oth;
+    size_type row() const noexcept {
+        return M;
     }
 
-    constexpr Matrix operator -(const Matrix &oth) const {
-        return Matrix(*this) -= oth;
-    }
-
-    constexpr Matrix operator *(const Matirx &oth) const {
-        return Matrix(*this) *= oth;
-    }
-
-    constexpr Matrix operator *(const T &t) const {
-        return Matrix(*this) *= t;
-    }
-   
-private:
-    bool check_add(const Matrix &oth) const {
-        return r == oth.row() && c == oth.col();
-    }
-
-    bool check_mul(const Matrix &oth) const {
-        return c == oth.row();
-    }
-
-    bool check_size() {
-        ssize_t r = size();
-        if (r == 0) return true;
-        ssize_t c = (*this)[0].size();
-        for (ssize_t i = 1; i < r; i++) if (c != (*this)[i].size()) return false;
-        return true;
+    size_type col() const noexcept {
+        return N;
     }
 };
 
-// FIXME
-template <typename T, std::size_t R, std::size_t C>
-struct Matrix : std::array<std::array<T, C>, R> {
-};
+template <typename T, size_type M, size_type N>
+std::ostream& operator<<(std::ostream &os, const Matrix<T, M, N> &mat) {
+    for (size_type i = 0; i < M; i++) {
+        os << (i == 0 ? "[ " : "  ");
+        for (size_type j = 0; j < N; j++) os << mat[i][j] << ", ";
+        os << (i + 1 == M ? " ]" : "\n");
+    }
+    return os;
+}
 
 }

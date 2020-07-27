@@ -3,7 +3,7 @@
 
 namespace geo {
 
-using value_type = long double;
+using value_type = double;
 using Point = std::complex<value_type>;
 
 const value_type eps = 1e-12;
@@ -48,11 +48,11 @@ struct Seg : public DualPoints {
 };
 
 value_type dot(const Point &a, const Point &b) {
-    return (std::conj(a) * b).real();
+    return std::real(std::conj(a) * b);
 }
 
 value_type cross(const Point &a, const Point &b) {
-    return (std::conj(a) * b).imag();
+    return std::imag(std::conj(a) * b);
 }
 
 bool is_zero(value_type a) {
@@ -85,7 +85,10 @@ value_type fix_arg(const Point &a) {
 }
 
 bool comp_coclock(const Point &p1, const Point &p2) {
-    return fix_arg(arg(p1)) < fix_arg(arg(p2));
+    auto fa = fix_arg(arg(p1));
+    auto fb = fix_arg(arg(p2));
+    if (eq(fa, fb)) return std::norm(p1) < std::norm(p2);
+    return fa < fb;
 }
 
 Point rotate(const Point &p, value_type arg) {

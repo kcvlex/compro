@@ -1,5 +1,5 @@
+#pragma once
 #include "../util/template.hpp"
-#include "../util/ceil-pow2.hpp"
 #include "../util/generics.hpp"
 #include "modint.hpp"
 #include "base.hpp"
@@ -64,14 +64,14 @@ struct ntt__ : convolution<ntt__<Mod, PrimitiveRoot>> {
     }
     
     template <typename InputIterator1, typename InputIterator2>
-    void multiply(InputIterator1 begin1, InputIterator1 end1,
+    auto multiply(InputIterator1 begin1, InputIterator1 end1,
                   InputIterator2 begin2, InputIterator2 end2) 
     {
         size_type n = std::distance(begin1, end1);
         size_type m = std::distance(begin2, end2);
         size_type sz = 1;
         while (sz < n + m - 1) sz *= 2;
-        buf[0].resize(sz); buf[1].resize(sz);
+        resize_buf(sz);
         std::fill(buf[0].begin(), buf[0].begin() + sz, mint(0));
         std::fill(buf[1].begin(), buf[1].begin() + sz, mint(0));
         std::copy(begin1, end1, buf[0].begin());
@@ -81,6 +81,7 @@ struct ntt__ : convolution<ntt__<Mod, PrimitiveRoot>> {
         auto isz = mint(sz).inv();
         for (size_type i = 0; i < sz; i++) buf[0][i] *= buf[1][i] * isz;
         ntt(ALL(buf[0]), sz, true);
+        return buf[0];
     }
 
     template <typename InputIterator1, typename InputIterator2, typename OutputIterator>
@@ -96,6 +97,13 @@ struct ntt__ : convolution<ntt__<Mod, PrimitiveRoot>> {
 
     auto get_last() {
         return buf[0].begin();
+    }
+
+    void resize_buf(size_type sz) {
+        if (buf[0].size() < sz) {
+            buf[0].resize(sz); 
+            buf[1].resize(sz);
+        }
     }
 
 private:

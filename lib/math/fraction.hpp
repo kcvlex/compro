@@ -3,18 +3,15 @@
 
 namespace math {
 
-constexpr ll gcd(ll a, ll b) { return b ? gcd(b, a % b) : a; }
-constexpr ll lcm(ll a, ll b) { return a / gcd(a, b) * b; }
-constexpr ll abs(ll n) { return n < 0 ? -n : n; }
-
+template <typename T = ll>
 struct fraction {
-    ll num, den;
+    T num, den;
     bool neg;
 
-    constexpr fraction(ll num, ll den)
+    constexpr fraction(T num, T den)
         : fraction(abs(num), abs(den), gcd(abs(num), abs(den)), (num < 0) ^ (den < 0)) { }
 
-    constexpr fraction(ll num_) : fraction(num_, 1) { }
+    constexpr fraction(T num_) : fraction(num_, 1) { }
 
     constexpr fraction() : fraction(0, 1) { }
 
@@ -30,9 +27,9 @@ struct fraction {
     }
 
     constexpr fraction& operator+=(const fraction &rhs) {
-        ll l = lcm(den, rhs.den);
-        ll a = num * (l / den);
-        ll b = rhs.num * (l / rhs.den);
+        T l = lcm(den, rhs.den);
+        T a = num * (l / den);
+        T b = rhs.num * (l / rhs.den);
         if (neg) a *= -1;
         if (rhs.neg) b *= -1;
         den = l;
@@ -66,8 +63,8 @@ struct fraction {
     }
 
     constexpr bool operator<(const fraction &rhs) const {
-        ll lv = num * rhs.den;
-        ll rv = rhs.num * den;
+        T lv = num * rhs.den;
+        T rv = rhs.num * den;
         if (neg) lv *= -1;
         if (rhs.neg) rv *= -1;
         return lv < rv;
@@ -81,6 +78,10 @@ struct fraction {
     constexpr bool operator<=(const fraction &rhs) const { return (*this) == rhs || (*this) < rhs; }
     constexpr bool operator>=(const fraction &rhs) const { return !((*this) < rhs); }
     constexpr bool operator>(const fraction &rhs) const { return !((*this) <= rhs); }
+
+    constexpr T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
+    constexpr T lcm(T a, T b) { return a / gcd(a, b) * b; }
+    constexpr T abs(T n) { return n < 0 ? -n : n; }
 
 private:
     constexpr void reduction() {
@@ -96,10 +97,11 @@ private:
         }
     }
 
-    constexpr fraction(ll num, ll den, ll g, bool neg) : num(num / g), den(den / g), neg(neg) { }
+    constexpr fraction(T num, T den, T g, bool neg) : num(num / g), den(den / g), neg(neg) { }
 };
 
-std::ostream& operator<<(std::ostream &os, fraction f) {
+template <typename T>
+std::ostream& operator<<(std::ostream &os, fraction<T> f) {
     if (f.neg) os << "-";
     os << f.num;
     os << "/";

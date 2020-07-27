@@ -27,57 +27,57 @@ struct Modint {
         return x; 
     }
 
-    constexpr Modint& operator +=(const Modint &oth) noexcept {
+    constexpr Modint& operator+=(const Modint &oth) noexcept {
         x += oth.value();
         if (Mod <= x) x -= Mod;
         return *this;
     }
 
-    constexpr Modint& operator -=(const Modint &oth) noexcept {
+    constexpr Modint& operator-=(const Modint &oth) noexcept {
         x += Mod - oth.value();
         if (Mod <= x) x -= Mod;
         return *this;
     }
 
-    constexpr Modint& operator *=(const Modint &oth) noexcept {
+    constexpr Modint& operator*=(const Modint &oth) noexcept {
         x *= oth.value();
         x %= Mod;
         return *this;
     }
 
-    constexpr Modint& operator /=(const Modint &oth) noexcept {
+    constexpr Modint& operator/=(const Modint &oth) noexcept {
         x *= oth.inv().value();
         x %= Mod;
         return *this;
     }
 
-    constexpr Modint operator +(const Modint &oth) const noexcept {
+    constexpr Modint operator+(const Modint &oth) const noexcept {
         return Modint(x) += oth;
     }
 
-    constexpr Modint operator -(const Modint &oth) const noexcept {
+    constexpr Modint operator-(const Modint &oth) const noexcept {
         return Modint(x) -= oth;
     }
 
-    constexpr Modint operator *(const Modint &oth) const noexcept {
+    constexpr Modint operator*(const Modint &oth) const noexcept {
         return Modint(x) *= oth;
     }
 
-    constexpr Modint operator /(const Modint &oth) const noexcept {
+    constexpr Modint operator/(const Modint &oth) const noexcept {
         return Modint(x) /= oth;
     }
 
-    constexpr Modint operator -() const noexcept {
+    constexpr Modint operator-() const noexcept {
         return Modint((x != 0) * (Mod - x)); 
     }
 
-    constexpr bool operator ==(const Modint &oth) const noexcept {
+    constexpr bool operator==(const Modint &oth) const noexcept {
         return value() == oth.value();
     }
 
     template <typename T>
     constexpr typename std::enable_if<std::is_integral<T>::value, const Modint&>::type
-    operator =(T t) noexcept {
+    operator=(T t) noexcept {
         (*this) = Modint(std::forward<T>(t)); 
         return *this;
     }
@@ -95,7 +95,15 @@ private:
 };
 
 template <ll Mod>
-std::ostream& operator <<(std::ostream &os, Modint<Mod> m) {
+std::istream& operator>>(std::istream &is, Modint<Mod> &m) {
+    ll v;
+    is >> v;
+    m = v;
+    return is;
+}
+
+template <ll Mod>
+std::ostream& operator<<(std::ostream &os, Modint<Mod> m) {
     os << m.value();
     return os;
 }

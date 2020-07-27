@@ -13,7 +13,6 @@ class MinCostFlow {
     using prev_node_t = std::pair<Node, ll>;
     using pq_ele_t = std::pair<Weight, Node>;
     FlowGraph fgraph;
-    const Capacity cinf;
     const Weight dinf = 5e15;
     vec<Weight> dists, potential;
     vec<prev_node_t> pnode;
@@ -43,8 +42,8 @@ class MinCostFlow {
 
 public:
 
-    MinCostFlow(const FlowGraph &fgraph, const Capacity &cinf = 5e15)
-        : fgraph(fgraph), cinf(cinf), dists(fgraph.size()), 
+    MinCostFlow(const FlowGraph &fgraph)
+        : fgraph(fgraph), dists(fgraph.size()), 
           potential(fgraph.size(), 0), pnode(fgraph.size())
     {
     }
