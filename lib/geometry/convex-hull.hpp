@@ -1,53 +1,86 @@
 #pragma once
 #include "ccw.hpp"
+#include "/home/taroy/kyopuro/lib/util/debug.hpp"
 
 namespace geo {
 
-Point get_one(const vec<Point> &pv) {
-    auto p1 = pv[1] - pv[0];
-    size_type i = 2;
-    for (; i < pv.size(); i++) {
-        auto p2 = pv[i] - pv[0];
-        auto v = std::abs(dot(p1, p2));
-        if (!eq(v * v, std::norm(p1) * std::norm(p2))) break;
+vec<Point> build_convex_hull_incremental(vec<Point> pv) {
+    std::sort(ALL(pv), comp_like_pair);
+    auto minx = std::real(pv.front()),
+         maxx = std::real(pv.back());
+
+    {
+        vec<Point> tmp;
+        for (size_type i = 0; i < pv.size(); i++) {
+            bool use = true;
+            do {
+                if (i == 0) break;
+                if (i + 1 == pv.size()) break;
+                auto pr = std::real(pv[i]);
+                if (pr == minx) break;
+                if (pr == maxx) break;
+                if (pr != std::real(pv[i - 1])) break;
+                if (pr != std::real(pv[i + 1])) break;
+                use = false;
+            } while (false);
+            if (use) tmp.push_back(pv[i]);
+        }
+        size_type i = 0;
+        while (i < tmp.size() && std::real(tmp[i]) == minx) i++;
+        std::reverse(tmp.begin(), tmp.begin() + i);
+        pv = std::move(tmp);
     }
-    auto p = pv[0] + pv[1] + pv[i];
-    return Point(std::real(p) / 3, std::imag(p) / 3);
-}
 
-vec<Point> graham(vec<Point> pv) {
-    size_type n = pv.size();
-    auto cp = get_one(pv);
-    DEBUG(cp);
-    ccw_sort(pv, cp);
-    auto get_p = [&](size_type i) { return pv[i % n]; };
-    auto ite = std::max_element(ALL(pv), [](Point a, Point b) { return std::real(a) < std::real(b); });
-    size_type idx = std::distance(pv.begin(), ite);
-    vec<Point> ret = { get_p(idx), get_p(idx + 1) };
-
-    auto on_line = [&](Point a, Point b, Point c) {
-        b -= a; c -= a;
-        auto v = dot(b, c);
-        return eq(v * v, std::norm(b) * std::norm(c));
-    };
-
-    auto check = [&](Point p) {
-        // a, b, p is convex or not
-        size_type tmp = ret.size();
-        Point a = ret[tmp - 2],
-              b = ret[tmp - 1];
-        if (on_line(a, b, p)) return true;
-        a -= cp; b -= cp; p -= cp;
-        int c = ccw(a, b, p);
-        return c != -1;
-    };
-    for (size_type i = 2; i <= n; i++) {
-        auto p = get_p(idx + i);
-        while (1 < ret.size() && !check(p)) ret.pop_back();
-        ret.push_back(p);
+    std::stack<Point, vec<Point>> ustk, lstk;
+    size_type idx = 0;
+    while (true) {
+        auto p = pv[idx];
+        bool f = (!ustk.empty() && std::real(p) != std::real(ustk.top()));
+        ustk.push(pv[idx]);
+        lstk.push(pv[idx]);
+        idx++;
+        if (f) break;
     }
-    if (ret.front() == ret.back()) ret.pop_back();
-    return ret;
+
+    for (size_type i = idx; i < pv.size(); i++) {
+        auto p = pv[i];
+        while (2 <= ustk.size()) {
+            auto p1 = ustk.top(); 
+            ustk.pop();
+            auto p2 = ustk.top();
+            auto c = ccw(p, p1, p2);
+            if (c == -1) continue;
+            ustk.push(p1);
+            break;
+        }
+        while (2 <= lstk.size()) {
+            auto p1 = lstk.top();
+            lstk.pop();
+            auto p2 = lstk.top();
+            auto c = ccw(p, p1, p2);
+            if (c == 1) continue;
+            lstk.push(p1);
+            break;
+        }
+        ustk.push(p);
+        lstk.push(p);
+    }
+
+    pv.clear();
+    while (lstk.size()) {
+        pv.push_back(lstk.top());
+        DEBUG(lstk.top());
+        lstk.pop();
+    }
+    std::reverse(ALL(pv));
+    while (ustk.size()) {
+        auto p = ustk.top();
+        ustk.pop();
+        if (std::real(p) == minx) continue;
+        if (std::real(p) == maxx) continue;
+        pv.push_back(p);
+    }
+    return pv;
 }
 
 }
