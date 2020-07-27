@@ -1,6 +1,5 @@
 #pragma once
 #include "base.hpp"
-#include "/home/taroy/kyopuro/lib/util/debug.hpp"
 
 namespace geo {
 
@@ -24,14 +23,22 @@ int ccw(Point a, Point b, Point c) {
 }
 
 void ccw_sort(vec<Point> &v, Point o) {
+    int lis[] = { -2, 1, 2, -1, };
+    auto get_ccw_idx = [&](int c) {
+        for (int i = 0; i < 4; i++) if (c == lis[i]) return i;
+        return 4;
+    };
+
     auto p = v[0];
     std::sort(v.begin() + 1, v.end(), 
               [&](Point a, Point b) {
                   if (a == b) return false;
                   int ca = ccw(o, p, a);
                   int cb = ccw(o, p, b);
-                  if (ca != cb) return ca > cb;
-                  return ccw(o, a, b) == 1;
+                  if (ca != cb) return get_ccw_idx(ca) < get_ccw_idx(cb);
+                  auto res = ccw(o, a, b);
+                  if (std::abs(res) == 1) return res == 1;
+                  return comp_like_pair(a, b);
               });
 }
 

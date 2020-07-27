@@ -1,5 +1,4 @@
 #pragma once
-#define CPP17
 #include "templates/includes.hpp"
 #include "templates/alias.hpp"
 #include "templates/var-func.hpp"

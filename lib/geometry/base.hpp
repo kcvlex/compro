@@ -3,7 +3,7 @@
 
 namespace geo {
 
-using value_type = double;
+using value_type = long double;
 using Point = std::complex<value_type>;
 
 const value_type eps = 1e-12;
@@ -84,11 +84,21 @@ value_type fix_arg(const Point &a) {
     return fix_arg(std::arg(a));
 }
 
+auto to_pair(const Point &p) {
+    value_type x, y;
+    get_xy(x, y) = p;
+    return std::make_pair(x, y);
+}
+
 bool comp_coclock(const Point &p1, const Point &p2) {
     auto fa = fix_arg(arg(p1));
     auto fb = fix_arg(arg(p2));
     if (eq(fa, fb)) return std::norm(p1) < std::norm(p2);
     return fa < fb;
+}
+
+bool comp_like_pair(const Point &p1, const Point &p2) {
+    return to_pair(p1) < to_pair(p2);
 }
 
 Point rotate(const Point &p, value_type arg) {
