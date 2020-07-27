@@ -3,64 +3,54 @@
 
 namespace segtree {
 
-template <typename T, typename Op>
+template <typename M>
 struct SegmentTree {
-    vec<T> nodes;
-    Op op;
-    T id_ele;
+    vec<M> nodes;
 
-    auto get_children_idx(ssize_t idx) const -> std::pair<ssize_t, ssize_t> {
-        return std::make_pair(2 * idx + 1, 2 * idx + 2);
+    auto get_children_idx(size_type idx) {
+        return std::make_pair(2 * idx, 2 * idx + 1);
     }
 
-    T get_merged(ssize_t idx) const {
-        ssize_t a, b;
-        std::tie(a, b) = get_children_idx(idx);
-        return op(nodes[a], nodes[b]);
+    void update_node(size_type i) {
+        auto [ a, b ] = get_children_idx(i);
+        nodes[i] = M::merge(nodes[a], nodes[b]);
     }
 
 public:
-    SegmentTree(const vec<T> &init_v, Op op, T id_ele)
-        : op(op), id_ele(id_ele)
-    {
-        build(init_v);
+
+    template <typename F>
+    SegmentTree(F f, size_type sz) {
+        build(f, sz);
     }
 
-    void build(const vec<T> &v) {
-        nodes.resize(ceil_pow2(v.size()) * 2 - 1, id_ele);
-        ssize_t sz = size();
-        std::copy(ALL(v), nodes.begin() + sz - 1);
-        build_parents();
+    template <typename F>
+    void build(F f, size_type sz) {
+        nodes.resize(ceil_pow2(sz) * 2);
+        for (size_type i = 0; i < sz; i++) {
+            nodes[i + sz] = f(i);
+        }
+        for (size_type i = sz - 1; 1 <= i; i--) update_node(i);
     }
 
-    void build_parents() {
-        ssize_t sz = size();
-        for (ssize_t i = sz - 2; 0 <= i; i--) nodes[i] = get_merged(i);
+    size_type size() const {
+        return nodes.size() / 2;
     }
 
-    ssize_t size() const {
-        return (nodes.size() + 1) / 2;
+    const M& operator [](size_type i) const {
+        return nodes[size() + i];
     }
 
-    const T& operator [](ll idx) const {
-        return nodes[idx + size() - 1];
-    }
-
-    T get_query(ll ql, ll qr) const {
-        return get_query(ql, qr, id_ele);
-    }
-
-    T get_query(ll ql, ll qr, T init) const {
-        T ret = init;
-        ssize_t lnode = ql + size(), rnode = qr + size();
+    M get_query(ll ql, ll qr) const {
+        M ret;
+        size_type lnode = ql + size(), rnode = qr + size();
         while (lnode < rnode) {
             if (lnode & 1) {
-                ret = std::move(op(nodes[lnode - 1], ret));
+                ret = M::merge(nodes[lnode], ret);
                 lnode++;
             }
             if (rnode & 1) {
                 rnode--;
-                ret = std::move(op(ret, nodes[rnode - 1]));
+                ret = M::merge(ret, nodes[rnode]);
             }
             lnode /= 2;
             rnode /= 2;
@@ -68,30 +58,30 @@ public:
         return ret;
     }
 
-    void update_query(ll idx, T val) {
-        idx += size() - 1;
+    void update_query(ll idx, M val) {
+        idx += size();
         nodes[idx] = val;
-        while (idx) {
-            ll pidx = (idx - 1) / 2;
-            nodes[pidx] = get_merged(pidx);
+        while (1 < idx) {
+            ll pidx = idx / 2;
+            update_node(pidx);
             idx = pidx;
         }
     }
 
     template <typename F>
-    ssize_t lower_bound(F f) const {
-        T sum = id_ele;
-        ssize_t l = 0, r = size(), idx = 0, bidx = 0;
+    size_type lower_bound(F f) const {
+        M sum;
+        size_type l = 0, r = size(), idx = 0, bidx = 0;
         if (!f(nodes[0])) return -1;
         while (true) {
             if (r - l == 1) {
                 if (!f(sum)) bidx++;
                 break;
             }
-            auto lidx = 2 * idx + 1;
+            auto lidx = 2 * idx;
             auto ridx = lidx + 1;
-            T nsum = op(sum, nodes[lidx]);
-            ssize_t m = (l + r) / 2;
+            auto nsum = M::merge(sum, nodes[lidx]);
+            size_type m = (l + r) / 2;
             if (f(nsum)) {
                 r = m;
                 idx = lidx;

@@ -5,8 +5,6 @@ namespace utility {
 
 template <typename T>
 struct Compressor {
-    using size_type = ssize_t;
-
     Compressor(vec<T> arg) : v(std::move(arg)) {
         std::sort(ALL(v));
         auto ite = std::unique(ALL(v));
@@ -31,6 +29,10 @@ struct Compressor {
         vec<U> ret(v.size());
         for (size_type i = 0; i < v.size(); i++) ret[i] = get(v[i]);
         return ret;
+    }
+
+    const vec<T>& raw() const noexcept {
+        return v;
     }
 
 private:
