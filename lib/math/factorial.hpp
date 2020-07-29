@@ -5,35 +5,37 @@
 
 namespace math {
 
-template <ll Mod>
+template <typename T>
 class Factorial {
-    using mint = Modint<Mod>;
-
-    ssize_t maxv;
-    vec<mint> factv, ifactv;
+    size_type maxv;
+    vec<T> factv, ifactv;
 
 public:
     Factorial(ssize_t maxv) : maxv(maxv), factv(maxv + 1), ifactv(maxv + 1) {
-        factv[0] = mint(1);
+        factv[0] = T(1);
         for (ll i = 1; i <= maxv; i++) factv[i] = factv[i - 1] * i;
         ifactv.back() = factv.back().inv();
         for (ll i = maxv - 1; 0 <= i; i--) ifactv[i] = ifactv[i + 1] * (i + 1);
     }
 
-    mint fact(ll n) const {
+    T fact(size_type n) const {
         return factv[n]; 
     }
 
-    mint ifact(ll n) const {
+    T ifact(size_type n) const {
         return ifactv[n];
     }
 
-    mint perm(ll n, ll k) const {
+    T perm(size_type n, size_type k) const {
         return factv[n] * ifactv[n - k];
     }
 
-    mint comb(ll n, ll k) const {
+    T comb(size_type n, size_type k) const {
         return perm(n, k) * ifactv[k];
+    }
+
+    T catalan(size_type n) const {
+        return fact[2 * n] * ifact[n + 1] * ifact[n];
     }
 };
 

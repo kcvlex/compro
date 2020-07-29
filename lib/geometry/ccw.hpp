@@ -22,6 +22,7 @@ int ccw(Point a, Point b, Point c) {
     return 0;
 }
 
+// WARNING : v has o
 void ccw_sort(vec<Point> &v, Point o) {
     int lis[] = { -2, 1, 2, -1, };
     auto get_ccw_idx = [&](int c) {

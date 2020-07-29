@@ -25,6 +25,7 @@ public:
 
 template <ll Mod, ll... Mods>
 struct ArbitraryNTT : convolution<ArbitraryNTT<Mod, Mods...>> {
+    using value_type = Modint<Mod>;
     constexpr ArbitraryNTT() : ntts() { }
 
     template <typename InputIterator1, typename InputIterator2, typename OutputIterator>

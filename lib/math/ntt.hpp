@@ -1,8 +1,7 @@
 #pragma once
 #include "../util/template.hpp"
-#include "../util/generics.hpp"
 #include "modint.hpp"
-#include "base.hpp"
+#include "convolution.hpp"
 
 namespace math {
 
@@ -38,20 +37,10 @@ constexpr auto calc_max_base(ll m) {
 
 }
 
-template <typename T>
-struct convolution {
-    template <typename InputIterator1, typename InputIterator2, typename OutputIterator>
-    void multiply(InputIterator1 begin1, InputIterator1 end1,
-                  InputIterator2 begin2, InputIterator2 end2,
-                  OutputIterator out)
-    {
-        static_cast<T*>(this)->multiply(begin1, end1, begin2, end2, out);
-    }
-};
-
 template <ll Mod, ll PrimitiveRoot>
 struct ntt__ : convolution<ntt__<Mod, PrimitiveRoot>> {
     using mint = Modint<Mod>;
+    using value_type = mint;
 
     constexpr ntt__() 
         :  root_lis(max_size_log), 
