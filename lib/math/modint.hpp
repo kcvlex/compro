@@ -95,6 +95,12 @@ private:
 };
 
 template <ll Mod>
+Modint<Mod> inv(Modint<Mod> m) {
+    m.inv();
+    return m;
+}
+
+template <ll Mod>
 std::istream& operator>>(std::istream &is, Modint<Mod> &m) {
     ll v;
     is >> v;

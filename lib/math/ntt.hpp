@@ -1,7 +1,6 @@
 #pragma once
 #include "../util/template.hpp"
 #include "modint.hpp"
-#include "convolution.hpp"
 
 namespace math {
 
@@ -38,7 +37,7 @@ constexpr auto calc_max_base(ll m) {
 }
 
 template <ll Mod, ll PrimitiveRoot>
-struct ntt__ : convolution<ntt__<Mod, PrimitiveRoot>> {
+struct ntt__ {
     using mint = Modint<Mod>;
     using value_type = mint;
 
@@ -46,53 +45,23 @@ struct ntt__ : convolution<ntt__<Mod, PrimitiveRoot>> {
         :  root_lis(max_size_log), 
            iroot_lis(max_size_log)
     {
-        for (size_type i = 0; i < root_lis.size(); i++) {
+        for (size_type i = 0; i < static_cast<size_type>(root_lis.size()); i++) {
             root_lis[i] = pow(mint(PrimitiveRoot), (Mod - 1) >> (i + 2)) * -1;
             iroot_lis[i] = root_lis[i].inv();
         }
     }
-    
-    template <typename InputIterator1, typename InputIterator2>
-    auto multiply(InputIterator1 begin1, InputIterator1 end1,
-                  InputIterator2 begin2, InputIterator2 end2) 
-    {
-        size_type n = std::distance(begin1, end1);
-        size_type m = std::distance(begin2, end2);
-        size_type sz = 1;
-        while (sz < n + m - 1) sz *= 2;
-        resize_buf(sz);
-        std::fill(buf[0].begin(), buf[0].begin() + sz, mint(0));
-        std::fill(buf[1].begin(), buf[1].begin() + sz, mint(0));
-        std::copy(begin1, end1, buf[0].begin());
-        std::copy(begin2, end2, buf[1].begin());
-        ntt(ALL(buf[0]), sz, false);
-        ntt(ALL(buf[1]), sz, false);
+
+    void multiply(vec<value_type> &a, vec<value_type> b) {
+        size_type m = a.size(), n = b.size();
+        size_type sz = 1, res_sz = n + m - 1;
+        while (sz < res_sz) sz *= 2;
+        a.resize(sz); b.resize(sz);
+        ntt(a, sz, false);
+        ntt(b, sz, false);
         auto isz = mint(sz).inv();
-        for (size_type i = 0; i < sz; i++) buf[0][i] *= buf[1][i] * isz;
-        ntt(ALL(buf[0]), sz, true);
-        return buf[0];
-    }
-
-    template <typename InputIterator1, typename InputIterator2, typename OutputIterator>
-    void multiply(InputIterator1 begin1, InputIterator1 end1,
-                  InputIterator2 begin2, InputIterator2 end2,
-                  OutputIterator out)
-    {
-        size_type n = std::distance(begin1, end1);
-        size_type m = std::distance(begin2, end2);
-        multiply(begin1, end1, begin2, end2);
-        std::copy(buf[0].begin(), buf[0].begin() + (n + m - 1), out);
-    }
-
-    auto get_last() {
-        return buf[0].begin();
-    }
-
-    void resize_buf(size_type sz) {
-        if (buf[0].size() < sz) {
-            buf[0].resize(sz); 
-            buf[1].resize(sz);
-        }
+        for (size_type i = 0; i < sz; i++) a[i] *= b[i] * isz;
+        ntt(a, sz, true);
+        a.resize(res_sz);
     }
 
 private:
@@ -101,20 +70,17 @@ private:
     static constexpr size_type max_conv_size = max_size * 2;
 
     vec<mint> root_lis, iroot_lis;
-    // std::array<mint, max_conv_size> buf[2];
-    // using buf_iterator = typename std::array<mint, max_conv_size>::iterator;
-    vec<mint> buf[2];
     using buf_iterator = typename vec<mint>::iterator;
 
-    void ntt(buf_iterator begin, buf_iterator end, size_type sz, bool inv) {
+    void ntt(vec<value_type> &v, size_type sz, bool inv) {
         if (!inv) {
             for (int m = sz / 2; m; m /= 2) {
                 mint mul = 1;
                 for(int s = 0, k = 0; s < sz; s += 2 * m) {
                     for(int i = s, j = s + m; i < s + m; ++i, ++j) {
-                        auto x = *(begin + i), y = *(begin + j) * mul;
-                        *(begin + i) = x + y;
-                        *(begin + j) = x - y;
+                        auto x = v[i], y = v[j] * mul;
+                        v[i] = x + y;
+                        v[j] = x - y;
                     }
                     mul *= root_lis[__builtin_ctz(++k)];
                 }
@@ -124,9 +90,9 @@ private:
                 mint mul = 1;
                 for (int s = 0, k = 0; s < sz; s += 2 * m) {
                     for (int i = s, j = s + m; i < s + m; i++, j++) {
-                        auto l = *(begin + i), r = *(begin + j);
-                        *(begin + i) = l + r;
-                        *(begin + j) = (l - r) * mul;
+                        auto l = v[i], r = v[j];
+                        v[i] = l + r;
+                        v[j] = (l - r) * mul;
                     }
                     mul *= iroot_lis[__builtin_ctz(++k)];
                 }

@@ -46,6 +46,18 @@ struct ArbitraryNTT : convolution<ArbitraryNTT<Mod, Mods...>> {
         }
     }
 
+    template <typename InputIterator1, typename InputIterator2>
+    vec<value_type> multiply(InputIterator1 begin1, InputIterator1 end1,
+                             InputIterator2 begin2, InputIterator2 end2)
+    {
+        size_type n = std::distance(begin1, end1);
+        size_type m = std::distance(begin2, end2);
+        size_type len = n + m - 1;
+        vec<value_type> ret(len);
+        multiply(begin1, end1, begin2, end2, ret.begin());
+        return ret;
+    }
+
 private:
     using ntts_type = typename helper::ntts_type<Mods...>::type;
     ntts_type ntts;
