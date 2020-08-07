@@ -13,14 +13,14 @@ struct link_cut_node {
     using size_type = ssize_t;
     node_ptr l, r, p;
     size_type sz;
-    M m, sum = M::id_ele(), rsum = M::id_ele();
-    Op op = Op::id_ele();
+    M m, sum = M(), rsum = M();
+    Op op = Op();
     bool rev, lazy;
 
     link_cut_node(node_ptr p, node_ptr l, node_ptr r, M m) 
         : p(p), l(l), r(r), sz(1), m(m), rev(false), lazy(false) { }
     link_cut_node() 
-        : link_cut_node(nullptr, nullptr, nullptr, M::id_ele()) { }
+        : link_cut_node(nullptr, nullptr, nullptr, M()) { }
 
     bool is_root() const {
         return !p || (p->l != this && p->r != this);
@@ -28,7 +28,7 @@ struct link_cut_node {
 
     void init_lazy() {
         lazy = false;
-        op = Op::id_ele();
+        op = Op();
     }
 
     void update() {
@@ -84,19 +84,21 @@ void splay(link_cut_node<M, Op> *n) {
     push(n);
     while (!n->is_root()) {
         auto p = n->p;
+        assert(p != p->p);
+        assert(p != p->l);
+        assert(p != p->r);
         if (p->p) push(p->p);
         push(p);
         push(n);
         tree::splay_aux(n);
+        assert(p != p->p);
+        assert(p != p->l);
+        assert(p != p->r);
     }
 }
 
 template <typename M, typename Op>
 struct LinkCutTree {
-    static_assert(utility::is_monoid<M>::value, "M must be monoid.");
-    static_assert(utility::is_monoid<Op>::value, "Op must be monoid.");
-    static_assert(utility::enable_apply<M, Op>::value, "Op is not operator of M.");
-    
     using node_type = link_cut_node<M, Op>;
     using node_ptr = node_type*;
     using size_type = typename node_type::size_type;
@@ -104,7 +106,7 @@ struct LinkCutTree {
     template <typename F>
     LinkCutTree(F f, size_type sz) : nodes(sz) {
         for (size_type i = 0; i < sz; i++) {
-             nodes[i] = new node_type(nullptr, nullptr, nullptr, f(i), i);
+             nodes[i] = new node_type(nullptr, nullptr, nullptr, f(i));
         }
     }
 
@@ -122,8 +124,9 @@ struct LinkCutTree {
     }
 
     void link(size_type p, size_type c) {
-        auto pp = expose(p);
+        evert(c);
         auto cp = expose(c);
+        auto pp = expose(p);
         cp->p = pp;
         pp->r = cp;
         pp->update();
@@ -143,9 +146,16 @@ struct LinkCutTree {
         push(p);
     }
 
-    void apply(size_type idx, Op op) {
+    void apply_path(size_type idx, Op op) {
         auto p = expose(idx);
         propagate(p, op);
+        push(p);
+    }
+
+    void apply(size_type idx, Op op) {
+        auto p = expose(idx);
+        p->m.apply(op);
+        p->update();
         push(p);
     }
 
