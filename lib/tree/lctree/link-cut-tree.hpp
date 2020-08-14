@@ -11,7 +11,7 @@ template <typename M, typename Op>
 struct link_cut_node {
     using node_ptr = link_cut_node<M, Op>*;
     using size_type = ssize_t;
-    node_ptr l, r, p;
+    node_ptr p, l, r;
     size_type sz;
     M m, sum = M(), rsum = M();
     Op op = Op();
@@ -36,14 +36,24 @@ struct link_cut_node {
         sum = m;
         rsum = m;
         if (l) {
-            sum = M::merge(l->sum, sum);
-            rsum = M::merge(rsum, l->rsum);
+            if (!rev) {
+                sum = M::merge(l->sum, sum);
+                rsum = M::merge(rsum, l->rsum);
+            } else {
+                sum = M::merge(l->rsum, sum);
+                rsum = M::merge(rsum, l->sum);
+            }
             sz += l->sz;
             l->p = this;
         }
         if (r) {
-            sum = M::merge(sum, r->sum);
-            rsum = M::merge(r->rsum, rsum);
+            if (!rev) {
+                sum = M::merge(sum, r->sum);
+                rsum = M::merge(r->rsum, rsum);
+            } else {
+                sum = M::merge(sum, r->rsum);
+                rsum = M::merge(r->sum, rsum);
+            }
             sz += r->sz;
             r->p = this;
         }
@@ -62,8 +72,8 @@ void propagate(link_cut_node<M, Op> *n, const Op op) {
 template <typename M, typename Op>
 void toggle(link_cut_node<M, Op> *n) {
     std::swap(n->l, n->r);
-    n->update();
     n->rev ^= true;
+    n->update();
 }
 
 template <typename M, typename Op>
@@ -154,9 +164,9 @@ struct LinkCutTree {
 
     void apply(size_type idx, Op op) {
         auto p = expose(idx);
+        push(p);
         p->m.apply(op);
         p->update();
-        push(p);
     }
 
 private:
