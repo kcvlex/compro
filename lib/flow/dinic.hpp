@@ -1,79 +1,74 @@
 #pragma once
-#include "../util/template.hpp"
-#include "../graph/flow-graph.hpp"
+#include "util/template.hpp"
 #include "base.hpp"
 
 namespace flow {
 
-template <typename FlowGraph = graph::FlowGraph<true>>
-class Dinic {
-    FlowGraph &flow_graph;
-    vec<ll> dists;
-    vec<ssize_t> used;
-    Node src, sink;
+template <typename Graph = FlowGraph<true>>
+class Dinic : public FlowSolverInterface<Dinic, Graph> {
+    Graph graph_;
+    vec<size_type> dists, idx_v;
+    constexpr static size_type dinf = std::numeric_limits<size_type>::max() / 2;
+    constexpr static Capacity cap0 = Capacity();
 
-    void bfs(Node start) {
-        vec<ll> dists(flow_graph.size(), dinf);
+    void bfs(Node start) noexcept {
+        std::fill(ALL(dists), dinf);
         dists[start] = 0;
-        std::queue<std::pair<ll, Node>> que;
+        std::queue<std::pair<size_type, Node>> que;
         que.emplace(0, start);
         while (que.size()) {
-            ll d;
-            Node cur;
-            std::tie(d, cur) = que.front();
+            auto [ d, cur ] = que.front();
             que.pop();
-            for (const auto &e : flow_graph[cur]) {
-                Node nxt;
-                Capacity cap;
-                tie(nxt, cap, std::ignore, std::ignore) = e;
-                if (cap <= Capacity()) continue;
+            for (auto &&e : graph_[cur]) {
+                auto [ nxt, cap, rev_idx, weight ] = e;
+                if (cap <= cap0) continue;
                 if (dists[nxt] <= d + 1) continue;
                 dists[nxt] = d + 1;
                 que.emplace(d + 1, nxt);
             }
         }
-        this->dists = move(dists);
     }
 
-    Capacity dfs(Node cur, Node pre, Capacity flow) {
-        if (cur == sink) return flow;
-        for (auto idx = used[cur] + 1; idx < flow_graph[cur].size(); idx++) {
-            used[cur]++;
-            auto &e = flow_graph[cur][idx];
-            if (dists[e.to()] <= dists[cur]) continue;
-            if (e.cap() <= Capacity()) continue;
-            if (e.to() == pre) continue;
-            auto f = dfs(e.to(), cur, std::min(flow, e.cap()));
-            e.cap() -= f;
-            flow_graph[e.to()][e.rev_idx()].cap() += f;
-            if (Capacity() < f) return f;
+    Capacity dfs(Node cur, Node pre, Node sink, Capacity f) noexcept {
+        if (cur == sink) return f;
+        for (auto &idx = idx_v[cur]; idx < size_type(graph_[cur].size()); idx++) {
+            auto &[ to, cap, rev_idx, weight ] = graph_[cur][idx];
+            if (dists[to] <= dists[cur]) continue;
+            if (to == pre) continue;
+            if (cap <= cap0) continue;
+            auto rec = dfs(to, cur, sink, std::min(f, cap));
+            cap -= rec;
+            graph_[to][rev_idx].cap += rec;
+            if (cap0 < rec) return rec;
         }
-        return Capacity();
+        return cap0;
     }
 
 public:
-    Dinic(FlowGraph &flow_graph) :
-        flow_graph(flow_graph), used(flow_graph.size()) { }
+    Dinic(Graph graph_arg) 
+        : graph_(std::move(graph_arg)), 
+          dists(graph_.size()),
+          idx_v(graph_.size()) 
+    {
+    }
 
-    Capacity max_flow(Node src, Node sink) {
-        this->src = src;
-        this->sink = sink;
-        auto ret = Capacity();
+    Capacity flow(Node src, Node sink, Capacity limit) noexcept {
+        Capacity ret = cap0;
         while (true) {
             bfs(src);
             if (dists[sink] == dinf) break;
-            std::fill(ALL(used), -1);
+            std::fill(ALL(idx_v), 0);
             while (true) {
-                auto tmp = dfs(src, -1, cinf);
-                if (tmp == Capacity()) break;
-                ret += tmp;
+                auto rec = dfs(src, -1, sink, limit);
+                if (rec == cap0) break;
+                ret += cap0;
             }
         }
         return ret;
     }
 
-    FlowGraph graph() {
-        return flow_graph;
+    const Graph& graph() const noexcept {
+        return graph_;
     }
 };
 

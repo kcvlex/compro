@@ -1,46 +1,49 @@
 #pragma once
-#include "../util/template.hpp"
+#include "util/template.hpp"
 #include "base.hpp"
 
 namespace flow {
 
-template <typename FlowGraph>
-class FordFulkerson {
-    FlowGraph flow_graph;
+template <typename Graph = FlowGraph<true>>
+class FordFulkerson : public FlowSolverInterface<FordFulkerson, Graph> {
+    Graph graph_;
     vec<bool> used;
-    Node src, sink;
+    constexpr static Capacity cap0 = Capacity();
 
-    Capacity dfs(Node cur, Capacity f) {
+    Capacity dfs(Node cur, Node sink, Capacity f) noexcept {
         if (cur == sink) return f;
         used[cur] = true;
-        for (auto &&e : flow_graph[cur]) {
-            if (used[e.to()]) continue;
-            if (e.cap() <= Capacity()) continue;
-            auto rec = dfs(e.to(), min(f, e.cap()));
-            if (Capacity() < rec) {
-                e.cap() -= rec;
-                flow_graph[e.to()][e.rev_idx()].cap() += rec;
+        for (auto &&e : graph_[cur]) {
+            auto dst = e.dst;
+            auto &cap = e.cap;
+            if (used[dst]) continue;
+            if (cap <= cap0) continue;
+            auto rec = dfs(dst, sink, std::min(f, cap));
+            if (cap0 < rec) {
+                cap -= rec;
+                graph_[dst][e.rev_idx].cap += rec;
                 return rec;
             }
         }
-        return 0;
+        return cap0;
     }
 
 public:
-    FordFulkerson(FlowGraph flow_graph) :
-        flow_graph(flow_graph), used(flow_graph.size()) { }
+    FordFulkerson(Graph graph_arg) : graph_(std::move(graph_arg)), used(graph_.size()) { }
 
-    Capacity max_flow(Node src, Node sink) {
-        this->src = src;
-        this->sink = sink;
-        auto ret = Capacity();
+    Capacity solve(Node src, Node sink, Capacity limit) noexcept {
+        auto ret = cap0;
         while (true) {
             std::fill(ALL(used), false);
-            auto tmp = dfs(src, cinf);
-            if (tmp == Capacity()) break;
-            ret += tmp;
+            auto rec = dfs(src, sink, limit);
+            if (rec == cap0) break;
+            ret += rec;
         }
         return ret;
+    }
+
+    const Graph& graph() const noexcept {
+        return graph_;
     }
 };
 

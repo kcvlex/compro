@@ -1,57 +1,80 @@
 #pragma once
 #include "base.hpp"
-#include "../graph/flow-graph.hpp"
 
 namespace flow {
 
-template <template <typename> typename Solver, 
-          typename FlowGraph = graph::FlowGraph<true>,
-          bool Restore = false>
+template <template <typename> typename FlowSolverImpl,
+          typename Graph = FlowGraph<true>>
 class BipartiteMatching {
     using matching = std::pair<Node, Node>;
-    ssize_t asz, bsz;
-    FlowGraph fg, res;
-    Node src, sink;
-    std::set<std::tuple<Node, Node, ll>> edges;
+    using solver_type = FlowSolverInterface<FlowSolverImpl, Graph>;
+    using solver_impl_type = FlowSolverImpl<Graph>;
 
-    vec<matching> extract_() {
-        vec<matching> ret;
-        for (auto &&e : edges) {
-            Node f, t;
-            ll idx;
-            std::tie(f, t, idx) = e;
-            auto c = res[f][idx].cap();
-            if (c == 0) ret.emplace_back(f, t - asz);
-        }
-        return ret;
+    size_type asz, bsz;
+    Graph fg;
+    Node src, sink;
+    std::unique_ptr<solver_type> solver;
+
+    BipartiteMatching(size_type asz, size_type bsz)
+        : asz(asz), 
+          bsz(bsz), 
+          fg(asz + bsz + 2),
+          src(asz + bsz), 
+          sink(src + 1),
+          solver(nullptr)
+    {
+        for (size_type i = 0; i < asz; i++) fg.add_edge(src, i, 1);
+        for (size_type i = 0; i < bsz; i++) fg.add_edge(i + asz, sink, 1);
     }
+
+    struct Node_ {
+        Node v;
+        Node_(Node v) : v(v) { };
+    };
 
 public:
-    BipartiteMatching(ssize_t asz, ssize_t bsz)
-        : asz(asz), bsz(bsz), fg(asz + bsz + 2), src(asz + bsz), sink(asz + bsz + 1)
-    {
-        for (ll i = 0; i < asz; i++) fg.add_edge(src, i, 1);
-        for (ll i = 0; i < bsz; i++) fg.add_edge(i + asz, sink, 1);
-    }
+    class NodeGenerator {
+        size_type offset, sz;
 
-    void add_edge(Node f, Node t) {
-        fg.add_edge(f, t + asz, 1);
-        if (Restore) edges.emplace(f, t + asz, fg[f].size() - 1);
-    }
+    public:
+        NodeGenerator(size_type offset, size_type sz) : offset(offset), sz(sz) { }
 
-    ll solve() {
-        Solver<FlowGraph> solver(fg);
-        auto ret = solver.max_flow(src, sink);
-        if (Restore) res = std::move(solver.graph());
-        return ret;
-    }
-
-    vec<matching> extract() {
-        if (Restore) {
-            return extract_();
-        } else {
-            assert(false);
+        Node_ operator()(size_type idx) const {
+            assert(0 <= idx && idx < sz);
+            return Node_(idx + offset);
         }
+    };
+
+    static auto make(size_type asz, size_type bsz) {
+        auto m = BipartiteMatching<FlowSolverImpl, Graph>(asz, bsz);
+        auto gen1 = NodeGenerator(0, asz);
+        auto gen2 = NodeGenerator(asz, bsz);
+        return std::make_tuple(BipartiteMatching<FlowSolverImpl, Graph>(asz, bsz),
+                               NodeGenerator(0, asz),
+                               NodeGenerator(asz, bsz));
+    }
+
+    void add_edge(Node_ a, Node_ b) {
+        fg.add_edge(a.v, b.v, 1);
+    }
+
+    Capacity solve() {
+        solver = std::move(std::make_unique<solver_impl_type>(fg));
+        return solver->flow(src, sink);
+    }
+
+    vec<matching> extract() const noexcept {
+        vec<matching> ret;
+        const auto &g = solver->graph();
+        for (Node a = 0; a < asz; a++) for (const auto &e : g[a]) {
+            auto [ b, cap, rev_idx, weight ] = e;
+            if (!(0 <= b - asz && b - asz < bsz)) continue;
+            if (cap == 0) {
+                ret.emplace_back(a, b - asz);
+                break;
+            }
+        }
+        return ret;
     }
 
 };
