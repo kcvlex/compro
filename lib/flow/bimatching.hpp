@@ -27,24 +27,7 @@ class BipartiteMatching {
         for (size_type i = 0; i < bsz; i++) fg.add_edge(i + asz, sink, 1);
     }
 
-    struct Node_ {
-        Node v;
-        Node_(Node v) : v(v) { };
-    };
-
 public:
-    class NodeGenerator {
-        size_type offset, sz;
-
-    public:
-        NodeGenerator(size_type offset, size_type sz) : offset(offset), sz(sz) { }
-
-        Node_ operator()(size_type idx) const {
-            assert(0 <= idx && idx < sz);
-            return Node_(idx + offset);
-        }
-    };
-
     static auto make(size_type asz, size_type bsz) {
         auto m = BipartiteMatching<FlowSolverImpl, Graph>(asz, bsz);
         auto gen1 = NodeGenerator(0, asz);
@@ -54,7 +37,7 @@ public:
                                NodeGenerator(asz, bsz));
     }
 
-    void add_edge(Node_ a, Node_ b) {
+    void add_edge(NodeGenerator::Node_ a, NodeGenerator::Node_ b) {
         fg.add_edge(a.v, b.v, 1);
     }
 

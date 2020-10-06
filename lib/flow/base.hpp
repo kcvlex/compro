@@ -55,4 +55,21 @@ struct FlowSolverInterface {
     }
 };
 
+class NodeGenerator {
+    size_type offset, sz;
+
+public:
+    NodeGenerator(size_type offset, size_type sz) : offset(offset), sz(sz) { }
+    
+    struct Node_ {
+        Node v;
+        Node_(Node v) : v(v) { };
+    };
+
+    Node_ operator()(size_type idx) const {
+        assert(0 <= idx && idx < sz);
+        return Node_(idx + offset);
+    }
+};
+
 }
