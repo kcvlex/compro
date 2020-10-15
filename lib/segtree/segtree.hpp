@@ -1,5 +1,6 @@
-#include "../util/template.hpp"
-#include "../util/bit-op.hpp"
+#include "util/template.hpp"
+#include "util/debug.hpp"
+#include "util/bit-op.hpp"
 
 namespace segtree {
 
@@ -25,10 +26,13 @@ public:
     template <typename F>
     void build(F f, size_type sz) {
         nodes.resize(ceil_pow2(sz) * 2);
+        auto offset = size();
         for (size_type i = 0; i < sz; i++) {
-            nodes[i + sz] = f(i);
+            nodes[i + offset] = f(i);
         }
-        for (size_type i = sz - 1; 1 <= i; i--) update_node(i);
+        for (size_type i = offset - 1; 1 <= i; i--) {
+            update_node(i);
+        }
     }
 
     size_type size() const {
@@ -44,11 +48,13 @@ public:
         size_type lnode = ql + size(), rnode = qr + size();
         while (lnode < rnode) {
             if (lnode & 1) {
+                DEBUG(nodes[lnode].v);
                 ret = M::merge(nodes[lnode], ret);
                 lnode++;
             }
             if (rnode & 1) {
                 rnode--;
+                DEBUG(nodes[rnode].v);
                 ret = M::merge(ret, nodes[rnode]);
             }
             lnode /= 2;
