@@ -1,5 +1,4 @@
 #include "util/template.hpp"
-#include "util/debug.hpp"
 #include "util/bit-op.hpp"
 
 namespace segtree {
@@ -48,13 +47,11 @@ public:
         size_type lnode = ql + size(), rnode = qr + size();
         while (lnode < rnode) {
             if (lnode & 1) {
-                DEBUG(nodes[lnode].v);
                 ret = M::merge(nodes[lnode], ret);
                 lnode++;
             }
             if (rnode & 1) {
                 rnode--;
-                DEBUG(nodes[rnode].v);
                 ret = M::merge(ret, nodes[rnode]);
             }
             lnode /= 2;
