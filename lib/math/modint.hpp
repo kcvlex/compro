@@ -1,5 +1,5 @@
 #pragma once
-#include "../util/template.hpp"
+#include "util/template.hpp"
 #include "base.hpp"
 
 namespace math {
@@ -11,12 +11,12 @@ struct Modint {
     
     constexpr Modint() noexcept : Modint(0) { }
     
-    constexpr Modint<Mod> add_id_ele() const noexcept { 
-        return Modint<Mod>(0); 
+    constexpr static Modint add_id_ele() { 
+        return Modint(0); 
     }
     
-    constexpr Modint<Mod> mul_id_ele() const noexcept {
-        return Modint<Mod>(1); 
+    constexpr static Modint mul_id_ele() {
+        return Modint(1); 
     }
     
     constexpr ll& value() noexcept { 
@@ -96,8 +96,7 @@ private:
 
 template <ll Mod>
 Modint<Mod> inv(Modint<Mod> m) {
-    m.inv();
-    return m;
+    return m.inv();
 }
 
 template <ll Mod>

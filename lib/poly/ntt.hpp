@@ -1,14 +1,15 @@
 #pragma once
-#include "../util/template.hpp"
-#include "modint.hpp"
+#include "util/template.hpp"
+#include "math/modint.hpp"
+#include "conv-base.hpp"
 
-namespace math {
+namespace poly {
 
 namespace ntt_helper {
 
 template <ll Mod>
 constexpr bool is_primitive_root(ll r) {
-    Modint<Mod> mr(r);
+    math::Modint<Mod> mr(r);
     for (ll d = 2; d * d <= Mod; d++) {
         if ((Mod - 1) % d == 0) {
             if (pow(mr, d).value() == 1) return false;
@@ -37,8 +38,8 @@ constexpr auto calc_max_base(ll m) {
 }
 
 template <ll Mod, ll PrimitiveRoot>
-struct ntt__ {
-    using mint = Modint<Mod>;
+struct ntt__ : convolution_interface<math::Modint<Mod>, ntt__<Mod, PrimitiveRoot>> {
+    using mint = math::Modint<Mod>;
     using value_type = mint;
 
     constexpr ntt__() 

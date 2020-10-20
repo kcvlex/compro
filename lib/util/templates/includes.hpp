@@ -28,6 +28,4 @@
 #include <regex>
 #include <cassert>
 #include <cstddef>
-#ifdef CPP17
 #include <variant>
-#endif

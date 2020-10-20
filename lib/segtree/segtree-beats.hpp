@@ -207,7 +207,7 @@ private:
 
 public:
     template <typename F>
-    SegmentTreeBeats(F f, size_type sz) : segs(2 * utility::ceil_pow2(sz)) {
+    SegmentTreeBeats(F f, size_type sz) : segs(2 * ceil_pow2(sz)) {
         for (size_type i = 0; i < sz; i++) {
             segs[segs.size() / 2 + i] = Segment(f(i), i, i + 1);
         }

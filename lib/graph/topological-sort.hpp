@@ -6,7 +6,7 @@ namespace graph {
 template <typename Graph>
 struct topological_sort {
     const Graph &g;
-    ssize_t n;
+    size_type n;
     vec<Node> ret;
     vec<bool> pass, used;
 

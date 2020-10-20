@@ -1,15 +1,10 @@
 #include "../util/template.hpp"
 #include "../util/bit-op.hpp"
-#include "../util/monoid-validator.hpp"
 
 namespace segtree {
 
 template <typename M, typename Op>
 class LazySegmentTree {
-    static_assert(utility::is_monoid<M>::value, "M must be monoid.");
-    static_assert(utility::is_monoid<Op>::value, "Op must be monoid.");
-    static_assert(utility::enable_apply<M, Op>::value, "Op is not operator of M.");
-
     struct segment {
         M m;
         Op op;
@@ -68,7 +63,7 @@ class LazySegmentTree {
 public:
     template <typename F>
     LazySegmentTree(F f, size_type sz) {
-        size_type sz2 = utility::ceil_pow2(sz);
+        size_type sz2 = ceil_pow2(sz);
         segs.resize(sz2 * 2);
         height = utility::msb(sz2);
         for (size_type i = 0; i < sz; i++) segs[i + sz2] = f(i);

@@ -1,4 +1,5 @@
-#include "../util/template.hpp"
+#pragma once
+#include "util/template.hpp"
 #include "graph.hpp"
 
 namespace graph {
@@ -57,18 +58,6 @@ public:
         vec<ll> result(graph.size(), -1);
         write_label();
         return build_scc();
-    }
-
-    std::pair<::graph::Graph<true>, vec<ll>> build_scc_graph() {
-        auto scc_label = build();
-        ::graph::Graph<true> scc_graph(*std::max_element(ALL(scc_label)) + 1);
-        for (ll from = 0; from < graph.size(); from++) for (auto &&e : graph[from]) {
-            ll to;
-            std::tie(to, std::ignore) = e;
-            ll lf = scc_label[from], lt = scc_label[to];
-            if (lf != lt) scc_graph.add_edge(lf, lt);
-        }
-        return std::make_pair(std::move(scc_graph), std::move(scc_label));
     }
 };
 

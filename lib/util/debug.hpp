@@ -1,6 +1,5 @@
 #pragma once
 
-#define DEBUG_MODE
 #ifdef DEBUG_MODE
 #define DEBUG(...) debug_f(std::string(#__VA_ARGS__), __VA_ARGS__)
 #define DEBUG_ENDL std::endl<<std::flush

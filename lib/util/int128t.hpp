@@ -4,7 +4,7 @@ using i128 = __int128_t;
 
 std::istream& operator >>(std::istream &is, i128 &n) {
     std::string s;
-    std::cin >> s;
+    is >> s;
     n = 0;
     bool minus = false;
     for (char c : s) {
@@ -19,6 +19,10 @@ std::istream& operator >>(std::istream &is, i128 &n) {
 }
 
 std::ostream& operator <<(std::ostream &os, i128 n) {
+    if (n == 0) {
+        os << 0;
+        return os;
+    }
     char buf[50] = { };
     int idx = 0;
     bool minus = false;
@@ -29,6 +33,6 @@ std::ostream& operator <<(std::ostream &os, i128 n) {
     }
     for (; n; n /= 10, idx++) buf[idx] = static_cast<char>('0' + (n % 10));
     std::reverse(buf + minus, buf + idx);
-    std::cout << buf;
+    os << buf;
     return os;
 }

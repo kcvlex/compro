@@ -1,138 +1,132 @@
 import os
 import sys
+import re
+from itertools import chain
 
-class Stack:
-    def __init__(self):
-        self.__stack = []
-
-    def push(self, ele):
-        self.__stack.append(ele)
-
-    def pop(self):
-        return self.__stack.pop()
-
-    def get(self):
-        return self.__stack
-
-
-class PathFixer:
-    def __init__(self, cwd):
-        self.__stk = Stack()
-        ite = filter(lambda s: s != '', cwd.split('/'))
-        for e in ite:
-            self.__stk.push(e)
-
-    def move(self, path):
-        lis = path.split('/')
-        for e in lis:
-            if e == '.':
-                continue
-            elif e == '..':
-                self.__stk.pop()
-            else:
-                self.__stk.push(e)
-        return self
-
-    def get(self):
-        ret = '/'.join(self.__stk.get())
-        if self.__stk.get()[0] == 'home':
-            ret = '/' + ret
-        return ret
 
 class ListUpFiles:
-    def __init__(self, src):
-        self.src = src
-        self.__file_list = []
-        self.__appended = set()
-        self.__include = "#include"
-        self.__debug_file = "debug.hpp"
-        self.__default_dir = "/home/taroy/kyopuro/lib/"
+    std_pattern = re.compile(r'#include\s?<(.*)>.*$', flags=re.DOTALL)
+    lib_pattern = re.compile(r'#include\s?"(.*)".*$', flags=re.DOTALL)
 
-    def __should_listup(self, path):
-        if path.find(self.__include) == -1:
+    def __init__(self, src):
+        self._src = src
+        self._files = []
+        self._appended = set()
+        self._std = []
+        self._lib = []
+
+    def _should_append(self, path):
+        if path in self._appended:
             return False
-        if path.find(self.__debug_file) != -1:
+        if debug_file in path:
             return False
-        if path.find('<') != -1:
+        if '<' in path:
             return False
         return True
 
-    def __get_cwd(self, cur_file):
-        return '/'.join(cur_file.split('/')[:-1])
+    def _fix_abs_path(self, dirname, path):
+        for d in [ '/home/taroy/kyopuro/lib/', dirname ]:
+            p = os.path.join(d, path)
+            if os.path.exists(p):
+                return p
+        return None
 
-    def __extract_included_file(self, include):
-        start = include.find('\"')
-        result = include[(start + 1):]
-        finish = result.find('\"')
-        return result[:finish]
+    def _get_included(self, path):
+        lis1 = []
+        lis2 = []
+        dirname = os.path.dirname(path)
+        
+        def extract(s, lis, pattern, fix=False):
+            m = pattern.match(s)
+            if m is None:
+                return
 
-    def __listup_rec(self, cur_file):
-        import os.path
-        cwd = self.__get_cwd(cur_file)
-        with open(cur_file) as f:
-            for line in f.readlines():
-                if not self.__should_listup(line):
-                    continue
-                included_file = self.__extract_included_file(line)
-                path1 = PathFixer(cwd).move(included_file).get()
-                path2 = PathFixer(self.__default_dir + included_file).get()
-                paths = [ path1, path2 ]
-                for path in paths:
-                    if path in self.__appended: continue;
-                    if not os.path.isfile(path): continue;
-                    self.__appended.add(path)
-                    self.__listup_rec(path)
-        self.__file_list.append(cur_file)
+            rs = m.group(1)
+            if s != rs:
+                if not fix:
+                    lis.append(rs)
+                    return
+                fixed = self._fix_abs_path(dirname, rs)
+                if fixed is None:
+                    exit(1)
+                lis.append(fixed)
+
+        with open(path) as fp:
+            for line in fp.readlines():
+                extract(line, lis1, ListUpFiles.std_pattern)
+                extract(line, lis2, ListUpFiles.lib_pattern, fix=True)
+
+        return lis1, lis2
+
+    def _listup_rec(self, cur):
+        cur = os.path.normpath(cur)
+        lis1, lis2 = self._get_included(cur)
+
+        for f in lis1:
+            if not (f in self._appended):
+                self._appended.add(f)
+                self._std.append(f)
+
+        for f in lis2:
+            if 'debug' in f:
+                continue
+            if not (f in self._appended):
+                self._appended.add(f)
+                self._listup_rec(f)
+                self._lib.append(f)
 
     def listup(self):
-        self.__listup_rec(self.src)
-        return self.__file_list
+        self._listup_rec(self._src)
+        self._lib.append(self._src)
+        return self._std, self._lib
+
+
+class ContentsFixer:
+    def __init__(self, lib):
+        self._lib = lib
+
+    def _open(self):
+        def readlines(f):
+            with open(f) as fp:
+                return fp.readlines()
+
+        return chain(*[ readlines(f) for f in self._lib ])
+
+    def _remove_include(self, gen):
+        return filter(lambda line: not '#include' in line, gen)
+
+    def _remove_debug(self, gen):
+        return filter(lambda line: not 'DEBUG' in line, gen)
+
+    def _remove_pragma_once(self, gen):
+        return filter(lambda line: not '#pragma once' in line, gen)
+
+    def fix(self):
+        gen = self._open()
+        gen = self._remove_include(gen)
+        gen = self._remove_debug(gen)
+        gen = self._remove_pragma_once(gen)
+        return gen
 
 
 class Printer:
-    def __init__(self):
-        self._is_defined_cpp17 = False
-        self._define_cpp17 = '#define CPP17'
-        self._contents = []
+    def __init__(self, src):
+        self._src = os.path.abspath(src)
 
-    def _read_file(self, fr):
-        lis = filter(lambda l: l.find('#include \"') == -1, fr.readlines())
-        lis = filter(lambda l: l.find('#pragma once') == -1, lis)
-        lis = list(lis)
-        if len(list(filter(lambda l: l.find(self._define_cpp17) != -1, lis))) != 0:
-            self._is_defined_cpp17 = True
-        for i, e in enumerate(lis):
-            if e.find('#define DEBUGGING') != -1:
-                lis = lis[0:i]
-                break
-        lis = list(filter(lambda l: l.find('DEBUG') == -1, lis))
-        self._contents += lis
+    def _get_dst(self):
+        dirname, filename = os.path.split(self._src)
+        problem, ext = filename.split('.')
+        submit_filename = problem + '_submit.' + ext
+        return os.path.join(dirname, submit_filename)
 
-    def _concat_files(self, flie_list):
-        for f in flie_list:
-            with open(f) as fr:
-                self._read_file(fr)
+    def print(self):
+        std, lib = ListUpFiles(self._src).listup()
+        std = map(lambda s: '#include <{0}>\n'.format(s), std)
+        lib = ContentsFixer(lib).fix()
+        dst = self._get_dst()
+        with open(dst, 'w+') as fp:
+            fp.writelines(chain(std, lib))
 
-    def _rewrite_src(self, src, dst):
-        file_list = ListUpFiles(src).listup()
-        # print(file_list)
-        self._concat_files(file_list)
-        if self._is_defined_cpp17:
-            self._contents = [ self._define_cpp17 + '\n' ] + self._contents
-        with open(dst, mode='w') as fw:
-            fw.writelines(self._contents)
-
-    def print_submit_file(self, src):
-        src = PathFixer(os.getcwd()).move(src).get()
-        ext = '.cpp'
-        remove_ext = src[:-len(ext)]
-        dst = remove_ext + '_submit' + ext
-        self._rewrite_src(src, dst)
-
-
-def main(src):
-    printer = Printer()
-    printer.print_submit_file(src)
 
 if __name__ == '__main__':
-    main(sys.argv[1])
+    Printer(sys.argv[1]).print()

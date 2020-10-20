@@ -4,6 +4,10 @@
 
 namespace flow {
 
+using NodeObject = NodeGenerator::Node_;
+template <template <typename, typename> typename SolverImpl, typename Flow, typename Cost> struct MinCostBFlow;
+template <template <typename, typename> typename SolverImpl, typename Flow, typename Cost> struct MinCostBFlowSolverInterface;
+
 enum class BFlowStatus {
     Optimal, 
     Infeasible,
@@ -30,11 +34,8 @@ struct EdgeIndex {
 private:
     size_type idx1, idx2;
 
-    template <template <typename, typename> typename Impl, typename Flow, typename Cost> friend class MinCostBFlow;
+    template <template <typename, typename> typename, typename, typename> friend class MinCostBFlow;
 };
-
-using NodeObject = NodeGenerator::Node_;
-template <template <typename, typename> typename SolverImpl, typename Flow, typename Cost> struct MinCostBFlow;
 
 template <template <typename, typename> typename SolverImpl,
           typename Flow, 
@@ -187,9 +188,9 @@ private:
         return ret / 2;
     }
 
-    template <typename A, typename B> friend class BFlowSSP;
-    template <typename A, typename B> friend class BFlowCapacityScaling;
-    template <template <typename, typename> typename A, typename B, typename C> friend class MinCostBFlowSolverInterface;
+    template <typename, typename> friend class BFlowSSP;
+    template <typename, typename> friend class BFlowCapacityScaling;
+    template <template <typename, typename> typename, typename, typename> friend class MinCostBFlowSolverInterface;
 };
 
 }

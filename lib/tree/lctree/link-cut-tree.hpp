@@ -1,7 +1,5 @@
 #pragma once
-#include "../splay-tree.hpp"
-#include "../../util/monoid-validator.hpp"
-#include "/home/taroy/kyopuro/lib/util/debug.hpp"
+#include "tree/splay-tree.hpp"
 
 namespace tree {
 
@@ -94,16 +92,10 @@ void splay(link_cut_node<M, Op> *n) {
     push(n);
     while (!n->is_root()) {
         auto p = n->p;
-        assert(p != p->p);
-        assert(p != p->l);
-        assert(p != p->r);
         if (p->p) push(p->p);
         push(p);
         push(n);
         tree::splay_aux(n);
-        assert(p != p->p);
-        assert(p != p->l);
-        assert(p != p->r);
     }
 }
 

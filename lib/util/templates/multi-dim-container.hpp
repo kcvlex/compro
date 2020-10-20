@@ -9,7 +9,6 @@ struct multi_dim_array<T, Head> { using type = std::array<T, Head>; };
 
 template <typename T, std::size_t... Args> using mdarray = typename multi_dim_array<T, Args...>::type;
 
-#ifdef CPP17
 template <typename T, typename F, typename... Args> 
 void fill_seq(T &t, F f, Args... args) { 
     if constexpr (std::is_invocable<F, Args...>::value) { 
@@ -18,7 +17,6 @@ void fill_seq(T &t, F f, Args... args) {
         for (size_type i = 0; i < t.size(); i++) fill_seq(t[i], f, args..., i); 
     } 
 }
-#endif
 
 template <typename T> vec<T> make_v(size_type sz) { return vec<T>(sz); }
 

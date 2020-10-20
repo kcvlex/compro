@@ -6,7 +6,7 @@ namespace graph {
 template <typename Graph>
 class LowLink {
     const Graph &graph;
-    const std::size_t gsz;
+    const size_type gsz;
     vec<ll> low, ord;
     vec<bool> visited, is_articulation;
     ll dfs_cnt;

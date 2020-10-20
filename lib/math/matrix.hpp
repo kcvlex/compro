@@ -28,12 +28,36 @@ struct Matrix : mdarray<T, M, N> {
         return ret;
     }
 
+    constexpr Matrix& operator*=(const T &c) {
+        for (size_type i = 0; i < M; i++) for (size_type j = 0; j < N; j++) (*this)[i][j] *= c;
+        return *this;
+    }
+
+    constexpr Matrix operator*(const T &c) const {
+        return Matrix(*this) *= c;
+    }
+
     size_type row() const noexcept {
         return M;
     }
 
     size_type col() const noexcept {
         return N;
+    }
+
+    static Matrix add_id_ele() {
+        Matrix ret;
+        fill_seq(ret, [&](size_type, size_type) { return add_id_ele<T>(); });
+        return ret;
+    }
+
+    static Matrix mul_id_ele() {
+        static_assert(M == N, "Matrix must be square.");
+        Matrix ret;
+        fill_seq(ret, [&](size_type i, size_type j) { 
+            return i == j ? mul_id_ele<T>() : add_id_ele<T>();  // TODO : is this correct ??
+        });
+        return ret;
     }
 };
 
