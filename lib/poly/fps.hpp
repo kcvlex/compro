@@ -8,6 +8,7 @@ struct FPS : vec<T> {
     using value_type = T;
     using vec<T>::vec;
     using conv_type = convolution_interface<T, ConvolutionImpl>;
+    using term_type = std::pair<value_type, size_type>;
 
     static conv_type** get_conv() {
         static conv_type *conv = nullptr;
@@ -62,7 +63,12 @@ struct FPS : vec<T> {
     }
 
     FPS& mul(FPS rhs) {
-        (*get_conv())->multiply(*this, std::move(rhs));
+        if (rhs.degree() < 64) {
+            auto cmp = rhs.compress();
+            if (cmp.size()) multiply_sparse(std::move(cmp));
+        } else {
+            (*get_conv())->multiply(*this, std::move(rhs));
+        }
         return *this;
     }
 
@@ -99,6 +105,7 @@ struct FPS : vec<T> {
             this->push_back(T(0));
             return *this;
         }
+
         size_type sz = degree() - den.degree();
         den.reverse().inv(sz);
         return this->reverse()
@@ -128,6 +135,16 @@ struct FPS : vec<T> {
         (*this)[0] = 0;
         return *this;
     }
+
+    value_type operator()(const value_type &x) const noexcept {
+        value_type ret = 0;
+        value_type p = 1;
+        for (auto &&coef : (*this)) {
+            ret += coef * p;
+            p *= x;
+        }
+        return ret;
+    }
     
     template <typename Container>
     FPS& multiply_sparse(Container terms) {
@@ -141,6 +158,14 @@ struct FPS : vec<T> {
         return *this;
     }
 
+    vec<term_type> compress() const {
+        vec<term_type> ret;
+        for (size_type i = 0; i <= degree(); i++) {
+            if ((*this)[i] == 0) continue;
+            ret.emplace_back((*this)[i], i);
+        }
+        return ret;
+    }
 };
 
 template <typename Poly> Poly prefix(Poly f, size_type sz) { return f.prefix(sz); }

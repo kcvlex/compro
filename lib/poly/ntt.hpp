@@ -5,9 +5,9 @@
 
 namespace poly {
 
-namespace ntt_helper {
+namespace internal {
 
-template <ll Mod>
+template <ull Mod>
 constexpr bool is_primitive_root(ll r) {
     math::Modint<Mod> mr(r);
     for (ll d = 2; d * d <= Mod; d++) {
@@ -19,12 +19,12 @@ constexpr bool is_primitive_root(ll r) {
     return true;
 }
 
-template <ll Mod>
+template <ull Mod>
 constexpr ll find_primitive_root(ll r) {
     return (is_primitive_root<Mod>(r) ? r : find_primitive_root<Mod>(r + 1));
 }
 
-template <ll Mod>
+template <ull Mod>
 constexpr ll find_primitive_root() {
     return find_primitive_root<Mod>(2);
 }
@@ -37,12 +37,12 @@ constexpr auto calc_max_base(ll m) {
 
 }
 
-template <ll Mod, ll PrimitiveRoot>
-struct ntt__ : convolution_interface<math::Modint<Mod>, ntt__<Mod, PrimitiveRoot>> {
+template <ull Mod, ull PrimitiveRoot = internal::find_primitive_root<Mod>()>
+struct NTT : convolution_interface<math::Modint<Mod>, NTT<Mod, PrimitiveRoot>> {
     using mint = math::Modint<Mod>;
     using value_type = mint;
 
-    constexpr ntt__() 
+    constexpr NTT() 
         :  root_lis(max_size_log), 
            iroot_lis(max_size_log)
     {
@@ -66,7 +66,7 @@ struct ntt__ : convolution_interface<math::Modint<Mod>, ntt__<Mod, PrimitiveRoot
     }
 
 private:
-    static constexpr size_type max_size_log = ntt_helper::calc_max_base(Mod - 1);
+    static constexpr size_type max_size_log = internal::calc_max_base(Mod - 1);
     static constexpr size_type max_size = 1ll << max_size_log;
     static constexpr size_type max_conv_size = max_size * 2;
 
@@ -101,8 +101,5 @@ private:
         }
     }
 };
-
-template <ll Mod>
-using NTT = ntt__<Mod, ntt_helper::find_primitive_root<Mod>()>;
 
 }

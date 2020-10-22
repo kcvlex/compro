@@ -4,11 +4,10 @@
 
 namespace math {
 
-template <ll Mod>
+template <ull Mod>
 struct Modint {
 
-    constexpr Modint(ll x) noexcept : x((Mod + x % Mod) % Mod) { }
-    
+    constexpr Modint(ll x) noexcept : x((Mod + x % static_cast<ll>(Mod)) % Mod) { }
     constexpr Modint() noexcept : Modint(0) { }
     
     constexpr static Modint add_id_ele() { 
@@ -16,15 +15,11 @@ struct Modint {
     }
     
     constexpr static Modint mul_id_ele() {
-        return Modint(1); 
+        return Modint(1);
     }
     
-    constexpr ll& value() noexcept { 
-        return x; 
-    }
-    
-    constexpr ll value() const noexcept {
-        return x; 
+    constexpr ll value() const noexcept { 
+        return static_cast<ll>(x);
     }
 
     constexpr Modint& operator+=(const Modint &oth) noexcept {
@@ -86,20 +81,20 @@ struct Modint {
         return ::math::pow(*this, Mod - 2);
     }
 
-    constexpr ll mod() const noexcept {
+    constexpr ull mod() const noexcept {
         return Mod;
     }
 
 private:
-    ll x;
+    ull x;
 };
 
-template <ll Mod>
+template <ull Mod>
 Modint<Mod> inv(Modint<Mod> m) {
     return m.inv();
 }
 
-template <ll Mod>
+template <ull Mod>
 std::istream& operator>>(std::istream &is, Modint<Mod> &m) {
     ll v;
     is >> v;
@@ -107,7 +102,7 @@ std::istream& operator>>(std::istream &is, Modint<Mod> &m) {
     return is;
 }
 
-template <ll Mod>
+template <ull Mod>
 std::ostream& operator<<(std::ostream &os, Modint<Mod> m) {
     os << m.value();
     return os;

@@ -33,8 +33,13 @@ struct SubproductTree {
         return nodes[get_poly_idx(r, idx)];
     }
 
+    value_type operator[](size_type i) const {
+        return cs[i];
+    }
+
 private:
     vec<Poly> nodes;
+    vec<value_type> cs;
     vec<ll> rank;
     vec<size_type> len_sum;
     size_type sz, nsz;
@@ -42,6 +47,7 @@ private:
     template <typename Container>
     void rebuild(const Container &cs) {
         resize(cs.size());
+        std::copy(ALL(cs), this->cs.begin());
 
         size_type idx = 0;
         for (; idx < sz; idx++) {
@@ -80,6 +86,7 @@ private:
         }
         nodes.resize(nsz);
         rank.resize(nsz);
+        cs.resize(nsz);
     }
 };
 

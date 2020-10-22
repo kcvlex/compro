@@ -31,6 +31,10 @@ private:
 
     void dfs(Poly f, size_type l, size_type r, size_type rank, size_type idx) {
         if (ret.size() <= l) return;
+        if (f.degree() < 64) {
+            for (size_type i = l; i < std::min(r, ptree->size()); i++) ret[i] = f((*ptree)[i]);
+            return;
+        }
         if (r - l == 1) {
             ret[l] = f[0];
             return;
