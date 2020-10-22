@@ -16,8 +16,7 @@ struct Compressor {
     }
 
     size_type get(const T &t) const {
-        return std::distance(v.begin(),
-                             std::lower_bound(ALL(v), t));
+        return this->lower_bound(t);
     }
 
     size_type size() const {
@@ -33,6 +32,16 @@ struct Compressor {
 
     const vec<T>& raw() const noexcept {
         return v;
+    }
+
+    size_type lower_bound(const T &t) const {
+        return std::distance(v.begin(),
+                             std::lower_bound(ALL(v), t));
+    }
+
+    size_type upper_bound(const T &t) const {
+        return std::distance(v.begin(),
+                             std::upper_bound(ALL(v), t));
     }
 
 private:
