@@ -6,61 +6,44 @@ namespace graph {
 
 template <typename Graph>
 class StronglyConnectedComponents {
-    const Graph &graph;
-    Graph rgraph;
-    vec<ll> label, scc_ord;
+    const Graph &g;
+    Graph rg;
+    vec<ll> cmp, vs;
+    vec<bool> used;
 
-    void dfs1(ll cur, ll &l) {
-        label[cur] = -2;
-        for (const graph::Edge &e : graph[cur]) {
-            ll nxt;
-            std::tie(nxt, std::ignore) = e;
-            if (label[nxt] != -1) continue;
-            dfs1(nxt, l);
-        }
-        label[cur] = l++;
+    void dfs(ll cur) {
+        used[cur] = true;
+        for (auto nxt : graph::dst(g[cur])) if (!used[nxt]) dfs(nxt);
+        vs.push_back(cur);
     }
 
-    void write_label() {
-        ll l = 0;
-        for (ll i = 0; i < graph.size(); i++) if (label[i] == -1) dfs1(i, l);
-    }
-
-    void dfs2(ll cur, ll l, ll &idx, vec<ll> &result) {
-        result[cur] = l;
-        scc_ord[idx++] = cur;
-        for (const graph::Edge &e : rgraph[cur]) {
-            ll nxt;
-            std::tie(nxt, std::ignore) = e;
-            if (result[nxt] != -1) continue;
-            dfs2(nxt, l, idx, result);
-        }
-    }
-
-    vec<ll> build_scc() {
-        ll l = 0;
-        vec<ll> result(graph.size(), -1), ord(rgraph.size());
-        std::iota(ALL(ord), 0ll);
-        std::sort(ALL(ord), [&](ll i, ll j) { return label[i] > label[j]; });
-        ll idx = 0;
-        for (ll n : ord) if (result[n] == -1) dfs2(n, l++, idx, result);
-        return result;
+    void rdfs(ll cur, ll k) {
+        cmp[cur] = k;
+        used[cur] = true;
+        for (auto nxt : graph::dst(rg[cur])) if (!used[nxt]) rdfs(nxt, k);
     }
 
 public:
-    StronglyConnectedComponents(const Graph &graph)
-        : graph(graph), label(graph.size(), -1), scc_ord(graph.size())
+    StronglyConnectedComponents(const Graph &arg) 
+        : g(arg), cmp(arg.size()), vs(), used(arg.size())
     {
-        rgraph = graph.build_inv();
+        rg = std::move(g.build_inv());
     }
 
     vec<ll> build() {
-        vec<ll> result(graph.size(), -1);
-        write_label();
-        return build_scc();
+        for (ll i = 0; i < int(g.size()); i++) if (!used[i]) dfs(i);
+        std::reverse(ALL(vs));
+        std::fill(ALL(used), false);
+        ll k = 0;
+        for (ll v : vs) if (!used[v]) rdfs(v, k++);
+        return cmp;
     }
 };
 
-template <typename Graph> using SCC = StronglyConnectedComponents<Graph>;
+template <typename Graph>
+vec<ll> scc(const Graph &g) {
+    StronglyConnectedComponents<Graph> s(g);
+    return s.build();
+}
 
 }

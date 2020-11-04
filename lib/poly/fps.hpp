@@ -46,6 +46,12 @@ struct FPS : vec<T> {
         return prefix(deg - s);
     }
 
+    FPS& rshift(size_type s) {
+        extend(s + degree());
+        for (size_type i = degree(); 0 <= i; i--) (*this)[i] = (i < s ? 0 : (*this)[i - s]);
+        return *this;
+    }
+
     FPS& middle(size_type l, size_type r) {
         return this->shift(l).prefix(r - l);
     }
@@ -179,6 +185,14 @@ template <typename Poly> Poly mod(Poly lhs, const Poly &rhs) { return lhs.mod(rh
 template <typename Poly> Poly mul(Poly lhs, Poly &&rhs) { return lhs.mul(std::move(rhs)); }
 template <typename Poly> Poly quo(Poly lhs, Poly &&rhs) { return lhs.quo(std::move(rhs)); }
 template <typename Poly> Poly mod(Poly lhs, Poly &&rhs) { return lhs.mod(std::move(rhs)); }
+
+template <typename T, typename ConvImpl>
+std::ostream& operator<<(std::ostream &os, const FPS<T, ConvImpl> &f) {
+    if (f.empty()) return os;
+    std::cout << f[0];
+    for (size_type i = 1; i <= f.degree(); i++) os << ' ' << f[i];
+    return os;
+}
 
 template <typename Poly1, typename Poly2>
 std::pair<Poly1, Poly1> div(Poly1 lhs, Poly2 &&rhs) {

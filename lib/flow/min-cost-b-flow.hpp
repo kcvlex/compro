@@ -31,6 +31,7 @@ struct BFlowEdge {
 
 struct EdgeIndex {
     EdgeIndex(size_type idx1, size_type idx2) : idx1(idx1), idx2(idx2) { }
+    EdgeIndex() : EdgeIndex(-1, -1) { }
 private:
     size_type idx1, idx2;
 

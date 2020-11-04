@@ -6,12 +6,37 @@ namespace tree {
 template <typename T>
 class BIT {
     vec<T> data;
-    T id_ele;
 
 public:
+    const T id_ele;
+
+    BIT() : id_ele() { }
+
     BIT(size_type sz, T id_ele) : id_ele(id_ele) {
         data = vec<T>(ceil_pow2(sz) + 1, id_ele);
     }
+
+    /*
+    template <typename F>
+    BIT(F f, size_type sz, T id_ele) : id_ele(id_ele) {
+        data = vec<T>(ceil_pow2(sz) + 1, id_ele);
+        for (size_type i = 0; i < sz; i++) {
+            data[i + 1] = f(i);
+            size_type par = i + (i & -i);
+            if (par < size_type(data.size())) data[par] += data[i + 1];
+        }
+    }
+
+    BIT(vec<T> d, T id_ele) : data(d), id_ele(id_ele) {
+        size_type sz = data.size();
+        data.resize(ceil_pow2(sz));
+    }
+
+    BIT(BIT &&obj) {
+        data = std::move(obj.data);
+        id_ele = std::move(obj.id_ele);
+    }
+    */
 
     // [0, pos)
     T sum(size_type pos) const noexcept {
@@ -41,6 +66,10 @@ public:
             }
         }
         return ret;
+    }
+
+    const vec<T>& raw() const {
+        return data;
     }
 };
 

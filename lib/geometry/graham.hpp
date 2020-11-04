@@ -18,7 +18,6 @@ Point get_one(const vec<Point> &pv) {
 vec<Point> graham(vec<Point> pv) {
     size_type n = pv.size();
     auto cp = get_one(pv);
-    DEBUG(cp);
     ccw_sort(pv, cp);
     auto get_p = [&](size_type i) { return pv[i % n]; };
     auto ite = std::max_element(ALL(pv), [](Point a, Point b) { return std::real(a) < std::real(b); });

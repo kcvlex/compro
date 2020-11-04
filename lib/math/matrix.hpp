@@ -47,7 +47,7 @@ struct Matrix : mdarray<T, M, N> {
 
     static Matrix add_id_ele() {
         Matrix ret;
-        fill_seq(ret, [&](size_type, size_type) { return add_id_ele<T>(); });
+        fill_seq(ret, [&](size_type, size_type) { return T(0); });
         return ret;
     }
 
@@ -55,7 +55,7 @@ struct Matrix : mdarray<T, M, N> {
         static_assert(M == N, "Matrix must be square.");
         Matrix ret;
         fill_seq(ret, [&](size_type i, size_type j) { 
-            return i == j ? mul_id_ele<T>() : add_id_ele<T>();  // TODO : is this correct ??
+            return i == j ? T(1) : T(0);  // TODO : is this correct ??
         });
         return ret;
     }

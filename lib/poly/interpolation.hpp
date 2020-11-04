@@ -3,6 +3,7 @@
 
 namespace poly {
 
+// Tellegen’s principle into practice, ISSAC'03
 template <typename Poly>
 Poly interpolation(const vec<typename Poly::value_type> &xv, const vec<typename Poly::value_type> &yv) {
     SubproductTree<Poly> ptree(xv);
