@@ -1,11 +1,11 @@
 #pragma once
-#include "../util/template.hpp"
+#include "util/template.hpp"
 
 namespace tree {
 
 struct UnionFind {
     vec<ll> rank, par;
-    vec<ssize_t> sz;
+    vec<size_type> sz;
 
     UnionFind(ll n) : rank(n), par(n), sz(n) {
         init();
@@ -35,7 +35,7 @@ struct UnionFind {
         return find(x) == find(y);
     }
 
-    ssize_t size(ll n) {
+    size_type size(ll n) {
         return sz[find(n)];
     }
 };

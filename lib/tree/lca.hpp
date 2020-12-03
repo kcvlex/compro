@@ -1,63 +1,55 @@
-#include "../util/template.hpp"
+#pragma once
+#include "util/template.hpp"
 
 namespace tree {
 
-class LCA {
-    std::size_t sz;
-    ll root;
-    vec<ll> depth;
-    vvec<ll> pars;
-    static constexpr std::size_t dsz = 30;
+struct LCA {
+    using node_type = int;
+    
+    const size_type sz;
+    const node_type root;
 
     template <typename Graph>
-    void dfs(ll cur, ll pre, ll dep, const Graph &graph) {
-        pars[cur][0] = pre;
-        dep[cur] = d;
-        for (auto &&e : graph[cur]) {
-            ll nxt;
-            std::tie(nxt, std::ignore) = e;
-            if (nxt == pre) continue;
-            dfs(nxt, cur, d + 1, graph);
-        }
-    }
-
-public:
-    template <typename Graph>
-    LCA(const Graph &graph, ll root) 
-        : sz(graph.size()), root(root), depth(sz), pars(make_v<ll>(0, sz, dsz)) 
+    LCA(const Graph &g, node_type root_arg)
+        : sz(g.size()), root(root_arg), depth(sz), par(sz)
     {
-        dfs(root, -1, 0, graph);
-        for (ll dig = 1; dig < dsz; dig++) for (ll i = 0; i < sz; i++) {
-            ll p = pars[i][dig - 1];
-            pars[i][dig] = (p == -1 ? -1 : pars[p][dig - 1]);
+        dfs(root, dummy, 0, g);
+        std::fill(ALL(par[root]), dummy);
+        for (int d = 0; d + 1 < log_sz; d++) for (int i = 0; i < sz; i++) {
+            int p = par[i][d];
+            par[i][d + 1] = (p == dummy ? dummy : par[p][d]);
         }
     }
 
-    ll get_depth(ll n) const {
-        return depth[n];
+    int get_depth(node_type i) const {
+        return depth[i];
     }
 
-    ll get_parent(ll n, ll dist) const {
-        ll ret = n;
-        for (ll i = 0; dist; i++, dist /= 2) if (dist & 1) ret = pars[ret][i];
-        return ret;
+    node_type operator()(node_type a, node_type b) const {
+        if (depth[a] < depth[b]) std::swap(a, b);
+        a = get_parent(a, depth[a] - depth[b]);
+        for (int d = log_sz - 1; 0 <= d; d--) {
+            auto p1 = get_parent(a, d), p2 = get_parent(b, d);
+            if (p1 != p2) {
+                a = p1;
+                b = p2;
+            }
+        }
+        return par[a][0];
     }
 
-    ll get_lca(ll n1, ll n2) const {
-        {
-            if (depth[n1] < depth[n2]) std::swap(n1, n2);
-            ll diff = depth[n1] - depth[n2];
-            n1 = get_parent(n1, diff);
-        }
+private:
+    static constexpr size_type log_sz = 30;
+    static constexpr node_type dummy = -1;
+    vec<int> depth;
+    vec<std::array<node_type, log_sz>> par;
 
-        n1 = get_parent(n1, diff);
-        for (ll dig = dsz - 1; 0 <= dig; dig--) {
-            ll pn1 = pars[n1][dig];
-            ll pn2 = pars[n2][dig];
-            if (pn1 != pn2) std::tie(n1, n2) = std::make_pair(pn1, pn2);
+    node_type get_parent(node_type a, int d) const {
+        for (int i = 0; d; i++, d /= 2) {
+            if (a == dummy) return dummy;
+            if (d & 1) a = par[a][d];
         }
-
-        return pars[n1][0];
+        return a;
     }
 };
 

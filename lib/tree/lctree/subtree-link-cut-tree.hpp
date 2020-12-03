@@ -35,12 +35,12 @@ struct subtree_link_cut_node {
     }
 
     void update() {
-        push();
+        propagate();
         sz = 1 + sz_light;
         sum = val + sum_light;
         for (int i = 0; i < 2; i++) {
             if (!ch[i]) continue;
-            ch[i]->push();
+            ch[i]->propagate();
             sz += ch[i]->sz;
             sum += ch[i]->sum;
         }
@@ -52,21 +52,16 @@ struct subtree_link_cut_node {
         done = v;
     }
 
-    void push() {
-        if (p) prop_from_parent(p->add);
+    void propagate() {
+        if (p) {
+            add_all(p->add + done.inv());
+            done = p->add;
+        }
         if (rev) {
             std::swap(ch[0], ch[1]);
-            if (ch[0]) ch[0]->rev ^= true;
-            if (ch[1]) ch[1]->rev ^= true;
+            for (int i = 0; i < 2; i++) if (ch[i]) ch[i]->rev ^= true;
+            rev = false;
         }
-        /*
-        for (int i = 0; i < 2; i++) {
-            if (!ch[i]) continue;
-            ch[i]->prop_from_parent(add);
-            if (rev) ch[i]->toggle();
-        }
-        */
-        rev = false;
     }
 
     void toggle() {
@@ -75,10 +70,9 @@ struct subtree_link_cut_node {
     }
 
     void rotate(bool cc) {
-        cc ^= true;
         auto np = ch[cc];
         assert(np);
-        if (np->ch[!cc]) np->ch[!cc]->push();
+        if (np->ch[!cc]) np->ch[!cc]->propagate();
         ch[cc] = np->ch[!cc];
         if (ch[cc]) {
             ch[cc]->p = this;
@@ -97,23 +91,26 @@ struct subtree_link_cut_node {
     }
 
     void splay() {
+        propagate();
         while (!is_root()) {
             if (p->is_root()) {
-                p->push(); push();
-                p->rotate(p->ch[0] == this);
+                p->propagate(); propagate();
+                p->rotate(p->ch[1] == this);
             } else {
                 auto pp = p->p;
-                pp->push(); p->push(); push();
-                bool a = (pp->ch[0] == p);
-                bool b = (p->ch[0] == this);
-                assert(pp->ch[0] == p || pp->ch[1] == p);
-                assert(p->ch[0] == this || p->ch[1] == this);
-                if (a == b) pp->rotate(a);
-                p->rotate(b);
-                if (a != b) pp->rotate(a);
+                pp->propagate(); p->propagate(); propagate();
+                bool a = (pp->ch[1] == p);
+                bool b = (p->ch[1] == this);
+                if (a == b) {
+                    pp->rotate(a);
+                    p->rotate(b);
+                } else {
+                    p->rotate(b);
+                    pp->rotate(a);
+                }
             }
         }
-        push();
+        propagate();
     }
 
     void light2heavy() {
@@ -161,16 +158,16 @@ struct SubtreeLinkCutTree {
             cur->splay();
             auto pr = cur->ch[1], nr = r;
             
-            cur->push();
+            cur->propagate();
             if (pr) {
-                pr->push();
+                pr->propagate();
                 pr->heavy2light();
             }
             
             cur->ch[1] = nr;
-            cur->push();
+            cur->propagate();
             if (nr) {
-                nr->push();
+                nr->propagate();
                 nr->light2heavy();
             }
             
@@ -185,11 +182,11 @@ struct SubtreeLinkCutTree {
         evert(c);
         auto cp = expose(c);
         auto pp = expose(p);  // pp->r is nullptr
-        cp->push();
+        cp->propagate();
         cp->done = pp->add;
         cp->p = pp;
         pp->ch[1] = cp;
-        pp->push();
+        pp->propagate();
         pp->update();
     }
 
@@ -197,8 +194,8 @@ struct SubtreeLinkCutTree {
     void cut(size_type idx) {
         auto p = expose(idx);
         auto lp = p->ch[0];
-        p->push();
-        lp->push();
+        p->propagate();
+        lp->propagate();
         p->ch[0] = nullptr;
         lp->p = nullptr;
         p->update();
@@ -207,9 +204,8 @@ struct SubtreeLinkCutTree {
 
     void evert(size_type idx) {
         auto p = expose(idx);
-        //p->toggle();
         p->rev ^= true;
-        p->push();
+        p->propagate();
     }
 
     void add_vertex(size_type idx, value_type delta) {

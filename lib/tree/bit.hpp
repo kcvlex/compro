@@ -31,11 +31,6 @@ public:
         size_type sz = data.size();
         data.resize(ceil_pow2(sz));
     }
-
-    BIT(BIT &&obj) {
-        data = std::move(obj.data);
-        id_ele = std::move(obj.id_ele);
-    }
     */
 
     // [0, pos)
