@@ -1,200 +1,241 @@
 #pragma once
-#include "../util/template.hpp"
-#include "../util/generics.hpp"
+#include "util/template.hpp"
+#include "math/modint.hpp"
 
 namespace strings {
 
-template <ll... Mods>
-struct base_generator {
-    constexpr static std::size_t mods_sz = sizeof...(Mods);
-    constexpr static std::array<ll, mods_sz> mods = {{ Mods... }};
-    template <std::size_t I> using dummy_type = typename std::conditional<
-        (I < mods_sz), std::true_type, std::false_type>::type;
+namespace internal {
 
-    constexpr base_generator() { }
-
-    constexpr ll xorshift32(ll seed) {
-        seed = seed ^ (seed << 13);
-        seed = seed ^ (seed >> 17);
-        return seed;
-    }
-
-    constexpr ll generate_seed() {
-        ll ret = 1;
-        for (int i = 0; i < 8; i++) {
-            char c = __TIME__[i];
-            if ('0' <= c && c <= '9') ret = ret * 10 + (c - '0');
-        }
-        return ret;
-    }
-
-    template <std::size_t Index, typename... Results>
-    constexpr auto generate(std::true_type, ll seed, Results... results) -> std::array<ll, mods_sz> {
-        const ll nseed = xorshift32(seed);
-        const ll mod = mods[Index];
-        const ll base = nseed % mod;
-        return generate<Index + 1>(dummy_type<Index + 1>(), nseed, results..., base);
-    }
-
-    template <std::size_t Index, typename... Results>
-    constexpr auto generate(std::false_type, ll, Results... results) -> std::array<ll, mods_sz> {
-        return {{ results... }};
-    }
-
-    constexpr auto get() {
-        return generate<0>(dummy_type<0>(), generate_seed());
-    }
-};
-
-template <ll... Mods>
-struct RollingHash {
-    constexpr static std::size_t mods_sz = sizeof...(Mods);
-    
-    using data_t = typename std::array<ll, mods_sz>; 
-
-    constexpr static data_t mods = {{ Mods... }};
-    constexpr static data_t bases = base_generator<Mods...>().get();
-
-    data_t dat;
-    std::size_t sz;
-    
-    static std::array<ll, mods_sz> generate_bases() {
-        std::array<ll, mods_sz> bases;
-        std::random_device rd;
-        for (ll i = 0; i < mods_sz; i++) {
-            ll b = rd() + 1;
-            b %= mods[i];
-            bases[i] = b;
-        }
-        return bases;
-    }
-
-    RollingHash(const data_t &dat, std::size_t sz) : dat(dat), sz(sz) { }
-    RollingHash() : RollingHash(data_t(), 0) { }
-
-    RollingHash append(ll e) {
-        data_t nxt;
-        for (ll i = 0; i < mods_sz; i++) {
-            ll mod = mods[i];
-            ll v = dat[i] * bases[i] % mod + e % mod;
-            if (mod <= v) v -= mod;
-            nxt[i] = v;
-        }
-
-        return RollingHash(nxt, sz + 1);
-    }
-
-    bool operator ==(const RollingHash &oth) const {
-        return sz == oth.sz && dat == oth.dat;
-    }
-
-    bool operator !=(const RollingHash &oth) const {
-        return !(*this == oth);
-    }
-
-    ll operator [](std::size_t idx) const {
-        return dat[idx];
-    }
-
-    ll& operator [](std::size_t idx) {
-        return dat[idx];
-    }
-};
-
-template <ll... Mods>
-struct BasePows {
-    constexpr static std::size_t mods_sz = sizeof...(Mods);
-    constexpr static auto &mods = RollingHash<Mods...>::mods;
-    constexpr static auto &bases = RollingHash<Mods...>::bases;
-
-    std::array<ll, sizeof...(Mods)> pows;
-
-    BasePows() {
-        std::fill(ALL(pows), 1);
-    }
-
-    BasePows next() {
-        BasePows<Mods...> ret;
-        for (ll i = 0; i < mods_sz; i++) ret[i] = pows[i] * bases[i] % mods[i];
-        return ret;
-    }
-
-    ll operator [](std::size_t idx) const {
-        return pows[idx];
-    }
-
-    ll& operator [](std::size_t idx) {
-        return pows[idx];
-    }
-};
-
-template <ll... Mods>
-struct RollingHashBuilder {
-    using hash_t = RollingHash<Mods...>;
-    using data_t = typename hash_t::data_t;
-    using pows_t = BasePows<Mods...>;
-
-    constexpr static std::size_t mods_sz = sizeof...(Mods);
-    constexpr static std::array<ll, mods_sz> mods = {{ Mods... }};
-    vec<pows_t> pows;
-
-    RollingHashBuilder() {
-        pows.push_back(pows_t());
-    }
-    
-    void repl_pows(std::size_t sz) {
-        for (ll i = pows.size(); i <= sz; i++) {
-            auto nxt = std::move(pows.back().next());
-            pows.push_back(std::move(nxt));
-        }
-    }
-
-    template <typename BidirIterator>
-    vec<hash_t> build(BidirIterator first, BidirIterator last) {
-        auto sz = std::distance(first, last);
-        vec<hash_t> ret(sz + 1);
-        auto ite = first;
-        ll idx = 0;
-        for (auto ite = first; ite != last; ite = std::next(ite), idx++) {
-            auto e = *ite;
-            ret[idx + 1] = ret[idx].append(static_cast<ll>(e));
-        }
-        return ret;
-    }
-
-    // [l, r)
-    hash_t substr(const vec<hash_t> &hash, ll l, ll r) {
-        repl_pows(r - l + 1);
-        const auto &hl = hash[l];
-        const auto &hr = hash[r];
-        const auto &ps = pows[r - l];
-        data_t ans;
-        for (ll i = 0; i < mods_sz; i++) {
-            ll mod = mods[i];
-            ans[i] = hr[i] - hl[i] * ps[i] % mod + mod;
-            if (mod <= ans[i]) ans[i] -= mod;
-        }
-        return hash_t(ans, r - l);
-    }
-
-    hash_t concat(const hash_t &d1, const hash_t &d2) {
-        repl_pows(d2.sz + 1);
-        const auto &h1 = d1;
-        const auto &h2 = d2;
-        const auto &ps = pows[d2.sz];
-        data_t ans;
-        for (ll i = 0; i < mods_sz; i++) {
-            ll mod = mods[i];
-            ans[i] = h1[i] * ps[i] % mod + h2[i];
-            if (mod <= ans[i]) ans[i] -= mod;
-        }
-        return hash_t(ans, d1.sz + d2.sz);
-    }
-};
-
-template <ll... Mods>
-auto gen_rhbuilder(std::integer_sequence<ll, Mods...>) {
-    return RollingHashBuilder<Mods...>();
+ull get_base(ull lb, ull ub) {
+    static std::mt19937_64 rng(std::chrono::steady_clock::now().time_since_epoch().count());
+    // static std::mt19937_64 rng(0);
+    return std::uniform_int_distribution<ull>(lb, ub)(rng);
 }
+
+template <ull Mod>
+struct rolling_hash_builder {
+    using mint = math::Modint<Mod>;
+    using value_type = std::pair<mint, ull>;
+
+    mint base;
+    vec<mint> pows;
+
+    rolling_hash_builder(const ull sz)
+        : base(get_base(1000, Mod / 10)),
+          pows(sz + 1)
+    {
+        pows[0] = 1;
+        for (ull i = 1; i <= sz; i++) pows[i] = base * pows[i - 1];
+    }
+
+    value_type concat(const value_type &a, const value_type &b) const {
+        const auto [ va, la ] = a;
+        const auto [ vb, lb ] = b;
+        return value_type((va * pows[lb] + vb), la + lb);
+    }
+};
+
+template <ull Mod>
+struct string_hash {
+    using builder_type = rolling_hash_builder<Mod>;
+    using value_type = typename builder_type::value_type;
+
+    vec<value_type> data;
+    builder_type *builder;
+
+    template <typename Container>
+    string_hash(const Container &s, builder_type *builder)
+        : data(s.size() + 1), builder(builder)
+    {
+        data[0] = value_type(0, 0);
+        for (ull i = 1; i <= s.size(); i++) {
+            data[i].first = data[i - 1].first * builder->base + s[i - 1] % Mod;
+            data[i].second = i;
+        }
+    }
+
+    value_type substr(const ull l, const ull r) const {
+        auto lv = data[l].first, rv = data[r].first;
+        auto len = r - l;
+        return value_type(rv - (lv * builder->pows[len]), len);
+    }
+};
+    
+template <typename Dummy> using is_false = std::false_type;
+
+template <typename T, typename U>
+struct tuple_append_front {
+    static_assert(is_false<T>::value, "Error : This struct must not be refered");
+};
+
+template <template <typename> typename Type2Type, typename Head, typename... Tail>
+struct apply_tuple_aux {
+    using type = typename tuple_append_front<typename Type2Type<Head>::type,
+                                             typename apply_tuple_aux<Type2Type, Tail...>::type>::type;
+};
+
+template <template <typename> typename Type2Type, typename T>
+struct apply_tuple_aux<Type2Type, T> {
+    using type = std::tuple<typename Type2Type<T>::type>;
+};
+
+template <typename T, typename... U>
+struct tuple_append_front<T, std::tuple<U...>> {
+    using type = std::tuple<T, U...>;
+};
+
+template <template <typename> typename Type2Type, typename T>
+struct apply_tuple {
+    static_assert(is_false<T>::value, "Error : This struct must not be refered");
+};
+
+template <template <typename> typename Type2Type, typename... Args>
+struct apply_tuple<Type2Type, std::tuple<Args...>> {
+    using type = typename apply_tuple_aux<Type2Type, Args...>::type;
+};
+
+template <ull Head, ull... Tail>
+class multi_rolling_hash_type {
+    using head_type = string_hash<Head>;
+    using tail_type = multi_rolling_hash_type<Tail...>;
+public:
+    using hash_type = typename tuple_append_front<head_type, typename tail_type::hash_type>::type;
+    using builder_type = typename tuple_append_front<typename head_type::builder_type,
+                                               typename tail_type::builder_type>::type;
+    using value_type = typename tuple_append_front<typename head_type::value_type,
+                                                   typename tail_type::value_type>::type;
+};
+
+template <ull Mod>
+class multi_rolling_hash_type<Mod> {
+    using element = string_hash<Mod>;
+public:
+    using hash_type = std::tuple<element>;
+    using builder_type = std::tuple<typename element::builder_type>;
+    using value_type = std::tuple<typename element::value_type>;
+};
+
+}  // internal
+
+
+// Usage
+// Declare a variable RollingHash<mod1, ...> rh(size) at first.
+// If you want to calculate string hash, call RollingHash<mod1, ...>::StringHash(str).
+template <ull... Mods>
+class RollingHash {
+    using internal_type = internal::multi_rolling_hash_type<Mods...>;
+
+public:
+    using hash_type = typename internal_type::hash_type;
+    using builder_type = typename internal_type::builder_type;
+    using value_type = typename internal_type::value_type;
+    using hash_ptr_type = typename internal::apply_tuple<std::add_pointer, hash_type>::type;
+    using builder_ptr_type = typename internal::apply_tuple<std::add_pointer, builder_type>::type;
+    constexpr static std::size_t mod_size = sizeof...(Mods);
+
+    static builder_ptr_type** get_builders() {
+        static builder_ptr_type *builders = nullptr;
+        return &builders;
+    }
+   
+private:
+    template <std::size_t Index = 0>
+    void construct(std::size_t sz) {
+        if constexpr (mod_size == Index) {
+        } else {
+            using type = typename std::tuple_element<Index, builder_type>::type;
+            std::get<Index>(**get_builders()) = new type(sz);
+            construct<Index + 1>(sz);
+        }
+    }
+    
+    template <std::size_t Index = 0>
+    void free() {
+        if constexpr (mod_size == Index) {
+        } else {
+            delete std::get<Index>(**get_builders());
+            free<Index + 1>();
+        }
+    }
+
+    template <std::size_t Index = 0>
+    void concat_rec(const value_type &a, const value_type &b, value_type &res) const {
+        if constexpr (concat_rec == mod_size) {
+        } else {
+            std::get<Index>(res) = std::get<Index>(**get_builders())->concat(std::get<Index>(a), std::get<Index>(b));
+            concat_rec<Index + 1>(a, b, res);
+        }
+    }
+
+public:
+    struct StringHash {
+        hash_ptr_type hash;
+        const std::size_t len;
+
+        template <typename Container>
+        StringHash(const Container &s) : len(s.size()) {
+            construct<0, Container>(s);
+        }
+
+        ~StringHash() {
+            this->free();
+        }
+
+        value_type substr(const ull l, const ull r) const {
+            value_type ret;
+            substr_rec(l, r, ret);
+            return ret;
+        }
+
+        std::size_t size() const noexcept {
+            return len;
+        }
+
+    private:
+        template <std::size_t Index, typename Container>
+        void construct(const Container &s) {
+            if constexpr (Index == mod_size) {
+            } else {
+                using type = typename std::tuple_element<Index, hash_type>::type;
+                std::get<Index>(hash) = new type(s, std::get<Index>(**get_builders()));
+                construct<Index + 1, Container>(s);
+            }
+        }
+
+        template <std::size_t Index = 0>
+        void free() {
+            if constexpr (Index == mod_size) {
+            } else {
+                delete std::get<Index>(hash);
+                this->free<Index + 1>();
+            }
+        }
+
+        template <std::size_t Index = 0>
+        void substr_rec(const ull l, const ull r, value_type &res) const {
+            if constexpr (Index == mod_size) {
+            } else {
+                std::get<Index>(res) = std::get<Index>(hash)->substr(l, r);
+                substr_rec<Index + 1>(l, r, res);
+            }
+        }
+    };
+
+    RollingHash(const std::size_t sz) {
+        assert(*get_builders() == nullptr);
+        *get_builders() = new builder_ptr_type();
+        construct(sz);
+    }
+
+    ~RollingHash() {
+        free();
+    }
+
+    value_type concat(const value_type &a, const value_type &b) const {
+        value_type ret;
+        concat_rec(a, b, ret);
+        return ret;
+    }
+};
 
 }
