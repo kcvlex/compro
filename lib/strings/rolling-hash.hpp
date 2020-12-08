@@ -1,5 +1,6 @@
 #pragma once
 #include "util/template.hpp"
+#include "util/types.hpp"
 #include "math/modint.hpp"
 
 namespace strings {
@@ -61,49 +62,16 @@ struct string_hash {
     }
 };
     
-template <typename Dummy> using is_false = std::false_type;
-
-template <typename T, typename U>
-struct tuple_append_front {
-    static_assert(is_false<T>::value, "Error : This struct must not be refered");
-};
-
-template <template <typename> typename Type2Type, typename Head, typename... Tail>
-struct apply_tuple_aux {
-    using type = typename tuple_append_front<typename Type2Type<Head>::type,
-                                             typename apply_tuple_aux<Type2Type, Tail...>::type>::type;
-};
-
-template <template <typename> typename Type2Type, typename T>
-struct apply_tuple_aux<Type2Type, T> {
-    using type = std::tuple<typename Type2Type<T>::type>;
-};
-
-template <typename T, typename... U>
-struct tuple_append_front<T, std::tuple<U...>> {
-    using type = std::tuple<T, U...>;
-};
-
-template <template <typename> typename Type2Type, typename T>
-struct apply_tuple {
-    static_assert(is_false<T>::value, "Error : This struct must not be refered");
-};
-
-template <template <typename> typename Type2Type, typename... Args>
-struct apply_tuple<Type2Type, std::tuple<Args...>> {
-    using type = typename apply_tuple_aux<Type2Type, Args...>::type;
-};
-
 template <ull Head, ull... Tail>
 class multi_rolling_hash_type {
     using head_type = string_hash<Head>;
     using tail_type = multi_rolling_hash_type<Tail...>;
 public:
-    using hash_type = typename tuple_append_front<head_type, typename tail_type::hash_type>::type;
-    using builder_type = typename tuple_append_front<typename head_type::builder_type,
-                                               typename tail_type::builder_type>::type;
-    using value_type = typename tuple_append_front<typename head_type::value_type,
-                                                   typename tail_type::value_type>::type;
+    using hash_type = typename utility::tuple_append_front<head_type, typename tail_type::hash_type>::type;
+    using builder_type = typename utility::tuple_append_front<typename head_type::builder_type,
+                                                              typename tail_type::builder_type>::type;
+    using value_type = typename utility::tuple_append_front<typename head_type::value_type,
+                                                            typename tail_type::value_type>::type;
 };
 
 template <ull Mod>
@@ -129,8 +97,8 @@ public:
     using hash_type = typename internal_type::hash_type;
     using builder_type = typename internal_type::builder_type;
     using value_type = typename internal_type::value_type;
-    using hash_ptr_type = typename internal::apply_tuple<std::add_pointer, hash_type>::type;
-    using builder_ptr_type = typename internal::apply_tuple<std::add_pointer, builder_type>::type;
+    using hash_ptr_type = typename utility::apply_tuple<std::add_pointer, hash_type>::type;
+    using builder_ptr_type = typename utility::apply_tuple<std::add_pointer, builder_type>::type;
     constexpr static std::size_t mod_size = sizeof...(Mods);
 
     static builder_ptr_type** get_builders() {
